@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 from packaging.version import Version
 from pt_dashboard.config import PAIN_STOP, PAIN_WARNING
-from pt_dashboard.db import execute, init_db, rows
+from pt_dashboard.db import archive_exercise, create_programme_day, execute, init_db, reset_programme_day, restore_exercise, rows
 
 st.set_page_config(page_title="FORGE", page_icon="⚒️", layout="wide", initial_sidebar_state="collapsed")
 init_db()
@@ -12,17 +12,14 @@ DATAFRAME_WIDTH = {"width": "stretch"} if Version(st.__version__) >= Version("1.
 
 st.markdown("""
 <style>
-/* Comfortable touch targets and horizontally scrollable navigation. */
+/* Comfortable touch targets and responsive navigation. */
 button, [role="button"], input, textarea, [data-baseweb="select"] { min-height: 44px; }
-[data-baseweb="tab-list"] { overflow-x: auto; scrollbar-width: thin; }
-[data-baseweb="tab"] { flex: 0 0 auto; white-space: nowrap; }
 [data-testid="stMetric"] {
   border: 1px solid #DCE6F5;
   border-radius: 14px;
   padding: 0.8rem 1rem;
   background: #FFFFFF;
 }
-
 @media (max-width: 768px) {
   /* Leave room for Streamlit's fixed mobile toolbar. */
   .block-container { padding: 3.5rem 0.75rem 2rem; }
@@ -52,20 +49,52 @@ def pain_message(value):
     elif value >= PAIN_WARNING:
         st.warning("Symptoms are elevated. Reduce load/range or stop; only continue if symptoms settle and do not worsen later.")
 
+def rerun_with_success(message):
+    st.session_state["flash_success"] = message
+    st.rerun()
+
+PAGES = ["Overview", "Log workout", "Check-in", "Workouts", "Cardio", "Progress", "Library", "Coach", "Profile"]
+PRIMARY_PAGES = ["Overview", "Log workout", "Check-in"]
+SECONDARY_PAGES = [page for page in PAGES if page not in PRIMARY_PAGES]
+
+def select_page(page_name):
+    def render_page():
+        st.session_state["page"] = page_name
+    return render_page
+
+page_objects = {
+    page: st.Page(
+        select_page(page),
+        title=page,
+        url_path=page.lower().replace(" ", "-"),
+        default=page == "Overview",
+    )
+    for page in PAGES
+}
+navigation = st.navigation(
+    {
+        "": [page_objects[page] for page in PRIMARY_PAGES],
+        "More": [page_objects[page] for page in SECONDARY_PAGES],
+    },
+    position="top",
+)
+navigation.run()
+current_page = st.session_state.get("page", "Overview")
+
 st.title("⚒️ FORGE")
 st.caption("Train smart · build steadily · stay pain-aware")
-
+if flash_message := st.session_state.pop("flash_success", None):
+    st.success(flash_message)
 profile = rows("SELECT * FROM profile WHERE id=1")[0]
-latest = rows("SELECT * FROM checkins ORDER BY week_date DESC LIMIT 1")
-c1,c2,c3,c4 = st.columns(4)
-c1.metric("Current weight", f"{latest[0]['weight_lb']:.1f} lb" if latest and latest[0]["weight_lb"] else "—", f"Target {profile['target_weight_lb']:.0f} lb")
-c2.metric("Weekly sessions", latest[0]["sessions_completed"] if latest else "—", f"Goal {profile['sessions_per_week']}")
-c3.metric("Energy", f"{latest[0]['energy']}/10" if latest else "—")
-c4.metric("Back pain", f"{latest[0]['back_pain']}/10" if latest else "—")
 
-tabs = st.tabs(["Overview", "Workouts", "Log workout", "Check-in", "Progress", "Library", "Coach", "Profile"])
+if current_page == "Overview":
+    latest = rows("SELECT * FROM checkins ORDER BY week_date DESC LIMIT 1")
+    c1,c2,c3,c4 = st.columns(4)
+    c1.metric("Current weight", f"{latest[0]['weight_lb']:.1f} lb" if latest and latest[0]["weight_lb"] else "—", f"Target {profile['target_weight_lb']:.0f} lb")
+    c2.metric("Weekly sessions", latest[0]["sessions_completed"] if latest else "—", f"Goal {profile['sessions_per_week']}")
+    c3.metric("Energy", f"{latest[0]['energy']}/10" if latest else "—")
+    c4.metric("Back pain", f"{latest[0]['back_pain']}/10" if latest else "—")
 
-with tabs[0]:
     st.subheader("Overview")
     st.caption("Your progress, training consistency and latest activity in one place.")
 
@@ -82,6 +111,7 @@ with tabs[0]:
     if not history.empty:
         history["session_date"] = pd.to_datetime(history["session_date"])
         history = history[history["session_date"] >= pd.Timestamp.today().normalize() - pd.Timedelta(days=56)]
+    cardio_summary = rows("SELECT COUNT(*) AS sessions,COALESCE(SUM(duration_min),0) AS minutes FROM cardio_logs WHERE cardio_date>=date('now','-28 day')")[0]
 
     chart_left,chart_right = st.columns([3,2])
     with chart_left:
@@ -110,6 +140,7 @@ with tabs[0]:
                     tooltip=[alt.Tooltip("session_date:T", title="Date", format="%d %b %Y"),"workouts:Q","sets:Q",alt.Tooltip("volume_kg:Q", title="Volume (kg)", format=",.0f")],
                 ).properties(height=250)
                 st.altair_chart(workout_chart, **DATAFRAME_WIDTH)
+            st.caption(f"Cardio · last 4 weeks: {cardio_summary['sessions']} session(s), {cardio_summary['minutes']} minutes")
 
     activity_left,programme_right = st.columns([3,2])
     with activity_left:
@@ -128,9 +159,13 @@ with tabs[0]:
 
     st.info("Use controlled reps, keep 1–3 reps in reserve, and record symptoms honestly. Stop or regress movements that increase back or neck symptoms.")
 
-with tabs[1]:
-    st.subheader("Workouts")
-    with st.expander("Create a new workout", expanded=False):
+if current_page == "Workouts":
+    st.subheader("Workout manager")
+    st.caption("View your plan, make quick exercise changes, or restore a workout without affecting training history.")
+    workout_mode = st.radio("Workout tools", ["Manage workouts", "Create workout", "Restore removed"], horizontal=True, label_visibility="collapsed")
+
+    if workout_mode == "Create workout":
+        st.markdown("#### Create a workout")
         build_exercises = rows("SELECT id,name FROM exercises WHERE active=1 ORDER BY name")
         build_ids = {r["name"]: r["id"] for r in build_exercises}
         with st.form("create_workout"):
@@ -142,75 +177,164 @@ with tabs[1]:
             create_workout = st.form_submit_button("Create workout", type="primary")
         if create_workout:
             clean_name = workout_name.strip()
-            existing_name = rows("SELECT 1 AS found FROM programme WHERE day_name=? AND active=1 LIMIT 1", (clean_name,)) if clean_name else []
             if not clean_name:
                 st.warning("Give the workout a name.")
             elif not workout_exercises:
                 st.warning("Select at least one exercise.")
-            elif existing_name:
-                st.warning("An active workout with that name already exists.")
             else:
-                for order, exercise_name in enumerate(workout_exercises, start=1):
-                    execute("INSERT INTO programme(day_name,sort_order,exercise_id,sets,rep_target,superset) VALUES (?,?,?,?,?,?)", (clean_name,order,build_ids[exercise_name],workout_sets,workout_reps,chr(64+min(order,26))))
-                st.success(f"Created {clean_name} with {len(workout_exercises)} exercises.")
-                st.rerun()
+                try:
+                    create_programme_day(clean_name, [build_ids[name] for name in workout_exercises], workout_sets, workout_reps)
+                    rerun_with_success(f"Created {clean_name} with {len(workout_exercises)} exercises. A reset baseline was saved too.")
+                except ValueError:
+                    st.warning("A workout with that name already exists. Restore it or choose a different name.")
 
-    day = st.selectbox("Training day", [r["day_name"] for r in rows("SELECT DISTINCT day_name FROM programme WHERE active=1 ORDER BY id")])
-    plan = dataframe("""SELECT p.superset AS block,e.name AS exercise,p.sets,p.rep_target AS reps,e.video_url AS video,e.guidance FROM programme p JOIN exercises e ON e.id=p.exercise_id WHERE p.day_name=? AND p.active=1 ORDER BY p.sort_order""", (day,))
-    st.dataframe(plan, hide_index=True, column_config={"video": st.column_config.LinkColumn("Technique video", display_text="Watch")}, **DATAFRAME_WIDTH)
-    st.caption("B1/B2, C1/C2, etc. are supersets. Rest after completing both exercises. Finish with an optional 5–10 minute comfortable walk.")
-    with st.expander("Add an exercise to this day"):
-        selectable = rows("SELECT id,name FROM exercises WHERE active=1 ORDER BY name")
-        select_ids = {r["name"]: r["id"] for r in selectable}
-        with st.form("plan_add"):
-            selected_exercise = st.selectbox("Exercise", list(select_ids), key="plan_exercise")
-            x,y,z = st.columns(3)
-            plan_sets = x.number_input("Sets", 1, 10, 3)
-            plan_reps = y.text_input("Rep target", "10–12")
-            plan_block = z.text_input("Block / superset", "E")
-            add_to_plan = st.form_submit_button("Add to programme")
-        if add_to_plan:
-            next_order = rows("SELECT COALESCE(MAX(sort_order),0)+1 AS n FROM programme WHERE day_name=?", (day,))[0]["n"]
-            execute("INSERT INTO programme(day_name,sort_order,exercise_id,sets,rep_target,superset) VALUES (?,?,?,?,?,?)", (day,next_order,select_ids[selected_exercise],plan_sets,plan_reps,plan_block))
-            st.success("Added to the programme. Refresh to see it in the table.")
-    with st.expander("Remove an exercise from this day"):
-        programme_entries = rows("""SELECT p.id,p.superset,e.name FROM programme p JOIN exercises e ON e.id=p.exercise_id WHERE p.day_name=? AND p.active=1 ORDER BY p.sort_order""", (day,))
-        entry_labels = {f"{r['superset']} · {r['name']}": r["id"] for r in programme_entries}
-        if not entry_labels:
-            st.info("This day has no active exercises.")
+    elif workout_mode == "Restore removed":
+        st.markdown("#### Restore a removed workout")
+        removed_days = rows("""SELECT b.day_name,MIN(b.id) AS first_id FROM programme_baseline b
+                               LEFT JOIN programme p ON p.day_name=b.day_name AND p.active=1
+                               GROUP BY b.day_name HAVING COUNT(p.id)=0 ORDER BY first_id""")
+        if not removed_days:
+            st.info("No workouts are currently removed.")
         else:
-            with st.form("plan_remove"):
-                remove_entry = st.selectbox("Exercise to remove", list(entry_labels))
-                confirm_plan_remove = st.checkbox("I understand this removes it from the programme (past logs are kept).")
-                remove_from_plan = st.form_submit_button("Remove from programme")
-            if remove_from_plan:
-                if not confirm_plan_remove:
-                    st.warning("Tick the confirmation box before removing the exercise.")
+            removed_day = st.selectbox("Removed workout", [r["day_name"] for r in removed_days])
+            st.caption("Restores the workout from its saved baseline. Past logged sessions are never changed.")
+            if st.button("Restore workout", type="primary"):
+                restored = reset_programme_day(removed_day)
+                if restored:
+                    rerun_with_success(f"Restored {removed_day} from its {restored}-exercise baseline. Exercises removed from the library stay removed.")
                 else:
-                    execute("UPDATE programme SET active=0 WHERE id=?", (entry_labels[remove_entry],))
-                    st.success(f"Removed {remove_entry} from {day}. Past workout data was not changed.")
-                    st.rerun()
-    with st.expander("Remove this whole workout"):
-        with st.form("remove_workout"):
-            st.warning(f"This removes all exercises from {day}. Logged workout history is kept.")
-            confirm_workout_remove = st.checkbox("I understand this removes the whole workout from my programme.")
-            remove_workout = st.form_submit_button("Remove whole workout")
-        if remove_workout:
-            if not confirm_workout_remove:
-                st.warning("Tick the confirmation box before removing the workout.")
-            else:
-                execute("UPDATE programme SET active=0 WHERE day_name=?", (day,))
-                st.success(f"Removed {day}. Past workout data was not changed.")
-                st.rerun()
+                    st.error("No saved reset baseline was found for this workout.")
 
-with tabs[2]:
+    else:
+        active_days = rows("SELECT day_name,MIN(id) AS first_id FROM programme WHERE active=1 GROUP BY day_name ORDER BY first_id")
+        if not active_days:
+            st.warning("You have no active workouts. Open ‘Restore removed’ to bring one back, or create a new one.")
+        else:
+            day = st.selectbox("Workout", [r["day_name"] for r in active_days])
+            plan = dataframe("""SELECT p.superset AS block,e.name AS exercise,p.sets,p.rep_target AS reps,e.video_url AS video,e.guidance FROM programme p JOIN exercises e ON e.id=p.exercise_id WHERE p.day_name=? AND p.active=1 ORDER BY p.sort_order""", (day,))
+            st.dataframe(plan, hide_index=True, column_config={"video": st.column_config.LinkColumn("Technique video", display_text="Watch")}, **DATAFRAME_WIDTH)
+            st.caption("Matching block labels such as B1/B2 are supersets. Rest after completing both exercises.")
+
+            add_column,remove_column = st.columns(2)
+            with add_column:
+                with st.expander("➕ Add exercise"):
+                    selectable = rows("SELECT id,name FROM exercises WHERE active=1 ORDER BY name")
+                    select_ids = {r["name"]: r["id"] for r in selectable}
+                    with st.form("plan_add"):
+                        selected_exercise = st.selectbox("Exercise", list(select_ids), key="plan_exercise")
+                        plan_sets = st.number_input("Sets", 1, 10, 3)
+                        plan_reps = st.text_input("Rep target", "10–12")
+                        plan_block = st.text_input("Block / superset", "E", help="Use matching labels such as B1 and B2 for a superset.")
+                        add_to_plan = st.form_submit_button("Add exercise", type="primary")
+                    if add_to_plan:
+                        next_order = rows("SELECT COALESCE(MAX(sort_order),0)+1 AS n FROM programme WHERE day_name=?", (day,))[0]["n"]
+                        execute("INSERT INTO programme(day_name,sort_order,exercise_id,sets,rep_target,superset) VALUES (?,?,?,?,?,?)", (day,next_order,select_ids[selected_exercise],plan_sets,plan_reps,plan_block))
+                        rerun_with_success(f"Added {selected_exercise} to {day}.")
+            with remove_column:
+                with st.expander("➖ Remove exercise"):
+                    programme_entries = rows("""SELECT p.id,p.superset,e.name FROM programme p JOIN exercises e ON e.id=p.exercise_id WHERE p.day_name=? AND p.active=1 ORDER BY p.sort_order""", (day,))
+                    entry_labels = {f"{r['superset']} · {r['name']}": r["id"] for r in programme_entries}
+                    if not entry_labels:
+                        st.info("This workout has no active exercises.")
+                    else:
+                        with st.form("plan_remove"):
+                            remove_entry = st.selectbox("Exercise", list(entry_labels))
+                            st.caption("This is reversible with Reset workout. Past logs stay intact.")
+                            remove_from_plan = st.form_submit_button("Remove exercise")
+                        if remove_from_plan:
+                            execute("UPDATE programme SET active=0 WHERE id=?", (entry_labels[remove_entry],))
+                            rerun_with_success(f"Removed {remove_entry} from {day}.")
+
+            st.markdown("#### Workout actions")
+            reset_column,archive_column = st.columns(2)
+            with reset_column:
+                with st.popover("↻ Reset workout", width="stretch"):
+                    st.write("Restore this workout to its saved baseline. Later additions leave the plan, globally removed exercises stay removed, and logged sessions are untouched.")
+                    confirm_reset = st.checkbox("I understand the current plan will be replaced.", key=f"confirm_reset_{day}")
+                    if st.button("Reset now", type="primary"):
+                        if not confirm_reset:
+                            st.warning("Tick the confirmation box first.")
+                        else:
+                            restored = reset_programme_day(day)
+                            rerun_with_success(f"Reset {day} from its {restored}-exercise baseline. Exercises removed from the library stayed removed.")
+            with archive_column:
+                with st.popover("Archive workout", width="stretch"):
+                    st.write("Hide this workout from your active programme. It can be restored later and logged history remains intact.")
+                    confirm_workout_remove = st.checkbox("Archive this workout", key=f"confirm_workout_remove_{day}")
+                    if st.button("Archive workout now"):
+                        if not confirm_workout_remove:
+                            st.warning("Tick the confirmation box first.")
+                        else:
+                            execute("UPDATE programme SET active=0 WHERE day_name=?", (day,))
+                            rerun_with_success(f"Archived {day}.")
+
+if current_page == "Log workout":
     st.subheader("Log a session")
+    with st.expander("Exercise library tools · add, remove or restore"):
+        st.caption("Add your own exercise here and it becomes immediately available in the workout logger.")
+        add_exercise_column,remove_exercise_column = st.columns(2)
+        with add_exercise_column:
+            st.markdown("##### Add your own exercise")
+            with st.form("quick_add_exercise"):
+                quick_name = st.text_input("Exercise name")
+                quick_group = st.text_input("Muscle group")
+                quick_equipment = st.text_input("Equipment")
+                quick_video = st.text_input("Technique video (optional)", placeholder="https://www.youtube.com/watch?v=...")
+                quick_guidance = st.text_area("Technique or safety notes")
+                quick_add = st.form_submit_button("Add to exercise list", type="primary")
+            if quick_add:
+                if not quick_name.strip():
+                    st.warning("Give the exercise a name.")
+                else:
+                    try:
+                        execute(
+                            "INSERT INTO exercises(name,muscle_group,equipment,guidance,video_url) VALUES (?,?,?,?,?)",
+                            (quick_name.strip(),quick_group.strip(),quick_equipment.strip(),quick_guidance.strip(),quick_video.strip()),
+                        )
+                        rerun_with_success(f"Added {quick_name.strip()} to the workout logger.")
+                    except Exception:
+                        st.warning("An exercise with that name already exists.")
+        with remove_exercise_column:
+            st.markdown("##### Remove an exercise")
+            removable_exercises = rows("SELECT id,name FROM exercises WHERE active=1 ORDER BY name")
+            removable_ids = {r["name"]: r["id"] for r in removable_exercises}
+            if removable_ids:
+                with st.form("quick_archive_exercise"):
+                    remove_exercise_name = st.selectbox("Exercise to remove", list(removable_ids))
+                    st.caption("It will disappear from the logger and active plans. Past workout records stay intact.")
+                    confirm_exercise_remove = st.checkbox("Remove this exercise")
+                    remove_exercise = st.form_submit_button("Remove exercise")
+                if remove_exercise:
+                    if not confirm_exercise_remove:
+                        st.warning("Tick the confirmation box first.")
+                    else:
+                        affected_plans = archive_exercise(removable_ids[remove_exercise_name])
+                        rerun_with_success(f"Removed {remove_exercise_name} and archived it from {affected_plans} active plan(s).")
+            else:
+                st.caption("No active exercises to remove.")
+
+        archived_exercises = rows("SELECT id,name FROM exercises WHERE active=0 ORDER BY name")
+        if archived_exercises:
+            st.divider()
+            archived_ids = {r["name"]: r["id"] for r in archived_exercises}
+            restore_name = st.selectbox("Restore a removed exercise", list(archived_ids))
+            if st.button("Restore exercise"):
+                restore_exercise(archived_ids[restore_name])
+                rerun_with_success(f"Restored {restore_name} to the exercise logger. Reset a workout if you also want it back in that plan.")
+
     exercises = rows("SELECT id,name FROM exercises WHERE active=1 ORDER BY name")
     names = {r["name"]: r["id"] for r in exercises}
+    session_days = [r["day_name"] for r in rows("SELECT DISTINCT day_name FROM programme WHERE active=1 ORDER BY id")]
+    if not names:
+        st.warning("No active exercises are available. Restore one in Exercise library tools before logging.")
+        st.stop()
+    if not session_days:
+        st.warning("No active workouts are available. Restore or create one in Workouts before logging.")
+        st.stop()
     with st.form("session"):
         col1,col2,col3 = st.columns(3)
         session_date = col1.date_input("Date", date.today())
-        day_name = col2.selectbox("Session", [r["day_name"] for r in rows("SELECT DISTINCT day_name FROM programme WHERE active=1 ORDER BY id")])
+        day_name = col2.selectbox("Session", session_days)
         duration = col3.number_input("Minutes", 1, 180, 45)
         pain_before = col1.slider("Pain before", 0, 10, 0)
         pain_after = col2.slider("Pain after", 0, 10, 0)
@@ -258,34 +382,34 @@ with tabs[2]:
         if logged_sets:
             st.dataframe(pd.DataFrame(logged_sets).rename(columns={"name":"exercise","set_no":"set","weight_kg":"weight (kg)"}), hide_index=True, **DATAFRAME_WIDTH)
             set_labels = {f"#{r['id']} · {r['name']} · set {r['set_no']} · {r['reps']} reps @ {r['weight_kg']:g} kg": r["id"] for r in logged_sets}
-            with st.form("delete_set"):
-                set_to_delete = st.selectbox("Accidental set", list(set_labels))
-                confirm_set_delete = st.checkbox("I understand this permanently deletes the selected set.")
-                delete_set = st.form_submit_button("Delete selected set")
-            if delete_set:
-                if not confirm_set_delete:
-                    st.warning("Tick the confirmation box before deleting the set.")
-                else:
-                    execute("DELETE FROM set_logs WHERE id=? AND session_id=?", (set_labels[set_to_delete],history_session_id))
-                    st.success("Set deleted.")
-                    st.rerun()
+            with st.expander("Delete an accidental set"):
+                with st.form("delete_set"):
+                    set_to_delete = st.selectbox("Set", list(set_labels))
+                    confirm_set_delete = st.checkbox("Permanently delete this set")
+                    delete_set = st.form_submit_button("Delete selected set")
+                if delete_set:
+                    if not confirm_set_delete:
+                        st.warning("Tick the confirmation box before deleting the set.")
+                    else:
+                        execute("DELETE FROM set_logs WHERE id=? AND session_id=?", (set_labels[set_to_delete],history_session_id))
+                        rerun_with_success("Set deleted.")
         else:
             st.caption("This workout contains no sets.")
-        with st.form("delete_session"):
-            st.warning("Deleting a workout also deletes every set recorded inside it.")
-            confirm_session_delete = st.checkbox("I understand this permanently deletes the whole workout and all its sets.")
-            delete_session = st.form_submit_button("Delete whole workout")
-        if delete_session:
-            if not confirm_session_delete:
-                st.warning("Tick the confirmation box before deleting the workout.")
-            else:
-                execute("DELETE FROM sessions WHERE id=?", (history_session_id,))
-                if st.session_state.get("last_session_id") == history_session_id:
-                    del st.session_state["last_session_id"]
-                st.success("Workout and its sets deleted.")
-                st.rerun()
+        with st.expander("Delete this logged workout"):
+            with st.form("delete_session"):
+                st.warning("This permanently deletes the workout and every set recorded inside it.")
+                confirm_session_delete = st.checkbox("Permanently delete this workout and its sets")
+                delete_session = st.form_submit_button("Delete whole logged workout")
+            if delete_session:
+                if not confirm_session_delete:
+                    st.warning("Tick the confirmation box before deleting the workout.")
+                else:
+                    execute("DELETE FROM sessions WHERE id=?", (history_session_id,))
+                    if st.session_state.get("last_session_id") == history_session_id:
+                        del st.session_state["last_session_id"]
+                    rerun_with_success("Workout and its sets deleted.")
 
-with tabs[3]:
+if current_page == "Check-in":
     st.subheader("Weekly check-in")
     with st.form("checkin"):
         a,b,c = st.columns(3)
@@ -306,7 +430,79 @@ with tabs[3]:
         st.success("Check-in saved.")
         pain_message(max(back,neck))
 
-with tabs[4]:
+if current_page == "Cardio":
+    st.subheader("Cardio")
+    st.caption("Optional tracking for walks, incline treadmill sessions and other low-impact cardio.")
+    with st.expander("Log cardio", expanded=True):
+        recent_linkable_sessions = rows("SELECT id,session_date,day_name FROM sessions ORDER BY session_date DESC,id DESC LIMIT 20")
+        session_options = {"No linked strength workout": None}
+        session_options.update({f"{r['session_date']} · {r['day_name']} · #{r['id']}": r["id"] for r in recent_linkable_sessions})
+        with st.form("cardio_log"):
+            cardio_a,cardio_b,cardio_c = st.columns(3)
+            cardio_date = cardio_a.date_input("Date", date.today(), key="cardio_date")
+            activity = cardio_b.selectbox("Activity", ["Walking", "Incline treadmill walk", "Bike", "Cross trainer", "Swimming", "Other"])
+            duration_min = cardio_c.number_input("Duration (minutes)", 1, 600, 15)
+            distance_km = cardio_a.number_input("Distance km (optional)", 0.0, 500.0, 0.0, 0.1)
+            incline_percent = cardio_b.number_input("Incline % (optional)", 0.0, 30.0, 0.0, 0.5)
+            intensity = cardio_c.selectbox("Intensity", ["Easy", "Moderate", "Hard"])
+            avg_heart_rate = cardio_a.number_input("Average heart rate (optional)", 0, 240, 0)
+            calories = cardio_b.number_input("Calories (optional)", 0, 5000, 0)
+            cardio_rpe = cardio_c.number_input("RPE", 1.0, 10.0, 5.0, 0.5)
+            cardio_pain = st.slider("Pain during / after", 0, 10, 0)
+            linked_session_label = st.selectbox("Link to a strength workout (optional)", list(session_options))
+            cardio_notes = st.text_area("Notes (optional)")
+            save_cardio = st.form_submit_button("Save cardio", type="primary")
+        if save_cardio:
+            execute(
+                """INSERT INTO cardio_logs(session_id,cardio_date,activity,duration_min,distance_km,incline_percent,intensity,avg_heart_rate,calories,rpe,pain,notes)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    session_options[linked_session_label],cardio_date.isoformat(),activity,duration_min,
+                    distance_km or None,incline_percent or None,intensity,avg_heart_rate or None,
+                    calories or None,cardio_rpe,cardio_pain,cardio_notes.strip(),
+                ),
+            )
+            st.success("Cardio saved.")
+            pain_message(cardio_pain)
+
+    cardio_history = dataframe("""SELECT id,cardio_date AS date,activity,duration_min AS minutes,distance_km AS distance_km,incline_percent AS incline_pct,intensity,rpe,pain,calories FROM cardio_logs ORDER BY cardio_date DESC,id DESC""")
+    if cardio_history.empty:
+        st.info("No cardio logged yet — this section is completely optional.")
+    else:
+        cardio_history["date"] = pd.to_datetime(cardio_history["date"])
+        cutoff_28 = pd.Timestamp.today().normalize() - pd.Timedelta(days=28)
+        recent_cardio = cardio_history[cardio_history["date"] >= cutoff_28]
+        cardio_metric_a,cardio_metric_b,cardio_metric_c = st.columns(3)
+        cardio_metric_a.metric("Cardio sessions · 4 weeks", len(recent_cardio))
+        cardio_metric_b.metric("Minutes · 4 weeks", int(recent_cardio["minutes"].sum()))
+        cardio_metric_c.metric("Distance · 4 weeks", f"{recent_cardio['distance_km'].fillna(0).sum():.1f} km")
+
+        weekly_cardio = cardio_history.copy()
+        weekly_cardio["week"] = weekly_cardio["date"].dt.to_period("W").apply(lambda period: period.start_time)
+        weekly_cardio = weekly_cardio.groupby("week", as_index=False).agg(minutes=("minutes","sum"),sessions=("id","count"))
+        cardio_chart = alt.Chart(weekly_cardio).mark_bar(color="#2F80ED", cornerRadiusTopLeft=5, cornerRadiusTopRight=5).encode(
+            x=alt.X("week:T", title=None, axis=alt.Axis(format="%d %b", labelAngle=-35)),
+            y=alt.Y("minutes:Q", title="Cardio minutes"),
+            tooltip=[alt.Tooltip("week:T", title="Week", format="%d %b %Y"),"sessions:Q","minutes:Q"],
+        ).properties(height=240)
+        st.altair_chart(cardio_chart, **DATAFRAME_WIDTH)
+        st.dataframe(cardio_history, hide_index=True, **DATAFRAME_WIDTH)
+
+        with st.expander("Delete an accidental cardio entry"):
+            cardio_rows = rows("SELECT id,cardio_date,activity,duration_min FROM cardio_logs ORDER BY cardio_date DESC,id DESC")
+            cardio_labels = {f"{r['cardio_date']} · {r['activity']} · {r['duration_min']} min · #{r['id']}": r["id"] for r in cardio_rows}
+            with st.form("delete_cardio"):
+                cardio_to_delete = st.selectbox("Cardio entry", list(cardio_labels))
+                confirm_cardio_delete = st.checkbox("Permanently delete this cardio entry")
+                delete_cardio = st.form_submit_button("Delete cardio entry")
+            if delete_cardio:
+                if not confirm_cardio_delete:
+                    st.warning("Tick the confirmation box first.")
+                else:
+                    execute("DELETE FROM cardio_logs WHERE id=?", (cardio_labels[cardio_to_delete],))
+                    rerun_with_success("Cardio entry deleted.")
+
+if current_page == "Progress":
     st.subheader("Progress")
     checks = dataframe("SELECT * FROM checkins ORDER BY week_date")
     if checks.empty:
@@ -322,8 +518,9 @@ with tabs[4]:
         choice = st.selectbox("Strength history", sorted(strength["name"].unique()))
         st.line_chart(strength[strength["name"]==choice].set_index("session_date")[["best_weight_kg"]])
 
-with tabs[5]:
+if current_page == "Library":
     st.subheader("Workout library")
+    st.caption("Your exercise list, safety notes and technique links.")
     search = st.text_input("Search exercises")
     library = dataframe("SELECT name,muscle_group,equipment,video_url AS video,guidance FROM exercises WHERE active=1 AND name LIKE ? ORDER BY muscle_group,name", (f"%{search}%",))
     st.dataframe(library, hide_index=True, column_config={"video": st.column_config.LinkColumn("Technique video", display_text="Watch")}, **DATAFRAME_WIDTH)
@@ -338,11 +535,41 @@ with tabs[5]:
         if add and n:
             try:
                 execute("INSERT INTO exercises(name,muscle_group,equipment,guidance,video_url) VALUES (?,?,?,?,?)", (n,mg,eq,gd,video))
-                st.success("Exercise added. Refresh to select it in logging.")
+                rerun_with_success("Exercise added.")
             except Exception:
                 st.error("That exercise already exists.")
+    with st.expander("Remove or restore an exercise"):
+        library_active = rows("SELECT id,name FROM exercises WHERE active=1 ORDER BY name")
+        library_archived = rows("SELECT id,name FROM exercises WHERE active=0 ORDER BY name")
+        library_remove_column,library_restore_column = st.columns(2)
+        with library_remove_column:
+            st.markdown("##### Remove")
+            if library_active:
+                library_active_ids = {r["name"]: r["id"] for r in library_active}
+                with st.form("library_remove"):
+                    library_remove_name = st.selectbox("Active exercise", list(library_active_ids))
+                    library_remove_confirm = st.checkbox("Remove from logger and active plans")
+                    library_remove = st.form_submit_button("Remove exercise")
+                if library_remove:
+                    if not library_remove_confirm:
+                        st.warning("Tick the confirmation box first.")
+                    else:
+                        archive_exercise(library_active_ids[library_remove_name])
+                        rerun_with_success(f"Removed {library_remove_name}. Past logs were kept.")
+            else:
+                st.caption("No active exercises.")
+        with library_restore_column:
+            st.markdown("##### Restore")
+            if library_archived:
+                library_archived_ids = {r["name"]: r["id"] for r in library_archived}
+                library_restore_name = st.selectbox("Removed exercise", list(library_archived_ids))
+                if st.button("Restore to logger", key="library_restore"):
+                    restore_exercise(library_archived_ids[library_restore_name])
+                    rerun_with_success(f"Restored {library_restore_name}.")
+            else:
+                st.caption("No removed exercises.")
 
-with tabs[6]:
+if current_page == "Coach":
     st.subheader("Coach notes & programme adjustments")
     notes_df = dataframe("SELECT note_date,title,note,adjustments,status FROM coach_notes ORDER BY note_date DESC,id DESC")
     if not notes_df.empty: st.dataframe(notes_df, hide_index=True, **DATAFRAME_WIDTH)
@@ -357,7 +584,7 @@ with tabs[6]:
         execute("INSERT INTO coach_notes(note_date,title,note,adjustments,status) VALUES (?,?,?,?,?)", (nd.isoformat(),title,note,adjustments,status))
         st.success("Coach note saved.")
 
-with tabs[7]:
+if current_page == "Profile":
     st.subheader("Profile & goals")
     with st.form("profile"):
         name = st.text_input("Name", profile["name"])

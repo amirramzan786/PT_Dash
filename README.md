@@ -1,6 +1,6 @@
 # FORGE
 
-A local-first Streamlit MVP for a pain-aware three-day gym programme. It includes the seeded workout plan and supersets, exercise library, set logging, weekly check-ins, progress charts, coach reviews and programme adjustments. Data persists in SQLite.
+A local-first Streamlit MVP for a pain-aware three-day gym programme. It includes responsive navigation, resettable workout plans and supersets, a user-editable exercise library, strength and optional cardio logging, weekly check-ins, progress charts, coach reviews and programme adjustments. Data persists in SQLite.
 
 ## Run locally
 
@@ -27,6 +27,9 @@ pytest
 - SQLite keeps setup simple and needs no paid service.
 - The exercise library is seeded in `pt_dashboard/seed.py` and can be extended in the UI.
 - Programme and history are separate: changing future programming does not rewrite past logs.
+- Every workout stores a reset baseline. Archiving or resetting a workout never rewrites logged sessions.
+- Exercise removal is reversible: it archives the exercise and active plan entries while retaining historical sets.
+- Cardio is stored separately so it can be logged on its own or optionally linked to a strength session.
 - Proposed coach changes have a status (`Proposed`, `Approved`, `Applied`) so an AI suggestion is not silently treated as an approved programme change.
 - Pain alerts are intentionally conservative. The app does not diagnose or replace a clinician.
 
