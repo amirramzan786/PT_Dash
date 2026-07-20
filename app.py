@@ -4,8 +4,34 @@ import streamlit as st
 from pt_dashboard.config import PAIN_STOP, PAIN_WARNING
 from pt_dashboard.db import execute, init_db, rows
 
-st.set_page_config(page_title="Amir's PT Dashboard", page_icon="💪", layout="wide")
+st.set_page_config(page_title="Amir's PT Dashboard", page_icon="💪", layout="wide", initial_sidebar_state="collapsed")
 init_db()
+
+st.markdown("""
+<style>
+/* Comfortable touch targets and horizontally scrollable navigation. */
+button, [role="button"], input, textarea, [data-baseweb="select"] { min-height: 44px; }
+[data-baseweb="tab-list"] { overflow-x: auto; scrollbar-width: thin; }
+[data-baseweb="tab"] { flex: 0 0 auto; white-space: nowrap; }
+
+@media (max-width: 768px) {
+  .block-container { padding: 0.75rem 0.75rem 2rem; }
+  h1 { font-size: 1.75rem !important; }
+  h2 { font-size: 1.4rem !important; }
+  h3 { font-size: 1.15rem !important; }
+  /* Streamlit columns become a readable single-column flow on phones. */
+  [data-testid="stHorizontalBlock"] { flex-wrap: wrap; gap: 0.5rem; }
+  [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+  [data-testid="stMetric"] { padding: 0.6rem; }
+  [data-testid="stDataFrame"] { overflow-x: auto; }
+  .stButton > button, .stFormSubmitButton > button { width: 100%; }
+}
+</style>
+""", unsafe_allow_html=True)
 
 def dataframe(sql, params=()):
     return pd.DataFrame(rows(sql, params))
