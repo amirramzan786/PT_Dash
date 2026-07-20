@@ -1,11 +1,12 @@
 from datetime import date
+import altair as alt
 import pandas as pd
 import streamlit as st
 from packaging.version import Version
 from pt_dashboard.config import PAIN_STOP, PAIN_WARNING
 from pt_dashboard.db import execute, init_db, rows
 
-st.set_page_config(page_title="Amir's PT Dashboard", page_icon="💪", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="FORGE", page_icon="⚒️", layout="wide", initial_sidebar_state="collapsed")
 init_db()
 DATAFRAME_WIDTH = {"width": "stretch"} if Version(st.__version__) >= Version("1.55") else {"use_container_width": True}
 
@@ -15,6 +16,12 @@ st.markdown("""
 button, [role="button"], input, textarea, [data-baseweb="select"] { min-height: 44px; }
 [data-baseweb="tab-list"] { overflow-x: auto; scrollbar-width: thin; }
 [data-baseweb="tab"] { flex: 0 0 auto; white-space: nowrap; }
+[data-testid="stMetric"] {
+  border: 1px solid #DCE6F5;
+  border-radius: 14px;
+  padding: 0.8rem 1rem;
+  background: #FFFFFF;
+}
 
 @media (max-width: 768px) {
   .block-container { padding: 0.75rem 0.75rem 2rem; }
@@ -44,8 +51,8 @@ def pain_message(value):
     elif value >= PAIN_WARNING:
         st.warning("Symptoms are elevated. Reduce load/range or stop; only continue if symptoms settle and do not worsen later.")
 
-st.title("💪 Amir's PT Dashboard")
-st.caption("Phase 1 · pain-aware muscle building · local-first")
+st.title("⚒️ FORGE")
+st.caption("Train smart · build steadily · stay pain-aware")
 
 profile = rows("SELECT * FROM profile WHERE id=1")[0]
 latest = rows("SELECT * FROM checkins ORDER BY week_date DESC LIMIT 1")
@@ -55,13 +62,70 @@ c2.metric("Weekly sessions", latest[0]["sessions_completed"] if latest else "—
 c3.metric("Energy", f"{latest[0]['energy']}/10" if latest else "—")
 c4.metric("Back pain", f"{latest[0]['back_pain']}/10" if latest else "—")
 
-tabs = st.tabs(["Today", "Workouts", "Log workout", "Check-in", "Progress", "Library", "Coach", "Profile"])
+tabs = st.tabs(["Overview", "Workouts", "Log workout", "Check-in", "Progress", "Library", "Coach", "Profile"])
 
 with tabs[0]:
-    st.subheader("At a glance")
-    st.info("Warm up for 5 minutes. Use controlled reps, keep 1–3 reps in reserve, and record symptoms honestly. Comfort during a movement does not guarantee it is appropriate for an undiagnosed condition.")
-    plan = dataframe("""SELECT p.day_name,p.superset,e.name,p.sets,p.rep_target FROM programme p JOIN exercises e ON e.id=p.exercise_id WHERE p.active=1 ORDER BY CASE p.day_name WHEN 'Monday · Push + Quads' THEN 1 WHEN 'Wednesday · Pull' THEN 2 WHEN 'Friday · Hybrid' THEN 3 ELSE 4 END,p.sort_order""")
-    st.dataframe(plan, hide_index=True, **DATAFRAME_WIDTH)
+    st.subheader("Overview")
+    st.caption("Your progress, training consistency and latest activity in one place.")
+
+    period = st.selectbox("Weight chart period", ["Last 4 weeks", "Last 8 weeks", "Last 12 weeks", "All time"], index=2)
+    period_days = {"Last 4 weeks": 28, "Last 8 weeks": 56, "Last 12 weeks": 84, "All time": None}[period]
+    weight_data = dataframe("SELECT week_date,weight_lb FROM checkins WHERE weight_lb IS NOT NULL ORDER BY week_date")
+    if not weight_data.empty:
+        weight_data["week_date"] = pd.to_datetime(weight_data["week_date"])
+        if period_days:
+            cutoff = pd.Timestamp.today().normalize() - pd.Timedelta(days=period_days)
+            weight_data = weight_data[weight_data["week_date"] >= cutoff]
+
+    history = dataframe("""SELECT s.session_date,COUNT(DISTINCT s.id) AS workouts,COUNT(l.id) AS sets,COALESCE(SUM(l.reps*l.weight_kg),0) AS volume_kg FROM sessions s LEFT JOIN set_logs l ON l.session_id=s.id GROUP BY s.session_date ORDER BY s.session_date""")
+    if not history.empty:
+        history["session_date"] = pd.to_datetime(history["session_date"])
+        history = history[history["session_date"] >= pd.Timestamp.today().normalize() - pd.Timedelta(days=56)]
+
+    chart_left,chart_right = st.columns([3,2])
+    with chart_left:
+        with st.container(border=True):
+            st.markdown("#### Weight trend")
+            if weight_data.empty:
+                st.info("Add weekly check-ins to build your weight chart.")
+            else:
+                weight_chart = alt.Chart(weight_data).mark_line(point=True, strokeWidth=3, color="#2F80ED").encode(
+                    x=alt.X("week_date:T", title=None, axis=alt.Axis(format="%d %b", labelAngle=0)),
+                    y=alt.Y("weight_lb:Q", title="Weight (lb)", scale=alt.Scale(zero=False)),
+                    tooltip=[alt.Tooltip("week_date:T", title="Date", format="%d %b %Y"),alt.Tooltip("weight_lb:Q", title="Weight", format=".1f")],
+                ).properties(height=250)
+                target_rule = alt.Chart(pd.DataFrame({"target":[profile["target_weight_lb"]]})).mark_rule(color="#65B891", strokeDash=[6,4]).encode(y="target:Q")
+                st.altair_chart(weight_chart + target_rule, **DATAFRAME_WIDTH)
+    with chart_right:
+        with st.container(border=True):
+            st.markdown("#### Workout tracking")
+            st.caption("Sets completed over the last 8 weeks")
+            if history.empty:
+                st.info("Log a workout to start tracking consistency.")
+            else:
+                workout_chart = alt.Chart(history).mark_bar(color="#2F80ED", cornerRadiusTopLeft=5, cornerRadiusTopRight=5).encode(
+                    x=alt.X("session_date:T", title=None, axis=alt.Axis(format="%d %b", labelAngle=-35)),
+                    y=alt.Y("sets:Q", title="Sets"),
+                    tooltip=[alt.Tooltip("session_date:T", title="Date", format="%d %b %Y"),"workouts:Q","sets:Q",alt.Tooltip("volume_kg:Q", title="Volume (kg)", format=",.0f")],
+                ).properties(height=250)
+                st.altair_chart(workout_chart, **DATAFRAME_WIDTH)
+
+    activity_left,programme_right = st.columns([3,2])
+    with activity_left:
+        with st.container(border=True):
+            st.markdown("#### Recent workout history")
+            recent = dataframe("""SELECT s.session_date AS date,s.day_name AS workout,COUNT(l.id) AS sets,s.duration_min AS minutes,s.pain_after AS pain_after FROM sessions s LEFT JOIN set_logs l ON l.session_id=s.id GROUP BY s.id ORDER BY s.session_date DESC,s.id DESC LIMIT 8""")
+            if recent.empty:
+                st.info("Your most recent workouts will appear here.")
+            else:
+                st.dataframe(recent, hide_index=True, **DATAFRAME_WIDTH)
+    with programme_right:
+        with st.container(border=True):
+            st.markdown("#### Current programme")
+            programme_summary = dataframe("""SELECT p.day_name AS workout,COUNT(*) AS exercises,SUM(p.sets) AS working_sets FROM programme p WHERE p.active=1 GROUP BY p.day_name ORDER BY MIN(p.id)""")
+            st.dataframe(programme_summary, hide_index=True, **DATAFRAME_WIDTH)
+
+    st.info("Use controlled reps, keep 1–3 reps in reserve, and record symptoms honestly. Stop or regress movements that increase back or neck symptoms.")
 
 with tabs[1]:
     st.subheader("Workouts")

@@ -1,4 +1,4 @@
-# Amir's PT Dashboard
+# FORGE
 
 A local-first Streamlit MVP for a pain-aware three-day gym programme. It includes the seeded workout plan and supersets, exercise library, set logging, weekly check-ins, progress charts, coach reviews and programme adjustments. Data persists in SQLite.
 
