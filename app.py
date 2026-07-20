@@ -24,7 +24,8 @@ button, [role="button"], input, textarea, [data-baseweb="select"] { min-height: 
 }
 
 @media (max-width: 768px) {
-  .block-container { padding: 0.75rem 0.75rem 2rem; }
+  /* Leave room for Streamlit's fixed mobile toolbar. */
+  .block-container { padding: 3.5rem 0.75rem 2rem; }
   h1 { font-size: 1.75rem !important; }
   h2 { font-size: 1.4rem !important; }
   h3 { font-size: 1.15rem !important; }
