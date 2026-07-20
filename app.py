@@ -54,6 +54,23 @@ with tabs[1]:
             next_order = rows("SELECT COALESCE(MAX(sort_order),0)+1 AS n FROM programme WHERE day_name=?", (day,))[0]["n"]
             execute("INSERT INTO programme(day_name,sort_order,exercise_id,sets,rep_target,superset) VALUES (?,?,?,?,?,?)", (day,next_order,select_ids[selected_exercise],plan_sets,plan_reps,plan_block))
             st.success("Added to the programme. Refresh to see it in the table.")
+    with st.expander("Remove an exercise from this day"):
+        programme_entries = rows("""SELECT p.id,p.superset,e.name FROM programme p JOIN exercises e ON e.id=p.exercise_id WHERE p.day_name=? AND p.active=1 ORDER BY p.sort_order""", (day,))
+        entry_labels = {f"{r['superset']} · {r['name']}": r["id"] for r in programme_entries}
+        if not entry_labels:
+            st.info("This day has no active exercises.")
+        else:
+            with st.form("plan_remove"):
+                remove_entry = st.selectbox("Exercise to remove", list(entry_labels))
+                confirm_plan_remove = st.checkbox("I understand this removes it from the programme (past logs are kept).")
+                remove_from_plan = st.form_submit_button("Remove from programme")
+            if remove_from_plan:
+                if not confirm_plan_remove:
+                    st.warning("Tick the confirmation box before removing the exercise.")
+                else:
+                    execute("UPDATE programme SET active=0 WHERE id=?", (entry_labels[remove_entry],))
+                    st.success(f"Removed {remove_entry} from {day}. Past workout data was not changed.")
+                    st.rerun()
 
 with tabs[2]:
     st.subheader("Log a session")
@@ -96,6 +113,46 @@ with tabs[2]:
             execute("INSERT INTO set_logs(session_id,exercise_id,set_no,reps,weight_kg,rpe,pain) VALUES (?,?,?,?,?,?,?)", (st.session_state["last_session_id"],names[ex2],sn,rp,wt,rr,pn))
             st.success("Set added.")
             pain_message(pn)
+
+    st.divider()
+    st.subheader("Workout history & corrections")
+    recent_sessions = rows("""SELECT s.id,s.session_date,s.day_name,COUNT(l.id) AS set_count FROM sessions s LEFT JOIN set_logs l ON l.session_id=s.id GROUP BY s.id ORDER BY s.session_date DESC,s.id DESC LIMIT 30""")
+    if not recent_sessions:
+        st.info("No logged workouts yet.")
+    else:
+        session_labels = {f"{r['session_date']} · {r['day_name']} · {r['set_count']} set(s) · #{r['id']}": r["id"] for r in recent_sessions}
+        history_session = st.selectbox("Workout to review", list(session_labels), key="history_session")
+        history_session_id = session_labels[history_session]
+        logged_sets = rows("""SELECT l.id,e.name,l.set_no,l.reps,l.weight_kg,l.rpe,l.pain FROM set_logs l JOIN exercises e ON e.id=l.exercise_id WHERE l.session_id=? ORDER BY l.id""", (history_session_id,))
+        if logged_sets:
+            st.dataframe(pd.DataFrame(logged_sets).rename(columns={"name":"exercise","set_no":"set","weight_kg":"weight (kg)"}), hide_index=True, use_container_width=True)
+            set_labels = {f"#{r['id']} · {r['name']} · set {r['set_no']} · {r['reps']} reps @ {r['weight_kg']:g} kg": r["id"] for r in logged_sets}
+            with st.form("delete_set"):
+                set_to_delete = st.selectbox("Accidental set", list(set_labels))
+                confirm_set_delete = st.checkbox("I understand this permanently deletes the selected set.")
+                delete_set = st.form_submit_button("Delete selected set")
+            if delete_set:
+                if not confirm_set_delete:
+                    st.warning("Tick the confirmation box before deleting the set.")
+                else:
+                    execute("DELETE FROM set_logs WHERE id=? AND session_id=?", (set_labels[set_to_delete],history_session_id))
+                    st.success("Set deleted.")
+                    st.rerun()
+        else:
+            st.caption("This workout contains no sets.")
+        with st.form("delete_session"):
+            st.warning("Deleting a workout also deletes every set recorded inside it.")
+            confirm_session_delete = st.checkbox("I understand this permanently deletes the whole workout and all its sets.")
+            delete_session = st.form_submit_button("Delete whole workout")
+        if delete_session:
+            if not confirm_session_delete:
+                st.warning("Tick the confirmation box before deleting the workout.")
+            else:
+                execute("DELETE FROM sessions WHERE id=?", (history_session_id,))
+                if st.session_state.get("last_session_id") == history_session_id:
+                    del st.session_state["last_session_id"]
+                st.success("Workout and its sets deleted.")
+                st.rerun()
 
 with tabs[3]:
     st.subheader("Weekly check-in")
