@@ -32,7 +32,12 @@ def init_db(path=None):
         con.executescript(SCHEMA)
         exercise_columns = {r[1] for r in con.execute("PRAGMA table_info(exercises)")}
         if "video_url" not in exercise_columns:
-            con.execute("ALTER TABLE exercises ADD COLUMN video_url TEXT")
+            try:
+                con.execute("ALTER TABLE exercises ADD COLUMN video_url TEXT")
+            except sqlite3.OperationalError as exc:
+                # Two Streamlit sessions can initialize the same new database at once.
+                if "duplicate column name" not in str(exc).lower():
+                    raise
         con.execute("""INSERT OR IGNORE INTO profile VALUES (1,?,?,?,?,?,?,?,?,?,?)""", (
             PROFILE["name"], PROFILE["age"], PROFILE["height_cm"], PROFILE["start_weight_lb"], PROFILE["target_weight_lb"], PROFILE["experience"], PROFILE["sessions_per_week"], PROFILE["session_minutes"], PROFILE["goals"], PROFILE["constraints"]
         ))

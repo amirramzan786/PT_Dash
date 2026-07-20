@@ -1,11 +1,13 @@
 from datetime import date
 import pandas as pd
 import streamlit as st
+from packaging.version import Version
 from pt_dashboard.config import PAIN_STOP, PAIN_WARNING
 from pt_dashboard.db import execute, init_db, rows
 
 st.set_page_config(page_title="Amir's PT Dashboard", page_icon="💪", layout="wide", initial_sidebar_state="collapsed")
 init_db()
+DATAFRAME_WIDTH = {"width": "stretch"} if Version(st.__version__) >= Version("1.55") else {"use_container_width": True}
 
 st.markdown("""
 <style>
@@ -59,7 +61,7 @@ with tabs[0]:
     st.subheader("At a glance")
     st.info("Warm up for 5 minutes. Use controlled reps, keep 1–3 reps in reserve, and record symptoms honestly. Comfort during a movement does not guarantee it is appropriate for an undiagnosed condition.")
     plan = dataframe("""SELECT p.day_name,p.superset,e.name,p.sets,p.rep_target FROM programme p JOIN exercises e ON e.id=p.exercise_id WHERE p.active=1 ORDER BY CASE p.day_name WHEN 'Monday · Push + Quads' THEN 1 WHEN 'Wednesday · Pull' THEN 2 WHEN 'Friday · Hybrid' THEN 3 ELSE 4 END,p.sort_order""")
-    st.dataframe(plan, hide_index=True, use_container_width=True)
+    st.dataframe(plan, hide_index=True, **DATAFRAME_WIDTH)
 
 with tabs[1]:
     st.subheader("Workouts")
@@ -90,7 +92,7 @@ with tabs[1]:
 
     day = st.selectbox("Training day", [r["day_name"] for r in rows("SELECT DISTINCT day_name FROM programme WHERE active=1 ORDER BY id")])
     plan = dataframe("""SELECT p.superset AS block,e.name AS exercise,p.sets,p.rep_target AS reps,e.video_url AS video,e.guidance FROM programme p JOIN exercises e ON e.id=p.exercise_id WHERE p.day_name=? AND p.active=1 ORDER BY p.sort_order""", (day,))
-    st.dataframe(plan, hide_index=True, use_container_width=True, column_config={"video": st.column_config.LinkColumn("Technique video", display_text="Watch")})
+    st.dataframe(plan, hide_index=True, column_config={"video": st.column_config.LinkColumn("Technique video", display_text="Watch")}, **DATAFRAME_WIDTH)
     st.caption("B1/B2, C1/C2, etc. are supersets. Rest after completing both exercises. Finish with an optional 5–10 minute comfortable walk.")
     with st.expander("Add an exercise to this day"):
         selectable = rows("SELECT id,name FROM exercises WHERE active=1 ORDER BY name")
@@ -189,7 +191,7 @@ with tabs[2]:
         history_session_id = session_labels[history_session]
         logged_sets = rows("""SELECT l.id,e.name,l.set_no,l.reps,l.weight_kg,l.rpe,l.pain FROM set_logs l JOIN exercises e ON e.id=l.exercise_id WHERE l.session_id=? ORDER BY l.id""", (history_session_id,))
         if logged_sets:
-            st.dataframe(pd.DataFrame(logged_sets).rename(columns={"name":"exercise","set_no":"set","weight_kg":"weight (kg)"}), hide_index=True, use_container_width=True)
+            st.dataframe(pd.DataFrame(logged_sets).rename(columns={"name":"exercise","set_no":"set","weight_kg":"weight (kg)"}), hide_index=True, **DATAFRAME_WIDTH)
             set_labels = {f"#{r['id']} · {r['name']} · set {r['set_no']} · {r['reps']} reps @ {r['weight_kg']:g} kg": r["id"] for r in logged_sets}
             with st.form("delete_set"):
                 set_to_delete = st.selectbox("Accidental set", list(set_labels))
@@ -259,7 +261,7 @@ with tabs[5]:
     st.subheader("Workout library")
     search = st.text_input("Search exercises")
     library = dataframe("SELECT name,muscle_group,equipment,video_url AS video,guidance FROM exercises WHERE active=1 AND name LIKE ? ORDER BY muscle_group,name", (f"%{search}%",))
-    st.dataframe(library, hide_index=True, use_container_width=True, column_config={"video": st.column_config.LinkColumn("Technique video", display_text="Watch")})
+    st.dataframe(library, hide_index=True, column_config={"video": st.column_config.LinkColumn("Technique video", display_text="Watch")}, **DATAFRAME_WIDTH)
     with st.expander("Add an exercise"):
         with st.form("exercise"):
             n = st.text_input("Name")
@@ -278,7 +280,7 @@ with tabs[5]:
 with tabs[6]:
     st.subheader("Coach notes & programme adjustments")
     notes_df = dataframe("SELECT note_date,title,note,adjustments,status FROM coach_notes ORDER BY note_date DESC,id DESC")
-    if not notes_df.empty: st.dataframe(notes_df, hide_index=True, use_container_width=True)
+    if not notes_df.empty: st.dataframe(notes_df, hide_index=True, **DATAFRAME_WIDTH)
     with st.form("coach"):
         nd = st.date_input("Date", date.today(), key="note_date")
         title = st.text_input("Review title", "Weekly review")
