@@ -27,7 +27,7 @@ c2.metric("Weekly sessions", latest[0]["sessions_completed"] if latest else "—
 c3.metric("Energy", f"{latest[0]['energy']}/10" if latest else "—")
 c4.metric("Back pain", f"{latest[0]['back_pain']}/10" if latest else "—")
 
-tabs = st.tabs(["Today", "Plan", "Log workout", "Check-in", "Progress", "Library", "Coach", "Profile"])
+tabs = st.tabs(["Today", "Workouts", "Log workout", "Check-in", "Progress", "Library", "Coach", "Profile"])
 
 with tabs[0]:
     st.subheader("At a glance")
@@ -36,9 +36,35 @@ with tabs[0]:
     st.dataframe(plan, hide_index=True, use_container_width=True)
 
 with tabs[1]:
+    st.subheader("Workouts")
+    with st.expander("Create a new workout", expanded=False):
+        build_exercises = rows("SELECT id,name FROM exercises WHERE active=1 ORDER BY name")
+        build_ids = {r["name"]: r["id"] for r in build_exercises}
+        with st.form("create_workout"):
+            workout_name = st.text_input("Workout name", placeholder="e.g. Saturday · Arms + Core")
+            workout_exercises = st.multiselect("Exercises", list(build_ids))
+            b1,b2 = st.columns(2)
+            workout_sets = b1.number_input("Default sets", 1, 10, 3)
+            workout_reps = b2.text_input("Default rep target", "10–12")
+            create_workout = st.form_submit_button("Create workout", type="primary")
+        if create_workout:
+            clean_name = workout_name.strip()
+            existing_name = rows("SELECT 1 AS found FROM programme WHERE day_name=? AND active=1 LIMIT 1", (clean_name,)) if clean_name else []
+            if not clean_name:
+                st.warning("Give the workout a name.")
+            elif not workout_exercises:
+                st.warning("Select at least one exercise.")
+            elif existing_name:
+                st.warning("An active workout with that name already exists.")
+            else:
+                for order, exercise_name in enumerate(workout_exercises, start=1):
+                    execute("INSERT INTO programme(day_name,sort_order,exercise_id,sets,rep_target,superset) VALUES (?,?,?,?,?,?)", (clean_name,order,build_ids[exercise_name],workout_sets,workout_reps,chr(64+min(order,26))))
+                st.success(f"Created {clean_name} with {len(workout_exercises)} exercises.")
+                st.rerun()
+
     day = st.selectbox("Training day", [r["day_name"] for r in rows("SELECT DISTINCT day_name FROM programme WHERE active=1 ORDER BY id")])
-    plan = dataframe("""SELECT p.superset AS block,e.name AS exercise,p.sets,p.rep_target AS reps,e.guidance FROM programme p JOIN exercises e ON e.id=p.exercise_id WHERE p.day_name=? AND p.active=1 ORDER BY p.sort_order""", (day,))
-    st.dataframe(plan, hide_index=True, use_container_width=True)
+    plan = dataframe("""SELECT p.superset AS block,e.name AS exercise,p.sets,p.rep_target AS reps,e.video_url AS video,e.guidance FROM programme p JOIN exercises e ON e.id=p.exercise_id WHERE p.day_name=? AND p.active=1 ORDER BY p.sort_order""", (day,))
+    st.dataframe(plan, hide_index=True, use_container_width=True, column_config={"video": st.column_config.LinkColumn("Technique video", display_text="Watch")})
     st.caption("B1/B2, C1/C2, etc. are supersets. Rest after completing both exercises. Finish with an optional 5–10 minute comfortable walk.")
     with st.expander("Add an exercise to this day"):
         selectable = rows("SELECT id,name FROM exercises WHERE active=1 ORDER BY name")
@@ -71,6 +97,18 @@ with tabs[1]:
                     execute("UPDATE programme SET active=0 WHERE id=?", (entry_labels[remove_entry],))
                     st.success(f"Removed {remove_entry} from {day}. Past workout data was not changed.")
                     st.rerun()
+    with st.expander("Remove this whole workout"):
+        with st.form("remove_workout"):
+            st.warning(f"This removes all exercises from {day}. Logged workout history is kept.")
+            confirm_workout_remove = st.checkbox("I understand this removes the whole workout from my programme.")
+            remove_workout = st.form_submit_button("Remove whole workout")
+        if remove_workout:
+            if not confirm_workout_remove:
+                st.warning("Tick the confirmation box before removing the workout.")
+            else:
+                execute("UPDATE programme SET active=0 WHERE day_name=?", (day,))
+                st.success(f"Removed {day}. Past workout data was not changed.")
+                st.rerun()
 
 with tabs[2]:
     st.subheader("Log a session")
@@ -194,18 +232,19 @@ with tabs[4]:
 with tabs[5]:
     st.subheader("Workout library")
     search = st.text_input("Search exercises")
-    library = dataframe("SELECT name,muscle_group,equipment,guidance FROM exercises WHERE active=1 AND name LIKE ? ORDER BY muscle_group,name", (f"%{search}%",))
-    st.dataframe(library, hide_index=True, use_container_width=True)
+    library = dataframe("SELECT name,muscle_group,equipment,video_url AS video,guidance FROM exercises WHERE active=1 AND name LIKE ? ORDER BY muscle_group,name", (f"%{search}%",))
+    st.dataframe(library, hide_index=True, use_container_width=True, column_config={"video": st.column_config.LinkColumn("Technique video", display_text="Watch")})
     with st.expander("Add an exercise"):
         with st.form("exercise"):
             n = st.text_input("Name")
             mg = st.text_input("Muscle group")
             eq = st.text_input("Equipment")
+            video = st.text_input("YouTube technique video (optional)", placeholder="https://www.youtube.com/watch?v=...")
             gd = st.text_area("Technique / safety guidance")
             add = st.form_submit_button("Add")
         if add and n:
             try:
-                execute("INSERT INTO exercises(name,muscle_group,equipment,guidance) VALUES (?,?,?,?)", (n,mg,eq,gd))
+                execute("INSERT INTO exercises(name,muscle_group,equipment,guidance,video_url) VALUES (?,?,?,?,?)", (n,mg,eq,gd,video))
                 st.success("Exercise added. Refresh to select it in logging.")
             except Exception:
                 st.error("That exercise already exists.")

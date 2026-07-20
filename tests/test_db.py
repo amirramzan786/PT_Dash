@@ -20,3 +20,10 @@ def test_programme_entry_can_be_removed_without_deleting_exercise(tmp_path: Path
     execute("UPDATE programme SET active=0 WHERE id=?", (entry["id"],), path=db)
     assert rows("SELECT active FROM programme WHERE id=?", (entry["id"],), path=db)[0]["active"] == 0
     assert rows("SELECT COUNT(*) n FROM exercises WHERE id=?", (entry["exercise_id"],), path=db)[0]["n"] == 1
+
+def test_exercises_receive_reputable_video_search_links(tmp_path: Path):
+    db = tmp_path / "test.db"
+    init_db(db)
+    linked = rows("SELECT COUNT(*) n FROM exercises WHERE video_url LIKE 'https://www.youtube.com/%'", path=db)[0]["n"]
+    total = rows("SELECT COUNT(*) n FROM exercises", path=db)[0]["n"]
+    assert linked == total
