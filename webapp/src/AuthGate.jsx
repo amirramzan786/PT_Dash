@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Dumbbell, Loader2, LockKeyhole } from 'lucide-react'
+import { Dumbbell, Loader2, LockKeyhole, Play } from 'lucide-react'
 import AppV2 from './AppV2'
+import GuestApp from './GuestApp'
 import './auth.css'
 import { getCurrentUser, onAuthChange, signIn, signOut, signUp } from './lib/steelApi'
 
 export default function AuthGate() {
   const [user, setUser] = useState(undefined)
+  const [guestMode, setGuestMode] = useState(false)
   const [mode, setMode] = useState('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -19,7 +21,10 @@ export default function AuthGate() {
     }).catch(() => {
       if (active) setUser(null)
     })
-    const unsubscribe = onAuthChange((nextUser) => setUser(nextUser))
+    const unsubscribe = onAuthChange((nextUser) => {
+      setUser(nextUser)
+      if (nextUser) setGuestMode(false)
+    })
     return () => {
       active = false
       unsubscribe()
@@ -48,6 +53,10 @@ export default function AuthGate() {
     return <div className="auth-shell"><Loader2 className="spin" size={28} /><span>Opening Project Steel…</span></div>
   }
 
+  if (guestMode) {
+    return <GuestApp onExit={() => setGuestMode(false)} />
+  }
+
   if (!user) {
     return (
       <main className="auth-shell">
@@ -69,6 +78,13 @@ export default function AuthGate() {
           <button className="text-button auth-switch" type="button" onClick={() => { setMode(mode === 'signup' ? 'signin' : 'signup'); setMessage('') }}>
             {mode === 'signup' ? 'Already have an account? Sign in' : 'First time? Create account'}
           </button>
+
+          <div style={{height:'1px',background:'#27313d',margin:'8px 0 14px'}} />
+          <button className="secondary-action" type="button" style={{width:'100%',justifyContent:'center'}} onClick={() => setGuestMode(true)}>
+            <Play size={16} /> Continue as guest
+          </button>
+          <p className="auth-message" style={{marginTop:10}}>Guest mode uses demo data only. It cannot access or change private account data.</p>
+
           <div className="auth-private"><LockKeyhole size={15} /> Protected by Supabase authentication + RLS</div>
         </section>
       </main>
