@@ -258,7 +258,7 @@ export async function saveWorkoutSession({ userId, workout, draft, durationMin =
   if (sessionError) throw sessionError
   const setRows = workout.exercises.flatMap((exercise) => {
     if (draft.removedExercises.includes(exercise.id)) return []
-    return (draft.sets[exercise.id] ?? []).filter((set) => set.complete && !set.removed).map((set) => ({ session_id: session.id, exercise_id: isCatalogWorkout ? null : exercise.id, exercise_name: exercise.name, set_no: set.setNo, reps: set.reps, weight_kg: set.weight, completed: true }))
+    return (draft.sets[exercise.id] ?? []).filter((set) => set.complete && !set.removed).map((set) => ({ session_id: session.id, exercise_id: isCatalogWorkout || exercise.source === 'catalog' ? null : exercise.id, exercise_name: exercise.name, set_no: set.setNo, reps: set.reps, weight_kg: set.weight, completed: true }))
   })
   if (setRows.length) {
     const { error } = await client.from('set_logs').insert(setRows)
