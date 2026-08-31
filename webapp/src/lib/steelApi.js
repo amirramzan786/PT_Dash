@@ -42,7 +42,7 @@ export async function loadWorkouts(userId) {
   const client = requireSupabase()
   const { data: workoutRows, error: workoutError } = await client.from('workouts').select('id,name,sort_order,active').eq('user_id', userId).eq('active', true).order('sort_order')
   if (workoutError) throw workoutError
-  if (!workoutRows?.length) return []
+  if (!workoutRows?.length) return loadWorkoutCatalog(client)
   const workoutIds = workoutRows.map((row) => row.id)
   const { data: links, error: linkError } = await client.from('workout_exercises').select('id,workout_id,exercise_id,sort_order,sets,rep_target,exercises(id,name,equipment,youtube_url,active)').in('workout_id', workoutIds).order('sort_order')
   if (linkError) throw linkError
@@ -61,6 +61,48 @@ export async function loadWorkouts(userId) {
       reps: link.rep_target,
     })),
   }))
+}
+
+async function loadWorkoutCatalog(client) {
+  const { data: workoutRows, error: workoutError } = await client.from('workout_catalog').select('id,slug,name,description,focus,difficulty,duration_min,is_free,active').eq('active', true).eq('is_free', true).order('name')
+  if (workoutError) throw workoutError
+  if (!workoutRows?.length) return []
+  const workoutIds = workoutRows.map((row) => row.id)
+  const { data: links, error: linkError } = await client.from('workout_catalog_exercises').select('id,workout_id,exercise_id,sort_order,sets,rep_target,rest_seconds,exercise_catalog(id,slug,name,primary_muscle_group,secondary_muscle_groups,equipment,movement_pattern,difficulty,instructions,video_url,thumbnail_url,active)').in('workout_id', workoutIds).order('sort_order')
+  if (linkError) throw linkError
+  return workoutRows.map((workout) => ({
+    id: workout.id,
+    source: 'catalog',
+    name: workout.name,
+    focus: workout.focus,
+    duration: workout.duration_min ? `~${workout.duration_min} min` : '~45 min',
+    finisher: '5–10 min incline walk',
+    exercises: (links ?? []).filter((link) => link.workout_id === workout.id && link.exercise_catalog?.active !== false).map((link) => ({
+      id: link.exercise_id,
+      programmeId: link.id,
+      name: link.exercise_catalog?.name ?? 'Exercise',
+      equipment: (link.exercise_catalog?.equipment ?? []).join(' / ') || 'Gym',
+      muscleGroup: link.exercise_catalog?.primary_muscle_group ?? null,
+      secondaryMuscleGroups: link.exercise_catalog?.secondary_muscle_groups ?? [],
+      movementPattern: link.exercise_catalog?.movement_pattern ?? null,
+      difficulty: link.exercise_catalog?.difficulty ?? null,
+      instructions: link.exercise_catalog?.instructions ?? null,
+      youtubeUrl: link.exercise_catalog?.video_url ?? null,
+      thumbnailUrl: link.exercise_catalog?.thumbnail_url ?? null,
+      sets: link.sets,
+      reps: link.rep_target,
+      restSeconds: link.rest_seconds,
+    })),
+  }))
+}
+
+export async function loadExerciseCatalog({ muscleGroup, limit = 100 } = {}) {
+  const client = requireSupabase()
+  let query = client.from('exercise_catalog').select('id,slug,name,primary_muscle_group,secondary_muscle_groups,equipment,movement_pattern,difficulty,instructions,video_url,thumbnail_url,is_free,active').eq('active', true).eq('is_free', true).order('name').limit(limit)
+  if (muscleGroup) query = query.eq('primary_muscle_group', muscleGroup)
+  const { data, error } = await query
+  if (error) throw error
+  return data ?? []
 }
 
 export async function getDashboardStats(userId) {
@@ -203,11 +245,12 @@ export async function getStepHistory(userId, limit = 31) {
 
 export async function saveWorkoutSession({ userId, workout, draft, durationMin = 45, notes = '' }) {
   const client = requireSupabase()
-  const { data: session, error: sessionError } = await client.from('sessions').insert({ user_id: userId, workout_id: workout.id, workout_name: workout.name, session_date: new Date().toISOString().slice(0, 10), duration_min: durationMin, notes }).select().single()
+  const isCatalogWorkout = workout.source === 'catalog'
+  const { data: session, error: sessionError } = await client.from('sessions').insert({ user_id: userId, workout_id: isCatalogWorkout ? null : workout.id, workout_name: workout.name, session_date: new Date().toISOString().slice(0, 10), duration_min: durationMin, notes }).select().single()
   if (sessionError) throw sessionError
   const setRows = workout.exercises.flatMap((exercise) => {
     if (draft.removedExercises.includes(exercise.id)) return []
-    return (draft.sets[exercise.id] ?? []).filter((set) => set.complete && !set.removed).map((set) => ({ session_id: session.id, exercise_id: exercise.id, exercise_name: exercise.name, set_no: set.setNo, reps: set.reps, weight_kg: set.weight, completed: true }))
+    return (draft.sets[exercise.id] ?? []).filter((set) => set.complete && !set.removed).map((set) => ({ session_id: session.id, exercise_id: isCatalogWorkout ? null : exercise.id, exercise_name: exercise.name, set_no: set.setNo, reps: set.reps, weight_kg: set.weight, completed: true }))
   })
   if (setRows.length) {
     const { error } = await client.from('set_logs').insert(setRows)

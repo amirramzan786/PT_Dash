@@ -145,3 +145,105 @@ with check (exists (select 1 from sessions s where s.id = session_id and s.user_
 create policy "own cardio logs" on cardio_logs for all
 using (exists (select 1 from sessions s where s.id = session_id and s.user_id = auth.uid()))
 with check (exists (select 1 from sessions s where s.id = session_id and s.user_id = auth.uid()));
+
+-- Shared free content catalogue. User plans remain in the user-owned tables above;
+-- this catalogue is the reusable foundation for future journeys and AI recommendations.
+create table if not exists exercise_catalog (
+  id uuid primary key default gen_random_uuid(),
+  slug text unique not null,
+  name text not null,
+  primary_muscle_group text not null,
+  secondary_muscle_groups text[] not null default '{}'::text[],
+  equipment text[] not null default '{}'::text[],
+  movement_pattern text,
+  difficulty text not null default 'Intermediate' check (difficulty in ('Beginner','Intermediate','Advanced')),
+  instructions text,
+  video_url text,
+  thumbnail_url text,
+  is_free boolean not null default true,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists workout_catalog (
+  id uuid primary key default gen_random_uuid(),
+  slug text unique not null,
+  name text not null,
+  description text,
+  focus text,
+  goal_tags text[] not null default '{}'::text[],
+  equipment text[] not null default '{}'::text[],
+  difficulty text not null default 'Intermediate' check (difficulty in ('Beginner','Intermediate','Advanced')),
+  duration_min integer,
+  is_free boolean not null default true,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists workout_catalog_exercises (
+  id uuid primary key default gen_random_uuid(),
+  workout_id uuid not null references workout_catalog(id) on delete cascade,
+  exercise_id uuid not null references exercise_catalog(id) on delete cascade,
+  sort_order integer not null,
+  sets integer not null default 3 check (sets > 0),
+  rep_target text not null default '10–12',
+  rest_seconds integer,
+  unique (workout_id, exercise_id)
+);
+
+alter table exercise_catalog enable row level security;
+alter table workout_catalog enable row level security;
+alter table workout_catalog_exercises enable row level security;
+
+create policy "read active exercise catalogue" on exercise_catalog for select
+to anon, authenticated using (active = true);
+create policy "read active workout catalogue" on workout_catalog for select
+to anon, authenticated using (active = true);
+create policy "read active workout catalogue exercises" on workout_catalog_exercises for select
+to anon, authenticated using (exists (select 1 from workout_catalog w where w.id = workout_id and w.active = true));
+
+create index if not exists exercise_catalog_muscle_group_idx on exercise_catalog (primary_muscle_group);
+create index if not exists workout_catalog_active_idx on workout_catalog (active, is_free);
+create index if not exists workout_catalog_exercises_workout_idx on workout_catalog_exercises (workout_id, sort_order);
+
+-- Starter catalogue content. All of these entries are free and safe to expose through the read-only policies above.
+insert into exercise_catalog (slug, name, primary_muscle_group, secondary_muscle_groups, equipment, movement_pattern, difficulty, instructions, is_free)
+values
+('lat-pulldown','Lat Pulldown','Back',array['Biceps']::text[],array['Machine','Cable']::text[],'Vertical pull','Beginner','Pull the bar toward your upper chest while keeping your ribs controlled.',true),
+('seated-row-machine','Seated Row Machine','Back',array['Biceps']::text[],array['Machine']::text[],'Horizontal pull','Beginner','Drive your elbows back and pause when your hands reach your torso.',true),
+('high-row-machine','High Row Machine','Back',array['Rear delts','Biceps']::text[],array['Machine']::text[],'Horizontal pull','Intermediate','Keep your chest supported and pull toward the upper ribs.',true),
+('preacher-curl-machine','Preacher Curl Machine','Biceps',array[]::text[],array['Machine']::text[],'Elbow flexion','Beginner','Keep the upper arm fixed and curl without swinging.',true),
+('cable-curl','Cable Curl','Biceps',array['Forearms']::text[],array['Cable']::text[],'Elbow flexion','Beginner','Brace your elbows by your sides and control the return.',true),
+('db-hammer-curl','Dumbbell Hammer Curl','Biceps',array['Forearms']::text[],array['Dumbbells']::text[],'Elbow flexion','Beginner','Keep palms facing inward and move through a smooth range.',true),
+('machine-chest-press','Machine Chest Press','Chest',array['Triceps','Front delts']::text[],array['Machine']::text[],'Horizontal push','Beginner','Set the handles at mid-chest height and press without locking out hard.',true),
+('incline-chest-press-machine','Incline Chest Press Machine','Chest',array['Front delts','Triceps']::text[],array['Machine']::text[],'Incline push','Intermediate','Keep your shoulders down and press along the machine path.',true),
+('pec-deck','Pec Deck','Chest',array['Front delts']::text[],array['Machine']::text[],'Horizontal adduction','Beginner','Bring the handles together with a soft bend in the elbows.',true),
+('rope-tricep-pushdown','Rope Tricep Pushdown','Triceps',array[]::text[],array['Cable']::text[],'Elbow extension','Beginner','Keep the elbows still and separate the rope at the bottom.',true),
+('overhead-cable-tricep-extension','Overhead Cable Tricep Extension','Triceps',array[]::text[],array['Cable']::text[],'Elbow extension','Intermediate','Brace your core and extend without flaring the elbows.',true),
+('assisted-dip-machine','Assisted Dip Machine','Triceps',array['Chest','Front delts']::text[],array['Machine']::text[],'Vertical push','Beginner','Lower under control and press evenly through both arms.',true),
+('machine-shoulder-press','Machine Shoulder Press','Shoulders',array['Triceps']::text[],array['Machine']::text[],'Vertical push','Beginner','Press overhead while keeping your back supported and wrists stacked.',true),
+('lateral-raise-machine','Lateral Raise Machine','Shoulders',array['Side delts']::text[],array['Machine']::text[],'Shoulder abduction','Beginner','Raise to shoulder height with control and avoid shrugging.',true),
+('leg-press','Leg Press','Quads',array['Glutes','Hamstrings']::text[],array['Machine']::text[],'Knee-dominant squat','Beginner','Lower until comfortable while keeping your feet and knees aligned.',true),
+('leg-extension','Leg Extension','Quads',array[]::text[],array['Machine']::text[],'Knee extension','Beginner','Extend smoothly and pause briefly at the top.',true),
+('seated-leg-curl','Seated Leg Curl','Hamstrings',array['Calves']::text[],array['Machine']::text[],'Knee flexion','Beginner','Keep your hips down and curl through the full comfortable range.',true),
+('calf-raise-machine','Calf Raise Machine','Calves',array[]::text[],array['Machine']::text[],'Plantar flexion','Beginner','Pause at the top and lower your heels under control.',true)
+on conflict (slug) do update set name = excluded.name, primary_muscle_group = excluded.primary_muscle_group, secondary_muscle_groups = excluded.secondary_muscle_groups, equipment = excluded.equipment, movement_pattern = excluded.movement_pattern, difficulty = excluded.difficulty, instructions = excluded.instructions, is_free = excluded.is_free, updated_at = now();
+
+insert into workout_catalog (slug, name, description, focus, goal_tags, equipment, difficulty, duration_min, is_free)
+values
+('back-biceps','Back + Biceps','A focused pull session for back strength and arm development.','Back · Biceps',array['Build muscle','Get stronger']::text[],array['Machines','Cable','Dumbbells']::text[],'Beginner',45,true),
+('chest-triceps','Chest + Triceps','A controlled push session for chest, shoulders and triceps.','Chest · Shoulders · Triceps',array['Build muscle','Get stronger']::text[],array['Machines','Cable']::text[],'Beginner',45,true),
+('shoulders-legs','Shoulders + Legs','A balanced lower-body and shoulder strength session.','Shoulders · Quads · Hamstrings · Calves',array['Build muscle','Improve fitness']::text[],array['Machines']::text[],'Beginner',45,true)
+on conflict (slug) do update set name = excluded.name, description = excluded.description, focus = excluded.focus, goal_tags = excluded.goal_tags, equipment = excluded.equipment, difficulty = excluded.difficulty, duration_min = excluded.duration_min, is_free = excluded.is_free, updated_at = now();
+
+with links(workout_slug, exercise_slug, sort_order, sets, rep_target, rest_seconds) as (
+  values
+  ('back-biceps','lat-pulldown',1,3,'8–12',90),('back-biceps','seated-row-machine',2,3,'8–12',90),('back-biceps','high-row-machine',3,3,'10–12',75),('back-biceps','preacher-curl-machine',4,3,'10–12',75),('back-biceps','cable-curl',5,3,'10–12',75),('back-biceps','db-hammer-curl',6,2,'10–12',60),
+  ('chest-triceps','machine-chest-press',1,3,'8–12',90),('chest-triceps','incline-chest-press-machine',2,3,'8–12',90),('chest-triceps','pec-deck',3,3,'10–15',75),('chest-triceps','rope-tricep-pushdown',4,3,'10–12',75),('chest-triceps','overhead-cable-tricep-extension',5,3,'10–12',75),('chest-triceps','assisted-dip-machine',6,2,'8–12',90),
+  ('shoulders-legs','machine-shoulder-press',1,3,'8–12',90),('shoulders-legs','lateral-raise-machine',2,3,'10–15',60),('shoulders-legs','leg-press',3,3,'8–12',120),('shoulders-legs','leg-extension',4,3,'10–15',75),('shoulders-legs','seated-leg-curl',5,3,'10–15',75),('shoulders-legs','calf-raise-machine',6,3,'12–15',60)
+)
+insert into workout_catalog_exercises (workout_id, exercise_id, sort_order, sets, rep_target, rest_seconds)
+select w.id, e.id, l.sort_order, l.sets, l.rep_target, l.rest_seconds from links l join workout_catalog w on w.slug = l.workout_slug join exercise_catalog e on e.slug = l.exercise_slug
+on conflict (workout_id, exercise_id) do update set sort_order = excluded.sort_order, sets = excluded.sets, rep_target = excluded.rep_target, rest_seconds = excluded.rest_seconds;
