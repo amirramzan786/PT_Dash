@@ -166,7 +166,7 @@
 .settings-subsection-heading { display: grid; gap: 3px; }
 .settings-subsection-heading strong { font-size: .84rem; }
 .profile-form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-.profile-form-grid label, .personal-profile-form > label { display: grid; gap: 6px; }
+.profile-form-grid label, .personal-profile-form > label, .personal-profile-form .settings-subsection label { display: grid; gap: 6px; }
 .profile-form-grid label > span, .personal-profile-form label > span { color: var(--steel-muted); font-size: .68rem; font-weight: 850; letter-spacing: .06em; }
 .profile-form-grid input, .personal-profile-form input { min-height: 46px; border: 1px solid #35404c; border-radius: 12px; background: #0a1017; color: #fff; padding: 0 12px; font-size: 16px; outline: none; }
 .profile-form-grid input:focus, .personal-profile-form input:focus { border-color: var(--steel-gold-dark); box-shadow: 0 0 0 3px rgba(217,173,85,.07); }
