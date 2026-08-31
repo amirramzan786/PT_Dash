@@ -7,6 +7,7 @@ create extension if not exists "pgcrypto";
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
+  phone text,
   goal text default 'Lose fat and gain muscle',
   experience_level text not null default 'Intermediate' check (experience_level in ('Beginner','Intermediate','Advanced')),
   available_equipment text[] not null default array['Machines']::text[],

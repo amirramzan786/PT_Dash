@@ -160,6 +160,16 @@
 .settings-disclosure-content { display: grid; gap: 13px; padding: 0 13px 13px; }
 .settings-disclosure-content > .steel-card { margin: 0; }
 .settings-disclosure-content .password-form { border-color: #293746; }
+.personal-profile-form { display: grid; gap: 15px; }
+.settings-subsection { display: grid; gap: 11px; padding-top: 12px; border-top: 1px solid var(--steel-line); }
+.settings-subsection:first-child { padding-top: 0; border-top: 0; }
+.settings-subsection-heading { display: grid; gap: 3px; }
+.settings-subsection-heading strong { font-size: .84rem; }
+.profile-form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.profile-form-grid label, .personal-profile-form > label { display: grid; gap: 6px; }
+.profile-form-grid label > span, .personal-profile-form label > span { color: var(--steel-muted); font-size: .68rem; font-weight: 850; letter-spacing: .06em; }
+.profile-form-grid input, .personal-profile-form input { min-height: 46px; border: 1px solid #35404c; border-radius: 12px; background: #0a1017; color: #fff; padding: 0 12px; font-size: 16px; outline: none; }
+.profile-form-grid input:focus, .personal-profile-form input:focus { border-color: var(--steel-gold-dark); box-shadow: 0 0 0 3px rgba(217,173,85,.07); }
 .settings-support-footer { margin-top: auto; }
 .settings-footer-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .85fr); align-items: center; gap: 18px; }
 .settings-footer-layout .settings-security-card { grid-template-columns: 30px minmax(0, 1fr); gap: 8px; padding: 10px 12px; border-color: rgba(49,68,59,.7); border-radius: 14px; background: rgba(18,32,25,.5); opacity: .78; }
@@ -207,6 +217,7 @@
   .nutrition-plan-summary { align-items: flex-start; flex-direction: column; }
   .nutrition-next-card { display: grid; }
   .settings-footer-layout { grid-template-columns: 1fr; gap: 8px; }
+  .profile-form-grid { grid-template-columns: 1fr; }
   .progress-stat-grid { grid-template-columns: repeat(2, 1fr); }
   .progress-detail-grid, .progress-chart-grid { grid-template-columns: 1fr; }
   .progress-detail-values { gap: 6px; }

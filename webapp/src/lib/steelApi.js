@@ -232,7 +232,7 @@ export async function saveWeight(userId, checkinDate, weightLb) {
 
 export async function getProfile(userId) {
   const client = requireSupabase()
-  const { data, error } = await client.from('profiles').select('id,display_name,goal,avatar_url,experience_level,available_equipment,training_days,units,limitations,onboarding_completed,dietary_preference,allergies,meals_per_day,created_at,updated_at').eq('id', userId).maybeSingle()
+  const { data, error } = await client.from('profiles').select('id,display_name,phone,goal,avatar_url,experience_level,available_equipment,training_days,units,limitations,onboarding_completed,dietary_preference,allergies,meals_per_day,created_at,updated_at').eq('id', userId).maybeSingle()
   if (error) throw error
   return data
 }
@@ -263,10 +263,11 @@ export async function deleteMealPlanItem({ userId, id }) {
   if (error) throw error
 }
 
-export async function saveProfile(userId, { displayName, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, units, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay }) {
+export async function saveProfile(userId, { displayName, phone, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, units, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay }) {
   const client = requireSupabase()
   const payload = { id: userId, display_name: displayName || null, goal: goal || 'Lose fat and gain muscle', updated_at: new Date().toISOString() }
   if (avatarUrl !== undefined) payload.avatar_url = avatarUrl || null
+  if (phone !== undefined) payload.phone = phone || null
   if (experienceLevel !== undefined) payload.experience_level = experienceLevel
   if (availableEquipment !== undefined) payload.available_equipment = availableEquipment
   if (trainingDays !== undefined) payload.training_days = trainingDays
