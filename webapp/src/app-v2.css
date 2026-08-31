@@ -158,9 +158,32 @@ button { cursor: pointer; }
 .library-exercise-copy { display: grid; gap: 3px; min-width: 0; }
 .library-exercise-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .78rem; }
 .library-exercise-copy span, .library-exercise-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--steel-muted); font-size: .64rem; }
+.library-card-actions { display: grid; justify-items: end; gap: 5px; }
+.library-details-button, .library-retry { min-height: 30px; padding: 0 9px; border: 1px solid #4b4a35; border-radius: 9px; background: #1c1a13; color: var(--steel-gold-2); font-size: .64rem; font-weight: 850; }
+.library-details-button:hover, .library-retry:hover { border-color: var(--steel-gold); background: #292214; }
 .library-video-link { display: inline-flex; align-items: center; gap: 4px; color: var(--steel-gold-2); font-size: .65rem; font-weight: 850; text-decoration: none; }
 .library-state { padding: 22px 12px; border: 1px dashed #3b4652; border-radius: 14px; color: var(--steel-muted); font-size: .76rem; text-align: center; }
+.library-state > span, .library-state > strong { display: block; }
+.library-state > strong { margin-bottom: 4px; color: #f0f2f4; }
+.library-state > .library-retry { margin-top: 12px; }
 .library-error { color: #e3aaaa; border-color: #704747; }
+
+.exercise-detail-backdrop { position: fixed; inset: 0; z-index: 40; display: grid; align-items: end; background: rgba(3,7,11,.72); }
+.exercise-detail-sheet { position: relative; width: min(100%, 560px); max-height: min(82vh, 720px); overflow: auto; display: grid; gap: 12px; padding: 22px 18px calc(24px + env(safe-area-inset-bottom)); border: 1px solid var(--steel-gold-dark); border-bottom: 0; border-radius: 24px 24px 0 0; background: linear-gradient(160deg,#161b20,#0d141c); box-shadow: 0 -18px 50px rgba(0,0,0,.3); }
+.exercise-detail-sheet > .more-sheet-close { position: absolute; top: 15px; right: 15px; }
+.exercise-detail-visual { min-height: 128px; display: grid; place-items: center; align-content: center; gap: 8px; border: 1px solid #554426; border-radius: 18px; color: var(--steel-gold); background: radial-gradient(circle at 50% 30%,rgba(217,173,85,.24),transparent 52%),linear-gradient(145deg,#241c10,#101720); }
+.exercise-detail-visual span { color: var(--steel-gold-2); font-size: .68rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.exercise-detail-sheet h2 { margin: 0; padding-right: 44px; font-size: 1.55rem; }
+.exercise-detail-sheet > p { margin: 0; color: #c2cbd3; line-height: 1.55; font-size: .8rem; }
+.exercise-detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.exercise-detail-tags span { padding: 6px 8px; border: 1px solid #5b4827; border-radius: 999px; color: var(--steel-gold-2); background: rgba(217,173,85,.08); font-size: .63rem; font-weight: 850; }
+.exercise-detail-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.exercise-detail-facts div { display: grid; gap: 4px; padding: 10px; border: 1px solid var(--steel-line); border-radius: 12px; background: #111a23; }
+.exercise-detail-facts span { color: var(--steel-muted); font-size: .62rem; }
+.exercise-detail-facts strong { font-size: .72rem; }
+.exercise-detail-video { min-height: 42px; justify-content: center; text-decoration: none; }
+.exercise-detail-muted { color: var(--steel-muted) !important; font-size: .72rem !important; }
+.exercise-detail-back { min-height: 42px; border: 1px solid #35404c; border-radius: 11px; background: #121a23; color: #d5dbe1; font-size: .72rem; font-weight: 850; }
 
 .train-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .train-top h2 { margin: 5px 0 0; font-size: 1.45rem; }
@@ -358,6 +381,8 @@ button { cursor: pointer; }
 .exercise-picker-list small { color: var(--steel-muted); font-size: .64rem; }
 .picker-exercise-icon { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid #554426; border-radius: 9px; color: var(--steel-gold-2); background: #201a10; }
 .picker-status { color: var(--steel-muted); font-size: .78rem; line-height: 1.45; }
+.picker-status { display: grid; gap: 10px; padding: 12px 2px; }
+.picker-error { color: #e3aaaa; }
 @keyframes more-sheet-up { from { transform: translateY(100%); opacity: .6; } to { transform: translateY(0); opacity: 1; } }
 @keyframes more-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
 
