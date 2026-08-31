@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS coach_notes (id INTEGER PRIMARY KEY, note_date TEXT N
 CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT);
 """
 
+STEEL_PLAN_VERSION = "2"
+
 @contextmanager
 def connect(path=None):
     db_path = path or DB_PATH
@@ -30,17 +32,33 @@ def connect(path=None):
     finally:
         con.close()
 
-def _apply_steel_v1(con):
+def _apply_steel_plan(con):
     marker = con.execute("SELECT value FROM app_meta WHERE key='steel_plan_version'").fetchone()
-    if marker and marker[0] == "1":
+    if marker and marker[0] == STEEL_PLAN_VERSION:
         return
+
     ids = {r["name"]: r["id"] for r in con.execute("SELECT id,name FROM exercises")}
+    missing = [exercise for _,_,exercise,_,_,_ in PLAN if exercise not in ids]
+    if missing:
+        raise RuntimeError(f"Missing seeded Steel exercises: {', '.join(sorted(set(missing)))}")
+
+    # Programme data describes future workouts only. Session/set history is stored separately,
+    # so replacing these rows never rewrites workouts the user has already logged.
     con.execute("DELETE FROM programme")
     con.execute("DELETE FROM programme_baseline")
-    entries = [(d,o,ids[e],s,r,g) for d,o,e,s,r,g in PLAN]
-    con.executemany("INSERT INTO programme(day_name,sort_order,exercise_id,sets,rep_target,superset) VALUES (?,?,?,?,?,?)", entries)
-    con.executemany("INSERT INTO programme_baseline(day_name,sort_order,exercise_id,sets,rep_target,superset) VALUES (?,?,?,?,?,?)", entries)
-    con.execute("INSERT OR REPLACE INTO app_meta(key,value) VALUES ('steel_plan_version','1')")
+    entries = [(day, order, ids[exercise], sets, reps, block) for day, order, exercise, sets, reps, block in PLAN]
+    con.executemany(
+        "INSERT INTO programme(day_name,sort_order,exercise_id,sets,rep_target,superset) VALUES (?,?,?,?,?,?)",
+        entries,
+    )
+    con.executemany(
+        "INSERT INTO programme_baseline(day_name,sort_order,exercise_id,sets,rep_target,superset) VALUES (?,?,?,?,?,?)",
+        entries,
+    )
+    con.execute(
+        "INSERT OR REPLACE INTO app_meta(key,value) VALUES ('steel_plan_version',?)",
+        (STEEL_PLAN_VERSION,),
+    )
 
 def init_db(path=None):
     with connect(path) as con:
@@ -48,8 +66,11 @@ def init_db(path=None):
         con.execute("""INSERT OR IGNORE INTO profile VALUES (1,?,?,?,?,?,?,?,?,?,?)""", (
             PROFILE["name"], PROFILE["age"], PROFILE["height_cm"], PROFILE["start_weight_lb"], PROFILE["target_weight_lb"], PROFILE["experience"], PROFILE["sessions_per_week"], PROFILE["session_minutes"], PROFILE["goals"], PROFILE["constraints"]
         ))
-        con.executemany("INSERT OR IGNORE INTO exercises(name,muscle_group,equipment,guidance) VALUES (?,?,?,?)", EXERCISES)
-        _apply_steel_v1(con)
+        con.executemany(
+            "INSERT OR IGNORE INTO exercises(name,muscle_group,equipment,guidance) VALUES (?,?,?,?)",
+            EXERCISES,
+        )
+        _apply_steel_plan(con)
 
 def rows(sql, params=(), path=None):
     with connect(path) as con:
