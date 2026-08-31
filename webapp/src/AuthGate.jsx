@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Dumbbell, Loader2, LockKeyhole, Play } from 'lucide-react'
+import { Loader2, LockKeyhole, Play } from 'lucide-react'
 import AppV3 from './AppV3'
 import GuestApp from './GuestApp'
 import './auth.css'
 import { getCurrentUser, onAuthChange, signIn, signOut, signUp } from './lib/steelApi'
+import SteelMark from './components/SteelMark'
 
 export default function AuthGate() {
   const [user, setUser] = useState(undefined)
@@ -34,7 +35,7 @@ export default function AuthGate() {
   if (user === undefined) return <div className="auth-shell"><Loader2 className="spin" size={28}/><span>Opening Project Steel…</span></div>
   if (guestMode) return <GuestApp onExit={() => setGuestMode(false)} />
 
-  if (!user) return <main className="auth-shell"><section className="auth-card"><div className="auth-mark"><Dumbbell size={24}/></div><div className="eyebrow">PLACEHOLDER FOR COOL TEXT THERE</div><h1>PROJECT <span>STEEL</span></h1><p>Your private training, weight and progress space.</p><form onSubmit={submit} className="auth-form"><label>Email<input type="email" autoComplete="email" required value={email} onChange={(e)=>setEmail(e.target.value)}/></label><label>Password<input type="password" autoComplete={mode==='signup'?'new-password':'current-password'} minLength="6" required value={password} onChange={(e)=>setPassword(e.target.value)}/></label><button className="primary" disabled={busy}>{busy?'Please wait…':mode==='signup'?'Create account':'Sign in'}</button></form>{message&&<p className="auth-message">{message}</p>}<button className="text-button auth-switch" type="button" onClick={()=>{setMode(mode==='signup'?'signin':'signup');setMessage('')}}>{mode==='signup'?'Already have an account? Sign in':'First time? Create account'}</button><div style={{height:'1px',background:'#27313d',margin:'12px 0'}}/><button className="primary" type="button" style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'}} onClick={()=>setGuestMode(true)}><Play size={17}/> Try Guest Demo</button><p className="auth-message" style={{marginTop:10}}>Demo mode is isolated from all private account data.</p><div className="auth-private"><LockKeyhole size={15}/> Protected by Supabase authentication + RLS</div></section></main>
+  if (!user) return <main className="auth-shell"><section className="auth-card"><div className="auth-mark"><SteelMark size={30}/></div><div className="eyebrow">SPARTAN STRENGTH, EVERY DAY</div><h1>PROJECT <span>STEEL</span></h1><p>Your private training, weight and progress space.</p><form onSubmit={submit} className="auth-form"><label>Email<input type="email" autoComplete="email" required value={email} onChange={(e)=>setEmail(e.target.value)}/></label><label>Password<input type="password" autoComplete={mode==='signup'?'new-password':'current-password'} minLength="6" required value={password} onChange={(e)=>setPassword(e.target.value)}/></label><button className="primary" disabled={busy}>{busy?'Please wait…':mode==='signup'?'Create account':'Sign in'}</button></form>{message&&<p className="auth-message">{message}</p>}<button className="text-button auth-switch" type="button" onClick={()=>{setMode(mode==='signup'?'signin':'signup');setMessage('')}}>{mode==='signup'?'Already have an account? Sign in':'First time? Create account'}</button><div style={{height:'1px',background:'#27313d',margin:'12px 0'}}/><button className="primary" type="button" style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'}} onClick={()=>setGuestMode(true)}><Play size={17}/> Try Guest Demo</button><p className="auth-message" style={{marginTop:10}}>Demo mode is isolated from all private account data.</p><div className="auth-private"><LockKeyhole size={15}/> Protected by Supabase authentication + RLS</div></section></main>
 
   return <AppV3 user={user} onSignOut={async()=>{await signOut();setUser(null)}} />
 }

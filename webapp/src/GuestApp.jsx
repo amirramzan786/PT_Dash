@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { ArrowRight, Check, Dumbbell, Flame, Home, LineChart, LogOut, Salad, Scale, Target, Trophy } from 'lucide-react'
 import { workouts } from './workoutData'
 import './app-v2.css'
+import SteelMark from './components/SteelMark'
 
 const tabs = [
   { id: 'Home', icon: Home },
@@ -46,7 +47,7 @@ export default function GuestApp({ onExit }) {
     <div className="steel-app">
       <main className="steel-screen">
         <header className="v2-topbar">
-          <div className="brand-lockup"><div className="brand-emblem">PS</div><div><div className="eyebrow">GUEST DEMO</div><h1>PROJECT <span>STEEL</span></h1></div></div>
+          <div className="brand-lockup"><div className="brand-emblem"><SteelMark /></div><div><div className="eyebrow">GUEST DEMO</div><h1>PROJECT <span>STEEL</span></h1></div></div>
           <button className="ghost-icon" onClick={onExit} aria-label="Exit guest mode"><LogOut size={18} /></button>
         </header>
         <div className="toast-note">Guest mode · demo data only · your private account is untouched</div>
