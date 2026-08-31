@@ -113,6 +113,25 @@ export async function loadExerciseCatalog({ muscleGroup, limit = 100 } = {}) {
   return data ?? []
 }
 
+export async function saveCustomWorkout({ userId, workout }) {
+  const client = requireSupabase()
+  const { data: latest } = await client.from('workouts').select('sort_order').eq('user_id', userId).order('sort_order', { ascending: false }).limit(1).maybeSingle()
+  const { data: workoutRow, error: workoutError } = await client.from('workouts').insert({ user_id: userId, name: workout.name, sort_order: (latest?.sort_order ?? -1) + 1 }).select('id,name').single()
+  if (workoutError) throw workoutError
+  const exerciseRows = []
+  for (const exercise of workout.exercises) {
+    const { data: existing, error: existingError } = await client.from('exercises').select('id').eq('user_id', userId).eq('name', exercise.name).eq('active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
+    if (existingError) throw existingError
+    if (existing?.id) { exerciseRows.push({ id: existing.id, exercise }) ; continue }
+    const { data: created, error: exerciseError } = await client.from('exercises').insert({ user_id: userId, name: exercise.name, equipment: exercise.equipment, youtube_url: exercise.youtubeUrl ?? null }).select('id').single()
+    if (exerciseError) throw exerciseError
+    exerciseRows.push({ id: created.id, exercise })
+  }
+  const { error: linkError } = await client.from('workout_exercises').insert(exerciseRows.map(({ id, exercise }, index) => ({ workout_id: workoutRow.id, exercise_id: id, sort_order: index + 1, sets: exercise.sets, rep_target: exercise.reps })))
+  if (linkError) throw linkError
+  return workoutRow
+}
+
 export async function getDashboardStats(userId) {
   const client = requireSupabase()
   const [weightResult, sessionResult, recentResult, sessionRowsResult] = await Promise.all([
