@@ -53,6 +53,12 @@ button { cursor: pointer; }
 .start-workout-option strong { font-size: .92rem; }
 .start-workout-option small { color: var(--steel-muted); font-size: .7rem; }
 .start-workout-cta { display: inline-flex; align-items: center; gap: 3px; color: var(--steel-gold-2); font-size: .72rem; font-weight: 850; }
+.custom-workout-card { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 11px; width: 100%; margin-top: 6px; padding: 13px; border: 1px dashed var(--steel-gold-dark); border-radius: 16px; background: rgba(217,173,85,.06); color: #f1f2f3; text-align: left; }
+.custom-workout-card:hover, .custom-workout-card:focus-visible { background: rgba(217,173,85,.11); }
+.custom-workout-icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 12px; color: var(--steel-gold); background: #211b10; }
+.custom-workout-card > span:nth-child(2) { display: grid; gap: 4px; }
+.custom-workout-card strong { font-size: .82rem; }
+.custom-workout-card small { color: var(--steel-muted); font-size: .68rem; line-height: 1.35; }
 
 .welcome-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 5px; }
 .welcome-row h2 { margin: 5px 0 0; font-size: 1.5rem; }
@@ -149,7 +155,7 @@ button { cursor: pointer; }
 .log-workout-name input { min-height: 46px; border: 1px solid #35404c; border-radius: 12px; background: #0a1017; color: #fff; padding: 0 12px; font-size: 16px; }
 .selected-exercises, .log-exercise-picker { display: grid; gap: 10px; }
 .selected-exercise-list { display: grid; gap: 7px; }
-.selected-exercise { display: grid; grid-template-columns: 27px minmax(0,1fr) 28px; align-items: center; gap: 9px; padding: 9px 10px; border: 1px solid var(--steel-line); border-radius: 12px; background: #111a23; }
+.selected-exercise { display: grid; grid-template-columns: 27px minmax(0,1fr) auto; align-items: center; gap: 9px; padding: 9px 10px; border: 1px solid var(--steel-line); border-radius: 12px; background: #111a23; }
 .selected-exercise > span { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px; color: var(--steel-gold-2); background: #261f12; font-size: .7rem; font-weight: 900; }
 .selected-exercise div { display: grid; gap: 3px; min-width: 0; }
 .selected-exercise strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .74rem; }
@@ -159,6 +165,11 @@ button { cursor: pointer; }
 .selected-exercise-actions button { width: 26px; height: 26px; padding: 0; border-color: #35404c; background: #17212b; color: #cdd5dc; font-size: .78rem; }
 .selected-exercise-actions button:last-child { border-color: #593a3f; background: #21181d; color: #e8b8bd; font-size: 1rem; }
 .selected-exercise-actions button:disabled { opacity: .3; }
+.selected-exercise-main { gap: 5px !important; }
+.selected-exercise-config { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px !important; margin-top: 4px; }
+.selected-exercise-config label { display: grid; gap: 3px; }
+.selected-exercise-config label span { color: var(--steel-muted); font-size: .58rem; font-weight: 800; }
+.selected-exercise-config input { min-width: 0; width: 100%; height: 29px; padding: 0 6px; border: 1px solid #35404c; border-radius: 7px; background: #0b1219; color: #f5f6f7; font-size: .72rem; }
 .add-exercise-label { color: var(--steel-gold-2); font-size: .66rem; font-weight: 850; }
 .log-workout-start { position: sticky; bottom: 83px; z-index: 5; justify-content: center; }
 .exercise-library { display: grid; gap: 12px; }
