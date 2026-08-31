@@ -26,6 +26,19 @@ export async function signUp(email, password) {
   return data
 }
 
+export async function sendPasswordReset(email, redirectTo = window.location.origin) {
+  const client = requireSupabase()
+  const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo })
+  if (error) throw error
+}
+
+export async function updatePassword(password) {
+  const client = requireSupabase()
+  const { data, error } = await client.auth.updateUser({ password })
+  if (error) throw error
+  return data.user
+}
+
 export async function signOut() {
   const client = requireSupabase()
   const { error } = await client.auth.signOut()
@@ -34,7 +47,7 @@ export async function signOut() {
 
 export function onAuthChange(callback) {
   const client = requireSupabase()
-  const { data } = client.auth.onAuthStateChange((_event, session) => callback(session?.user ?? null))
+  const { data } = client.auth.onAuthStateChange((event, session) => callback(session?.user ?? null, event))
   return () => data.subscription.unsubscribe()
 }
 
@@ -286,14 +299,14 @@ export async function saveWeeklyCheckin({ userId, weekStart, energy, sleep, stre
 
 export async function getMealLogs(userId, startDate, endDate) {
   const client = requireSupabase()
-  const { data, error } = await client.from('meal_logs').select('id,meal_date,meal_type,recipe_name,calories').eq('user_id', userId).gte('meal_date', startDate).lte('meal_date', endDate).order('meal_date', { ascending: false })
+  const { data, error } = await client.from('meal_logs').select('id,meal_date,meal_type,recipe_name,calories,protein_g,carbs_g,fat_g,serving_g').eq('user_id', userId).gte('meal_date', startDate).lte('meal_date', endDate).order('meal_date', { ascending: false })
   if (error) throw error
   return data ?? []
 }
 
-export async function saveMealLog({ userId, mealDate, mealType, recipeName, calories }) {
+export async function saveMealLog({ userId, mealDate, mealType, recipeName, calories, protein, carbs, fat, servingG }) {
   const client = requireSupabase()
-  const { data, error } = await client.from('meal_logs').upsert({ user_id: userId, meal_date: mealDate, meal_type: mealType, recipe_name: recipeName || null, calories: Number(calories) || 0 }, { onConflict: 'user_id,meal_date,meal_type' }).select().single()
+  const { data, error } = await client.from('meal_logs').upsert({ user_id: userId, meal_date: mealDate, meal_type: mealType, recipe_name: recipeName || null, calories: Number(calories) || 0, protein_g: Number(protein) || 0, carbs_g: Number(carbs) || 0, fat_g: Number(fat) || 0, serving_g: Number(servingG) || null }, { onConflict: 'user_id,meal_date,meal_type' }).select().single()
   if (error) throw error
   return data
 }

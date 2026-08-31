@@ -153,6 +153,10 @@ create table if not exists meal_logs (
   meal_type text not null,
   recipe_name text,
   calories integer,
+  protein_g integer,
+  carbs_g integer,
+  fat_g integer,
+  serving_g numeric(7,1),
   created_at timestamptz not null default now(),
   unique (user_id, meal_date, meal_type)
 );
