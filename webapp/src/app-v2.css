@@ -76,6 +76,12 @@ button { cursor: pointer; }
 .tile-art { height: 100%; display: grid; place-items: center; color: #d6ad5a; border-right: 1px solid #303844; background: radial-gradient(circle at 50% 42%,rgba(217,173,85,.18),transparent 50%), linear-gradient(145deg,#222b35,#111720); }
 .tile-art-2 { background: radial-gradient(circle at 50% 42%,rgba(217,173,85,.14),transparent 50%),linear-gradient(145deg,#1b2630,#12171f); }
 .tile-art-3 { background: radial-gradient(circle at 50% 42%,rgba(217,173,85,.14),transparent 50%),linear-gradient(145deg,#241e18,#111720); }
+.workout-tile .tile-art { position: relative; }
+.workout-tile .tile-art svg { display: none; }
+.workout-tile .tile-art::before { content: ''; width: 42px; height: 72px; border-radius: 45% 45% 18% 18%; background: linear-gradient(90deg,#493720,#d0a04c 48%,#342716); clip-path: polygon(36% 0,64% 0,75% 18%,68% 34%,90% 100%,58% 100%,50% 59%,42% 100%,10% 100%,32% 34%,25% 18%); filter: drop-shadow(0 0 10px rgba(217,173,85,.28)); }
+.workout-tile .tile-art::after { width: 17px; height: 23px; right: auto; bottom: 50%; left: 50%; border: 1px solid rgba(244,213,137,.62); border-radius: 45% 45% 35% 35%; background: linear-gradient(90deg,#4a3820,#c49a4f 50%,#332515); transform: translate(-50%,50%); }
+.workout-tile .tile-art-2::before { transform: scaleX(-1); background: linear-gradient(90deg,#342716,#b78a43 48%,#493720); }
+.workout-tile .tile-art-3::before { width: 38px; height: 75px; clip-path: polygon(38% 0,62% 0,70% 22%,61% 42%,78% 100%,57% 100%,50% 59%,43% 100%,22% 100%,39% 42%,30% 22%); }
 .tile-copy { padding: 12px; min-width: 0; display: grid; gap: 3px; }
 .tile-copy strong { font-size: 1rem; }
 .tile-copy small { color: var(--steel-muted); font-size: .7rem; }
@@ -195,6 +201,8 @@ button { cursor: pointer; }
 .v4-hero-copy p { margin: 0; color: var(--steel-muted); font-size: .8rem; line-height: 1.45; }
 .v4-hero-art { position: absolute; inset: 0 0 74px 31%; background: radial-gradient(circle at 70% 48%,rgba(217,173,85,.24),transparent 25%),linear-gradient(110deg,#191a15,#101720); }
 .v4-hero-figure { position: absolute; width: 78px; height: 150px; right: 15%; bottom: 0; background: linear-gradient(90deg,#493720,#d0a04c 48%,#342716); clip-path: polygon(38% 0,62% 0,72% 11%,67% 21%,77% 34%,69% 55%,87% 100%,57% 100%,50% 65%,43% 100%,13% 100%,31% 55%,23% 34%,33% 21%,28% 11%); filter: drop-shadow(0 0 18px rgba(217,173,85,.3)); }
+.v4-hero-figure::before { content: ''; position: absolute; left: 25%; top: 8%; width: 50%; height: 25%; border: 2px solid rgba(244,213,137,.62); border-radius: 45% 45% 35% 35%; background: linear-gradient(90deg,#3f2f1b,#c49a4f 50%,#312313); clip-path: polygon(18% 0,82% 0,100% 35%,75% 100%,25% 100%,0 35%); }
+.v4-hero-figure::after { content: ''; position: absolute; left: 42%; top: 32%; width: 16%; height: 43%; background: rgba(244,213,137,.36); border-radius: 50%; box-shadow: 0 32px 0 8px rgba(45,32,18,.5); }
 .v4-metric-grid { position: relative; z-index: 3; display: grid; grid-template-columns: repeat(4,1fr); gap: 0; padding: 13px 8px 12px; border-top: 1px solid rgba(217,173,85,.18); background: rgba(8,17,27,.88); }
 .v4-metric-grid article { min-width: 0; display: grid; justify-items: center; gap: 4px; padding: 2px 8px; border: 0; border-right: 1px solid var(--steel-line); border-radius: 0; background: transparent; text-align: center; }
 .v4-metric-grid article:last-child { border-right: 0; }
