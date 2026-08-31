@@ -36,13 +36,13 @@ st.markdown(
     .stButton>button,.stFormSubmitButton>button {min-height:46px;border-radius:12px;font-weight:750;border:1px solid #364152;}
     .stButton>button[kind="primary"],.stFormSubmitButton>button[kind="primary"] {background:#D6A84B;color:#0B1018;border-color:#D6A84B;}
     [data-baseweb="input"] input,[data-baseweb="select"],textarea {font-size:16px !important;}
-    div[data-testid="stHorizontalBlock"] {gap:.45rem;}
+    div[data-testid="stHorizontalBlock"] {gap:.35rem;}
     .nav-note {color:#667085;font-size:.74rem;text-align:center;margin-top:-.25rem;}
     @media (max-width:640px){
       .block-container{padding:.5rem .7rem 4rem;}
       .steel-logo{font-size:1.75rem;}
       [data-testid="column"]{min-width:0 !important;}
-      .stButton>button,.stFormSubmitButton>button{width:100%;}
+      .stButton>button,.stFormSubmitButton>button{width:100%;font-size:.82rem;padding-left:.35rem;padding-right:.35rem;}
     }
     </style>
     """,
@@ -271,18 +271,10 @@ elif page == "Train":
                 complete_count = 0
                 active_set_count = 0
                 for set_no in range(1, int(ex["sets"]) + 1):
-                    if set_no in removed_sets:
-                        restore_col, label_col = st.columns([1, 2])
-                        label_col.caption(f"Set {set_no} removed from this session")
-                        if restore_col.button("Restore", key=f"restore_set_{ex['programme_id']}_{set_no}", use_container_width=True):
-                            restore_set(ex["programme_id"], set_no)
-                            st.rerun()
-                        continue
-
-                    active_set_count += 1
+                    removed = set_no in removed_sets
                     prev = previous_by_no.get(set_no)
                     st.markdown(f"**Set {set_no}**")
-                    c1, c2 = st.columns(2)
+
                     weight_key = f"draft_w_{ex['programme_id']}_{set_no}"
                     reps_key = f"draft_r_{ex['programme_id']}_{set_no}"
                     done_key = f"draft_d_{ex['programme_id']}_{set_no}"
@@ -294,23 +286,49 @@ elif page == "Train":
                     if done_key not in st.session_state:
                         st.session_state[done_key] = False
 
-                    c1.number_input("Weight (kg)", min_value=0.0, max_value=500.0, step=2.5, key=weight_key)
-                    c2.number_input("Reps", min_value=1, max_value=50, step=1, key=reps_key)
-
-                    a, b = st.columns(2)
-                    if st.session_state.get(done_key):
-                        complete_count += 1
-                        if a.button("✓ Completed", key=f"uncomplete_{ex['programme_id']}_{set_no}", use_container_width=True):
-                            uncomplete_set(ex["programme_id"], set_no)
-                            st.rerun()
+                    if removed:
+                        st.caption("Removed from this session")
                     else:
-                        if a.button("Complete", key=f"complete_{ex['programme_id']}_{set_no}", type="primary", use_container_width=True):
-                            complete_set(ex["programme_id"], set_no)
-                            st.rerun()
+                        active_set_count += 1
+                        c1, c2 = st.columns(2)
+                        c1.number_input("Weight (kg)", min_value=0.0, max_value=500.0, step=2.5, key=weight_key)
+                        c2.number_input("Reps", min_value=1, max_value=50, step=1, key=reps_key)
+                        if st.session_state.get(done_key):
+                            complete_count += 1
 
-                    if b.button("Remove set", key=f"remove_set_{ex['programme_id']}_{set_no}", use_container_width=True):
+                    complete_col, remove_col, restore_col = st.columns(3)
+
+                    complete_label = "✓ Complete" if st.session_state.get(done_key) else "Complete"
+                    if complete_col.button(
+                        complete_label,
+                        key=f"toggle_complete_{ex['programme_id']}_{set_no}",
+                        type="primary" if not st.session_state.get(done_key) and not removed else "secondary",
+                        disabled=removed,
+                        use_container_width=True,
+                    ):
+                        if st.session_state.get(done_key):
+                            uncomplete_set(ex["programme_id"], set_no)
+                        else:
+                            complete_set(ex["programme_id"], set_no)
+                        st.rerun()
+
+                    if remove_col.button(
+                        "Remove",
+                        key=f"remove_set_{ex['programme_id']}_{set_no}",
+                        disabled=removed,
+                        use_container_width=True,
+                    ):
                         remove_set(ex["programme_id"], set_no)
                         uncomplete_set(ex["programme_id"], set_no)
+                        st.rerun()
+
+                    if restore_col.button(
+                        "Restore",
+                        key=f"restore_set_{ex['programme_id']}_{set_no}",
+                        disabled=not removed,
+                        use_container_width=True,
+                    ):
+                        restore_set(ex["programme_id"], set_no)
                         st.rerun()
 
                 st.caption(f"{complete_count}/{active_set_count} active sets completed")
