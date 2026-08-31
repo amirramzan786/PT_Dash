@@ -224,6 +224,14 @@
   .progress-detail-values strong { font-size: .75rem; }
 }
 
+@media (min-width: 521px) {
+  .settings-support-footer { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, .85fr); align-items: center; gap: 14px 22px; }
+  .settings-support-footer .settings-footer-layout { display: contents; }
+  .settings-support-footer .section-heading { grid-column: 1; grid-row: 1; }
+  .settings-support-footer .settings-security-card { grid-column: 2; grid-row: 1 / span 2; }
+  .settings-support-footer .settings-support-list { grid-column: 1; grid-row: 2; }
+}
+
 @media (max-width: 480px) {
   .v2-topbar { align-items: flex-start; }
   .brand-lockup { min-width: 0; }
