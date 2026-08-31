@@ -12,6 +12,7 @@ create table if not exists profiles (
   experience_level text not null default 'Intermediate' check (experience_level in ('Beginner','Intermediate','Advanced')),
   available_equipment text[] not null default array['Machines']::text[],
   training_days smallint not null default 3 check (training_days between 1 and 7),
+  checkin_day smallint not null default 0 check (checkin_day between 0 and 6),
   units text not null default 'lb' check (units in ('lb','kg')),
   limitations text,
   onboarding_completed boolean not null default false,
