@@ -231,6 +231,29 @@ values
 ('calf-raise-machine','Calf Raise Machine','Calves',array[]::text[],array['Machine']::text[],'Plantar flexion','Beginner','Pause at the top and lower your heels under control.',true)
 on conflict (slug) do update set name = excluded.name, primary_muscle_group = excluded.primary_muscle_group, secondary_muscle_groups = excluded.secondary_muscle_groups, equipment = excluded.equipment, movement_pattern = excluded.movement_pattern, difficulty = excluded.difficulty, instructions = excluded.instructions, is_free = excluded.is_free, updated_at = now();
 
+update exercise_catalog set video_url = case slug
+  when 'lat-pulldown' then 'https://www.youtube.com/results?search_query=lat+pulldown+proper+form'
+  when 'seated-row-machine' then 'https://www.youtube.com/results?search_query=seated+row+machine+proper+form'
+  when 'high-row-machine' then 'https://www.youtube.com/results?search_query=machine+high+row+proper+form'
+  when 'preacher-curl-machine' then 'https://www.youtube.com/results?search_query=preacher+curl+machine+proper+form'
+  when 'cable-curl' then 'https://www.youtube.com/results?search_query=cable+curl+proper+form'
+  when 'db-hammer-curl' then 'https://www.youtube.com/results?search_query=dumbbell+hammer+curl+proper+form'
+  when 'machine-chest-press' then 'https://www.youtube.com/results?search_query=machine+chest+press+proper+form'
+  when 'incline-chest-press-machine' then 'https://www.youtube.com/results?search_query=incline+chest+press+machine+proper+form'
+  when 'pec-deck' then 'https://www.youtube.com/results?search_query=pec+deck+proper+form'
+  when 'rope-tricep-pushdown' then 'https://www.youtube.com/results?search_query=rope+tricep+pushdown+proper+form'
+  when 'overhead-cable-tricep-extension' then 'https://www.youtube.com/results?search_query=overhead+cable+tricep+extension+proper+form'
+  when 'assisted-dip-machine' then 'https://www.youtube.com/results?search_query=assisted+dip+machine+proper+form'
+  when 'machine-shoulder-press' then 'https://www.youtube.com/results?search_query=machine+shoulder+press+proper+form'
+  when 'lateral-raise-machine' then 'https://www.youtube.com/results?search_query=lateral+raise+machine+proper+form'
+  when 'leg-press' then 'https://www.youtube.com/results?search_query=leg+press+proper+form'
+  when 'leg-extension' then 'https://www.youtube.com/results?search_query=leg+extension+proper+form'
+  when 'seated-leg-curl' then 'https://www.youtube.com/results?search_query=seated+leg+curl+proper+form'
+  when 'calf-raise-machine' then 'https://www.youtube.com/results?search_query=calf+raise+machine+proper+form'
+  else video_url
+end, updated_at = now()
+where active = true;
+
 insert into workout_catalog (slug, name, description, focus, goal_tags, equipment, difficulty, duration_min, is_free)
 values
 ('back-biceps','Back + Biceps','A focused pull session for back strength and arm development.','Back · Biceps',array['Build muscle','Get stronger']::text[],array['Machines','Cable','Dumbbells']::text[],'Beginner',45,true),

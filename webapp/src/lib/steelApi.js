@@ -46,6 +46,8 @@ export async function loadWorkouts(userId) {
   const workoutIds = workoutRows.map((row) => row.id)
   const { data: links, error: linkError } = await client.from('workout_exercises').select('id,workout_id,exercise_id,sort_order,sets,rep_target,exercises(id,name,equipment,youtube_url,active)').in('workout_id', workoutIds).order('sort_order')
   if (linkError) throw linkError
+  const { data: catalogueRows } = await client.from('exercise_catalog').select('name,primary_muscle_group,secondary_muscle_groups,movement_pattern,difficulty,instructions,video_url,thumbnail_url,active').eq('active', true).eq('is_free', true)
+  const catalogueByName = new Map((catalogueRows ?? []).map((row) => [row.name.trim().toLowerCase(), row]))
   return workoutRows.map((workout) => ({
     id: workout.id,
     name: workout.name,
@@ -56,7 +58,13 @@ export async function loadWorkouts(userId) {
       programmeId: link.id,
       name: link.exercises?.name ?? 'Exercise',
       equipment: link.exercises?.equipment ?? 'Gym',
-      youtubeUrl: link.exercises?.youtube_url ?? null,
+      muscleGroup: catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.primary_muscle_group ?? null,
+      secondaryMuscleGroups: catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.secondary_muscle_groups ?? [],
+      movementPattern: catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.movement_pattern ?? null,
+      difficulty: catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.difficulty ?? null,
+      instructions: catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.instructions ?? null,
+      youtubeUrl: link.exercises?.youtube_url ?? catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.video_url ?? null,
+      thumbnailUrl: catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.thumbnail_url ?? null,
       sets: link.sets,
       reps: link.rep_target,
     })),
