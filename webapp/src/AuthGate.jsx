@@ -79,11 +79,16 @@ export default function AuthGate() {
             {mode === 'signup' ? 'Already have an account? Sign in' : 'First time? Create account'}
           </button>
 
-          <div style={{height:'1px',background:'#27313d',margin:'8px 0 14px'}} />
-          <button className="secondary-action" type="button" style={{width:'100%',justifyContent:'center'}} onClick={() => setGuestMode(true)}>
-            <Play size={16} /> Continue as guest
+          <div style={{height:'1px',background:'#27313d',margin:'12px 0'}} />
+          <button
+            className="primary"
+            type="button"
+            style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'}}
+            onClick={() => setGuestMode(true)}
+          >
+            <Play size={17} /> Try Guest Demo
           </button>
-          <p className="auth-message" style={{marginTop:10}}>Guest mode uses demo data only. It cannot access or change private account data.</p>
+          <p className="auth-message" style={{marginTop:10}}>Demo mode is isolated from all private account data.</p>
 
           <div className="auth-private"><LockKeyhole size={15} /> Protected by Supabase authentication + RLS</div>
         </section>
