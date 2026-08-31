@@ -47,6 +47,7 @@ create table if not exists workout_exercises (
   sort_order integer not null,
   sets integer not null default 3 check (sets > 0),
   rep_target text not null default '10–12',
+  start_weight_kg numeric(7,2) not null default 0,
   unique (workout_id, exercise_id)
 );
 

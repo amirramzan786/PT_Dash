@@ -44,7 +44,7 @@ export async function loadWorkouts(userId) {
   if (workoutError) throw workoutError
   if (!workoutRows?.length) return loadWorkoutCatalog(client)
   const workoutIds = workoutRows.map((row) => row.id)
-  const { data: links, error: linkError } = await client.from('workout_exercises').select('id,workout_id,exercise_id,sort_order,sets,rep_target,exercises(id,name,equipment,youtube_url,active)').in('workout_id', workoutIds).order('sort_order')
+  const { data: links, error: linkError } = await client.from('workout_exercises').select('id,workout_id,exercise_id,sort_order,sets,rep_target,start_weight_kg,exercises(id,name,equipment,youtube_url,active)').in('workout_id', workoutIds).order('sort_order')
   if (linkError) throw linkError
   const { data: catalogueRows } = await client.from('exercise_catalog').select('name,primary_muscle_group,secondary_muscle_groups,movement_pattern,difficulty,instructions,video_url,thumbnail_url,active').eq('active', true).eq('is_free', true)
   const catalogueByName = new Map((catalogueRows ?? []).map((row) => [row.name.trim().toLowerCase(), row]))
@@ -67,6 +67,7 @@ export async function loadWorkouts(userId) {
       thumbnailUrl: catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.thumbnail_url ?? null,
       sets: link.sets,
       reps: link.rep_target,
+      startWeightKg: link.start_weight_kg ?? 0,
     })),
   }))
 }
@@ -127,7 +128,7 @@ export async function saveCustomWorkout({ userId, workout }) {
     if (exerciseError) throw exerciseError
     exerciseRows.push({ id: created.id, exercise })
   }
-  const { error: linkError } = await client.from('workout_exercises').insert(exerciseRows.map(({ id, exercise }, index) => ({ workout_id: workoutRow.id, exercise_id: id, sort_order: index + 1, sets: exercise.sets, rep_target: exercise.reps })))
+  const { error: linkError } = await client.from('workout_exercises').insert(exerciseRows.map(({ id, exercise }, index) => ({ workout_id: workoutRow.id, exercise_id: id, sort_order: index + 1, sets: exercise.sets, rep_target: exercise.reps, start_weight_kg: Number(exercise.startWeightKg) || 0 })))
   if (linkError) throw linkError
   return workoutRow
 }
@@ -136,7 +137,7 @@ export async function updateCustomWorkout({ userId, workout }) {
   const client = requireSupabase()
   const { error: workoutError } = await client.from('workouts').update({ name: workout.name }).eq('id', workout.id).eq('user_id', userId)
   if (workoutError) throw workoutError
-  const { data: existingLinks, error: linksError } = await client.from('workout_exercises').select('id,exercise_id').eq('workout_id', workout.id)
+  const { data: existingLinks, error: linksError } = await client.from('workout_exercises').select('id,exercise_id,start_weight_kg').eq('workout_id', workout.id)
   if (linksError) throw linksError
   const resolved = []
   for (const exercise of workout.exercises) {
@@ -149,7 +150,7 @@ export async function updateCustomWorkout({ userId, workout }) {
   }
   for (const [index, { id, exercise }] of resolved.entries()) {
     const existingLink = (existingLinks ?? []).find((link) => link.exercise_id === id)
-    const values = { workout_id: workout.id, exercise_id: id, sort_order: index + 1, sets: exercise.sets, rep_target: exercise.reps }
+    const values = { workout_id: workout.id, exercise_id: id, sort_order: index + 1, sets: exercise.sets, rep_target: exercise.reps, start_weight_kg: Number(exercise.startWeightKg) || 0 }
     const result = existingLink ? await client.from('workout_exercises').update(values).eq('id', existingLink.id) : await client.from('workout_exercises').insert(values)
     if (result.error) throw result.error
   }
