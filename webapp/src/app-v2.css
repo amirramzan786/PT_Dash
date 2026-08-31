@@ -119,6 +119,24 @@ button { cursor: pointer; }
 .page-switcher { display: inline-flex; gap: 4px; margin-top: 15px; padding: 4px; border: 1px solid var(--steel-line); border-radius: 12px; background: #0c141d; }
 .page-switcher button { min-height: 34px; border: 0; border-radius: 9px; padding: 0 11px; background: transparent; color: var(--steel-muted); font-size: .7rem; font-weight: 850; }
 .page-switcher button.active { background: #2a2417; color: var(--steel-gold-2); }
+.log-workout-cta { width: 100%; display: grid; grid-template-columns: 36px minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--steel-gold-dark); border-radius: 15px; background: linear-gradient(145deg,#211b10,#131b23); color: #f0f1f2; text-align: left; }
+.log-workout-cta > svg:first-child { width: 32px; height: 32px; padding: 7px; border-radius: 9px; color: #111; background: var(--steel-gold); }
+.log-workout-cta span { display: grid; gap: 3px; }
+.log-workout-cta strong { font-size: .78rem; }
+.log-workout-cta small { color: var(--steel-muted); font-size: .64rem; }
+.log-workout-name, .log-workout-name span { display: grid; gap: 6px; }
+.log-workout-name span { color: var(--steel-muted); font-size: .68rem; font-weight: 850; letter-spacing: .06em; }
+.log-workout-name input { min-height: 46px; border: 1px solid #35404c; border-radius: 12px; background: #0a1017; color: #fff; padding: 0 12px; font-size: 16px; }
+.selected-exercises, .log-exercise-picker { display: grid; gap: 10px; }
+.selected-exercise-list { display: grid; gap: 7px; }
+.selected-exercise { display: grid; grid-template-columns: 27px minmax(0,1fr) 28px; align-items: center; gap: 9px; padding: 9px 10px; border: 1px solid var(--steel-line); border-radius: 12px; background: #111a23; }
+.selected-exercise > span { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px; color: var(--steel-gold-2); background: #261f12; font-size: .7rem; font-weight: 900; }
+.selected-exercise div { display: grid; gap: 3px; min-width: 0; }
+.selected-exercise strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .74rem; }
+.selected-exercise small { color: var(--steel-muted); font-size: .62rem; }
+.selected-exercise button { width: 28px; height: 28px; border: 1px solid #593a3f; border-radius: 8px; background: #21181d; color: #e8b8bd; font-size: 1.1rem; line-height: 1; }
+.add-exercise-label { color: var(--steel-gold-2); font-size: .66rem; font-weight: 850; }
+.log-workout-start { position: sticky; bottom: 83px; z-index: 5; justify-content: center; }
 .exercise-library { display: grid; gap: 12px; }
 .library-toolbar { display: grid; gap: 8px; }
 .library-search { min-height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid #35404c; border-radius: 13px; background: #0d151e; color: var(--steel-muted); }
