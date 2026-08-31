@@ -164,7 +164,8 @@ create table if not exists weekly_checkin_media (
   storage_path text not null unique,
   file_name text not null,
   mime_type text not null,
-  file_size integer not null,
+  file_size integer not null check (file_size > 0 and file_size <= 26214400),
+  check ((media_type = 'exercise_video' and mime_type like 'video/%') or (media_type in ('front','side','back','other') and mime_type like 'image/%')),
   created_at timestamptz not null default now()
 );
 
@@ -194,7 +195,9 @@ create policy "own meal logs" on meal_logs for all using (auth.uid() = user_id) 
 create policy "own checkin media" on weekly_checkin_media for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- Private check-in uploads. Files are stored under <user_id>/<week_start>/...
-insert into storage.buckets (id, name, public) values ('checkin-media', 'checkin-media', false) on conflict (id) do nothing;
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('checkin-media', 'checkin-media', false, 26214400, array['image/jpeg','image/png','image/webp','image/heic','video/mp4','video/quicktime','video/webm'])
+on conflict (id) do update set public = false, file_size_limit = 26214400, allowed_mime_types = excluded.allowed_mime_types;
 drop policy if exists "own checkin media files" on storage.objects;
 create policy "own checkin media files" on storage.objects for all to authenticated
 using (bucket_id = 'checkin-media' and (storage.foldername(name))[1] = (select auth.uid())::text)

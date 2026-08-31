@@ -317,14 +317,23 @@ export async function getWeeklyActivitySummary(userId, weekStart, weekEnd) {
 
 export async function uploadCheckinMedia({ userId, weekStart, file, mediaType = 'other' }) {
   const client = requireSupabase()
+  const validTypes = ['front', 'side', 'back', 'exercise_video', 'other']
+  if (!validTypes.includes(mediaType)) throw new Error('That check-in media type is not supported.')
   if (!file || (!file.type.startsWith('image/') && !file.type.startsWith('video/'))) throw new Error('Upload an image or video file.')
+  if (mediaType === 'exercise_video' && !file.type.startsWith('video/')) throw new Error('Upload a video for exercise form feedback.')
+  if (mediaType !== 'exercise_video' && !file.type.startsWith('image/')) throw new Error('Upload an image for this progress photo.')
   if (file.size > 25 * 1024 * 1024) throw new Error('Each check-in upload must be under 25 MB.')
+  const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'video/mp4', 'video/quicktime', 'video/webm']
+  if (!allowedMimeTypes.includes(file.type)) throw new Error('Use JPG, PNG, WEBP, HEIC, MP4, MOV or WEBM files.')
   const extension = file.name.split('.').pop()?.toLowerCase() || 'bin'
   const path = `${userId}/${weekStart}/${crypto.randomUUID()}.${extension}`
   const { error: uploadError } = await client.storage.from('checkin-media').upload(path, file, { contentType: file.type, cacheControl: '3600' })
   if (uploadError) throw uploadError
   const { data, error } = await client.from('weekly_checkin_media').insert({ user_id: userId, week_start: weekStart, media_type: mediaType, storage_path: path, file_name: file.name, mime_type: file.type, file_size: file.size }).select().single()
-  if (error) throw error
+  if (error) {
+    await client.storage.from('checkin-media').remove([path])
+    throw error
+  }
   return data
 }
 
