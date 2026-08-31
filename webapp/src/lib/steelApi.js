@@ -236,6 +236,17 @@ export async function getProfile(userId) {
   return data
 }
 
+export async function getNutritionPlan(userId) {
+  const client = requireSupabase()
+  const [targetResult, mealsResult] = await Promise.all([
+    client.from('nutrition_targets').select('calories,protein_g').eq('user_id', userId).eq('active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    client.from('meal_plan_items').select('id,meal_type,title,description,calories,protein_g,sort_order').eq('user_id', userId).eq('active', true).order('sort_order').order('created_at'),
+  ])
+  if (targetResult.error) throw targetResult.error
+  if (mealsResult.error) throw mealsResult.error
+  return { target: targetResult.data ?? null, meals: mealsResult.data ?? [] }
+}
+
 export async function saveProfile(userId, { displayName, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, units, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay }) {
   const client = requireSupabase()
   const payload = { id: userId, display_name: displayName || null, goal: goal || 'Lose fat and gain muscle', updated_at: new Date().toISOString() }
