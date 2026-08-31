@@ -241,11 +241,26 @@ export async function getNutritionPlan(userId) {
   const client = requireSupabase()
   const [targetResult, mealsResult] = await Promise.all([
     client.from('nutrition_targets').select('calories,protein_g').eq('user_id', userId).eq('active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-    client.from('meal_plan_items').select('id,meal_type,title,description,calories,protein_g,sort_order').eq('user_id', userId).eq('active', true).order('sort_order').order('created_at'),
+    client.from('meal_plan_items').select('id,meal_type,title,description,calories,protein_g,carbs_g,fat_g,serving_g,sort_order').eq('user_id', userId).eq('active', true).order('sort_order').order('created_at'),
   ])
   if (targetResult.error) throw targetResult.error
   if (mealsResult.error) throw mealsResult.error
   return { target: targetResult.data ?? null, meals: mealsResult.data ?? [] }
+}
+
+export async function saveMealPlanItem({ userId, item }) {
+  const client = requireSupabase()
+  const payload = { user_id: userId, meal_type: item.meal, title: item.name, description: item.detail || null, calories: Number(item.calories) || 0, protein_g: Number(item.protein) || 0, carbs_g: Number(item.carbs) || 0, fat_g: Number(item.fat) || 0, serving_g: Number(item.servingG) || 0, sort_order: Number(item.sortOrder) || 0, active: true }
+  const query = item.id ? client.from('meal_plan_items').update(payload).eq('id', item.id).eq('user_id', userId) : client.from('meal_plan_items').insert(payload)
+  const { data, error } = await query.select('id,meal_type,title,description,calories,protein_g,carbs_g,fat_g,serving_g,sort_order').single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteMealPlanItem({ userId, id }) {
+  const client = requireSupabase()
+  const { error } = await client.from('meal_plan_items').delete().eq('id', id).eq('user_id', userId)
+  if (error) throw error
 }
 
 export async function saveProfile(userId, { displayName, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, units, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay }) {

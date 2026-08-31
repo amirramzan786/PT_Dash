@@ -162,6 +162,12 @@
 .settings-disclosure-content .password-form { border-color: #293746; }
 .settings-support-footer { margin-top: auto; }
 .nutrition-page { max-width: 760px; margin-inline: auto; }
+.nutrition-view-switcher { display: inline-flex; gap: 4px; padding: 4px; margin-top: 14px; border: 1px solid var(--steel-line); border-radius: 12px; background: rgba(10,16,24,.7); }
+.nutrition-view-switcher button { min-height: 34px; padding: 0 11px; border: 0; border-radius: 9px; color: var(--steel-muted); background: transparent; font: inherit; font-size: .7rem; font-weight: 800; }
+.nutrition-view-switcher button.active { color: #111820; background: var(--steel-gold); }
+.nutrition-plan-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; border: 1px solid rgba(217,173,85,.35); border-radius: 15px; background: linear-gradient(115deg, rgba(217,173,85,.12), rgba(17,24,33,.7)); }
+.nutrition-plan-summary > div { display: grid; gap: 4px; }
+.nutrition-plan-summary strong { font-size: .86rem; }
 .nutrition-plan-list { display: grid; gap: 10px; }
 .nutrition-progress { color: var(--steel-gold-2); font-size: .74rem; font-weight: 800; }
 .nutrition-meal-card { display: grid; grid-template-columns: 40px minmax(0,1fr) auto; align-items: center; gap: 11px; padding: 13px; }
@@ -189,6 +195,9 @@
   .settings-disclosure-trigger { min-height: 66px; }
   .settings-disclosure-content { padding-inline: 9px; }
   .nutrition-meal-card { grid-template-columns: 36px minmax(0,1fr) auto; gap: 8px; }
+  .nutrition-view-switcher { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .nutrition-view-switcher button { width: 100%; }
+  .nutrition-plan-summary { align-items: flex-start; flex-direction: column; }
   .nutrition-next-card { display: grid; }
 }
 

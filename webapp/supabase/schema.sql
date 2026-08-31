@@ -111,6 +111,9 @@ create table if not exists meal_plan_items (
   description text,
   calories integer,
   protein_g integer,
+  carbs_g integer,
+  fat_g integer,
+  serving_g integer,
   sort_order integer not null default 0,
   active boolean not null default true,
   created_at timestamptz not null default now()
