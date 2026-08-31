@@ -75,14 +75,17 @@
 .preferences-form fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .preferences-form legend { padding: 0; }
 .preferences-form select, .preferences-form textarea { width: 100%; min-height: 45px; border: 1px solid #35404c; border-radius: 11px; background: #0a1017; color: #fff; padding: 0 11px; font: inherit; font-size: .82rem; outline: none; }
+.preferences-form input { width: 100%; min-height: 45px; border: 1px solid #35404c; border-radius: 11px; background: #0a1017; color: #fff; padding: 0 11px; font: inherit; font-size: .82rem; outline: none; }
 .preferences-form textarea { min-height: 88px; padding: 11px; resize: vertical; }
-.preferences-form select:focus, .preferences-form textarea:focus { border-color: var(--steel-gold); box-shadow: 0 0 0 3px rgba(217,173,85,.12); }
+.preferences-form select:focus, .preferences-form input:focus, .preferences-form textarea:focus { border-color: var(--steel-gold); box-shadow: 0 0 0 3px rgba(217,173,85,.12); }
 .preference-choice-grid, .equipment-choice-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; }
 .preference-choice-grid button, .equipment-choice-grid button { min-height: 40px; padding: 6px 7px; border: 1px solid #35404c; border-radius: 10px; color: var(--steel-muted); background: #101821; font-size: .7rem; font-weight: 800; }
 .preference-choice-grid button.selected, .equipment-choice-grid button.selected { border-color: var(--steel-gold-dark); color: var(--steel-gold-2); background: rgba(217,173,85,.12); }
 .preference-choice-grid button:hover, .equipment-choice-grid button:hover { border-color: var(--steel-gold); color: var(--steel-text); }
 .field-hint { color: #7f8996; font-size: .65rem; line-height: 1.35; }
 .preference-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.settings-form-divider { display: grid; gap: 4px; margin-top: 4px; padding-top: 16px; border-top: 1px solid var(--steel-line); }
+.settings-form-divider strong { font-size: .82rem; }
 .settings-support-card .section-heading { margin-bottom: 2px; }
 .settings-support-card h3 { margin: 3px 0 0; font-size: .9rem; }
 .settings-support-list { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; }
@@ -120,6 +123,8 @@
 .onboarding-brand strong { font-size: .82rem; letter-spacing: .12em; }
 .onboarding-progress { height: 5px; overflow: hidden; border-radius: 99px; background: #26313c; }
 .onboarding-progress span { display: block; height: 100%; border-radius: inherit; background: var(--steel-gold); transition: width .2s ease; }
+.onboarding-skip { display: block; margin: 12px 0 0 auto; border: 0; background: transparent; color: var(--steel-muted); font-size: .7rem; font-weight: 800; }
+.onboarding-skip:hover { color: var(--steel-gold-2); }
 .onboarding-step-copy { margin: 28px 0 24px; }
 .onboarding-step-copy h1 { margin: 7px 0 8px; font-size: clamp(1.55rem,5vw,2.25rem); letter-spacing: -.04em; }
 .onboarding-step-copy p { margin: 0; color: var(--steel-muted); font-size: .86rem; line-height: 1.5; }

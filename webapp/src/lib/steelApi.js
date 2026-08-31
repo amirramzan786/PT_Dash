@@ -133,12 +133,12 @@ export async function saveWeight(userId, checkinDate, weightLb) {
 
 export async function getProfile(userId) {
   const client = requireSupabase()
-  const { data, error } = await client.from('profiles').select('id,display_name,goal,avatar_url,experience_level,available_equipment,training_days,units,limitations,onboarding_completed,created_at,updated_at').eq('id', userId).maybeSingle()
+  const { data, error } = await client.from('profiles').select('id,display_name,goal,avatar_url,experience_level,available_equipment,training_days,units,limitations,onboarding_completed,dietary_preference,allergies,meals_per_day,created_at,updated_at').eq('id', userId).maybeSingle()
   if (error) throw error
   return data
 }
 
-export async function saveProfile(userId, { displayName, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, units, limitations, onboardingCompleted }) {
+export async function saveProfile(userId, { displayName, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, units, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay }) {
   const client = requireSupabase()
   const payload = { id: userId, display_name: displayName || null, goal: goal || 'Lose fat and gain muscle', updated_at: new Date().toISOString() }
   if (avatarUrl !== undefined) payload.avatar_url = avatarUrl || null
@@ -148,6 +148,9 @@ export async function saveProfile(userId, { displayName, goal, avatarUrl, experi
   if (units !== undefined) payload.units = units
   if (limitations !== undefined) payload.limitations = limitations || null
   if (onboardingCompleted !== undefined) payload.onboarding_completed = onboardingCompleted
+  if (dietaryPreference !== undefined) payload.dietary_preference = dietaryPreference
+  if (allergies !== undefined) payload.allergies = allergies || null
+  if (mealsPerDay !== undefined) payload.meals_per_day = mealsPerDay
   const { data, error } = await client.from('profiles').upsert(payload, { onConflict: 'id' }).select().single()
   if (error) throw error
   return data

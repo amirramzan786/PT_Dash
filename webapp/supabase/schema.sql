@@ -14,6 +14,9 @@ create table if not exists profiles (
   units text not null default 'lb' check (units in ('lb','kg')),
   limitations text,
   onboarding_completed boolean not null default false,
+  dietary_preference text not null default 'No preference',
+  allergies text,
+  meals_per_day smallint not null default 3 check (meals_per_day between 1 and 8),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
