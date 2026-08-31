@@ -132,6 +132,35 @@ export async function saveCustomWorkout({ userId, workout }) {
   return workoutRow
 }
 
+export async function updateCustomWorkout({ userId, workout }) {
+  const client = requireSupabase()
+  const { error: workoutError } = await client.from('workouts').update({ name: workout.name }).eq('id', workout.id).eq('user_id', userId)
+  if (workoutError) throw workoutError
+  const { data: existingLinks, error: linksError } = await client.from('workout_exercises').select('id,exercise_id').eq('workout_id', workout.id)
+  if (linksError) throw linksError
+  const resolved = []
+  for (const exercise of workout.exercises) {
+    const { data: existing, error: existingError } = await client.from('exercises').select('id').eq('user_id', userId).eq('name', exercise.name).eq('active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
+    if (existingError) throw existingError
+    if (existing?.id) { resolved.push({ id: existing.id, exercise }); continue }
+    const { data: created, error: createError } = await client.from('exercises').insert({ user_id: userId, name: exercise.name, equipment: exercise.equipment, youtube_url: exercise.youtubeUrl ?? null }).select('id').single()
+    if (createError) throw createError
+    resolved.push({ id: created.id, exercise })
+  }
+  for (const [index, { id, exercise }] of resolved.entries()) {
+    const existingLink = (existingLinks ?? []).find((link) => link.exercise_id === id)
+    const values = { workout_id: workout.id, exercise_id: id, sort_order: index + 1, sets: exercise.sets, rep_target: exercise.reps }
+    const result = existingLink ? await client.from('workout_exercises').update(values).eq('id', existingLink.id) : await client.from('workout_exercises').insert(values)
+    if (result.error) throw result.error
+  }
+  const keepIds = new Set(resolved.map(({ id }) => id))
+  for (const link of existingLinks ?? []) if (!keepIds.has(link.exercise_id)) {
+    const { error } = await client.from('workout_exercises').delete().eq('id', link.id)
+    if (error) throw error
+  }
+  return workout
+}
+
 export async function getDashboardStats(userId) {
   const client = requireSupabase()
   const [weightResult, sessionResult, recentResult, sessionRowsResult] = await Promise.all([

@@ -109,6 +109,9 @@ button { cursor: pointer; }
 .plan-title-row h3 { margin: 0 0 4px; font-size: 1.25rem; }
 .plan-title-row p { margin: 0; color: var(--steel-muted); font-size: .76rem; }
 .circle-button { width: 40px; height: 40px; border-radius: 50%; border: 0; display: grid; place-items: center; background: var(--steel-gold); color: #111; }
+.plan-secondary-actions { display: flex; gap: 7px; margin: 10px 0 2px; }
+.plan-secondary-actions button { min-height: 32px; padding: 0 10px; border: 1px solid #374350; border-radius: 9px; background: #121a23; color: #bcc5ce; font-size: .65rem; font-weight: 850; }
+.plan-secondary-actions button:hover { border-color: var(--steel-gold-dark); color: var(--steel-gold-2); }
 .compact-exercise-list { display: grid; margin: 14px 0; }
 .compact-exercise { display: grid; grid-template-columns: 28px 1fr; gap: 9px; padding: 10px 0; border-top: 1px solid #252e39; }
 .compact-exercise > span { color: var(--steel-gold); font-size: .75rem; font-weight: 900; }
@@ -135,6 +138,10 @@ button { cursor: pointer; }
 .selected-exercise strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .74rem; }
 .selected-exercise small { color: var(--steel-muted); font-size: .62rem; }
 .selected-exercise button { width: 28px; height: 28px; border: 1px solid #593a3f; border-radius: 8px; background: #21181d; color: #e8b8bd; font-size: 1.1rem; line-height: 1; }
+.selected-exercise-actions { display: flex; align-items: center; gap: 4px; }
+.selected-exercise-actions button { width: 26px; height: 26px; padding: 0; border-color: #35404c; background: #17212b; color: #cdd5dc; font-size: .78rem; }
+.selected-exercise-actions button:last-child { border-color: #593a3f; background: #21181d; color: #e8b8bd; font-size: 1rem; }
+.selected-exercise-actions button:disabled { opacity: .3; }
 .add-exercise-label { color: var(--steel-gold-2); font-size: .66rem; font-weight: 850; }
 .log-workout-start { position: sticky; bottom: 83px; z-index: 5; justify-content: center; }
 .exercise-library { display: grid; gap: 12px; }
