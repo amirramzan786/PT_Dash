@@ -41,6 +41,18 @@ button { cursor: pointer; }
 .app-load-error > div:last-child { width: min(100%, 420px); display: grid; justify-items: center; gap: 10px; }
 .app-load-error h2 { margin: 0; color: #f5f6f7; font-size: clamp(1.45rem, 4vw, 2rem); }
 .app-load-error p { max-width: 34rem; margin: 0 0 8px; color: var(--steel-muted); line-height: 1.55; }
+.training-page > .empty-state { display: none; }
+.start-workout-chooser { max-width: 760px; margin-inline: auto; }
+.start-workout-list { display: grid; gap: 10px; }
+.start-workout-option { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; padding: 12px; border: 1px solid var(--steel-line); border-radius: 16px; background: linear-gradient(145deg, #141d27, #0e151e); color: #f2f3f5; text-align: left; }
+.start-workout-option:hover, .start-workout-option:focus-visible { border-color: var(--steel-gold-dark); background: linear-gradient(145deg, #1d211c, #101821); }
+.start-workout-art { width: 58px; height: 58px; display: grid; place-items: center; border: 1px solid var(--steel-gold-dark); border-radius: 13px; color: var(--steel-gold); background: radial-gradient(circle at 50% 35%, rgba(217,173,85,.28), rgba(8,14,21,.92) 68%); }
+.start-workout-option:nth-child(2) .start-workout-art { background: radial-gradient(circle at 50% 35%, rgba(120,142,166,.25), rgba(8,14,21,.92) 68%); }
+.start-workout-option:nth-child(3) .start-workout-art { background: radial-gradient(circle at 50% 35%, rgba(109,78,39,.3), rgba(8,14,21,.92) 68%); }
+.start-workout-option > span:nth-child(2) { display: grid; gap: 4px; min-width: 0; }
+.start-workout-option strong { font-size: .92rem; }
+.start-workout-option small { color: var(--steel-muted); font-size: .7rem; }
+.start-workout-cta { display: inline-flex; align-items: center; gap: 3px; color: var(--steel-gold-2); font-size: .72rem; font-weight: 850; }
 
 .welcome-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 5px; }
 .welcome-row h2 { margin: 5px 0 0; font-size: 1.5rem; }
