@@ -263,6 +263,20 @@ export async function deleteMealPlanItem({ userId, id }) {
   if (error) throw error
 }
 
+export async function getLatestWeeklyCheckin(userId) {
+  const client = requireSupabase()
+  const { data, error } = await client.from('weekly_checkins').select('id,week_start,energy,sleep,stress,soreness,workouts_completed,nutrition_days,pain_or_injury,wins,challenges,questions,submitted_at,created_at').eq('user_id', userId).order('week_start', { ascending: false }).limit(1).maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function saveWeeklyCheckin({ userId, weekStart, energy, sleep, stress, soreness, workoutsCompleted, nutritionDays, painOrInjury, wins, challenges, questions }) {
+  const client = requireSupabase()
+  const { data, error } = await client.from('weekly_checkins').upsert({ user_id: userId, week_start: weekStart, energy, sleep, stress, soreness, workouts_completed: workoutsCompleted, nutrition_days: nutritionDays, pain_or_injury: painOrInjury || null, wins: wins || null, challenges: challenges || null, questions: questions || null, submitted_at: new Date().toISOString() }, { onConflict: 'user_id,week_start' }).select().single()
+  if (error) throw error
+  return data
+}
+
 export async function saveProfile(userId, { displayName, phone, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, units, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay }) {
   const client = requireSupabase()
   const payload = { id: userId, display_name: displayName || null, goal: goal || 'Lose fat and gain muscle', updated_at: new Date().toISOString() }

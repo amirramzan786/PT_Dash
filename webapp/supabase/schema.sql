@@ -120,6 +120,25 @@ create table if not exists meal_plan_items (
   created_at timestamptz not null default now()
 );
 
+create table if not exists weekly_checkins (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  week_start date not null,
+  energy smallint check (energy between 1 and 5),
+  sleep smallint check (sleep between 1 and 5),
+  stress smallint check (stress between 1 and 5),
+  soreness smallint check (soreness between 1 and 5),
+  workouts_completed smallint check (workouts_completed between 0 and 14),
+  nutrition_days smallint check (nutrition_days between 0 and 7),
+  pain_or_injury text,
+  wins text,
+  challenges text,
+  questions text,
+  submitted_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  unique (user_id, week_start)
+);
+
 alter table profiles enable row level security;
 alter table workouts enable row level security;
 alter table exercises enable row level security;
@@ -130,6 +149,7 @@ alter table cardio_logs enable row level security;
 alter table weight_checkins enable row level security;
 alter table nutrition_targets enable row level security;
 alter table meal_plan_items enable row level security;
+alter table weekly_checkins enable row level security;
 
 create policy "own profile" on profiles for all using (auth.uid() = id) with check (auth.uid() = id);
 create policy "own workouts" on workouts for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
@@ -138,6 +158,7 @@ create policy "own sessions" on sessions for all using (auth.uid() = user_id) wi
 create policy "own weight checkins" on weight_checkins for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "own nutrition targets" on nutrition_targets for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "own meal plan" on meal_plan_items for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "own weekly checkins" on weekly_checkins for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create policy "own workout exercises" on workout_exercises for all
 using (exists (select 1 from workouts w where w.id = workout_id and w.user_id = auth.uid()))
