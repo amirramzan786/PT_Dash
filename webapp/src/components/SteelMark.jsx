@@ -1,7 +1,7 @@
 export default function SteelMark({ size = 27, title = 'Project Steel' }) {
-  return <svg className="steel-mark" width={size} height={size} viewBox="0 0 48 48" role="img" aria-label={title} focusable="false">
-    <path className="steel-mark-shield" d="M24 3.5 40 9v12.4c0 10.5-6.1 18.9-16 23.1C14.1 40.3 8 31.9 8 21.4V9L24 3.5Z" />
-    <path className="steel-mark-line" d="M17 14.5h13.6l-9.8 7.1c-2.1 1.5-1.2 4.2 1.5 4.2h4.9c3.8 0 4.4 4.7.7 5.9L17 35.2" />
-    <path className="steel-mark-line" d="M17 14.5v4.1M31 14.5v4.1M17 35.2v-4.1M31 35.2v-4.1" />
+  return <svg className="steel-mark" width={size} height={size} viewBox="0 0 64 64" role="img" aria-label={title} focusable="false">
+    <path className="steel-mark-shield" d="M32 2.5 57 10v16.8c0 15.8-8.7 28.3-25 35.1C15.7 55.1 7 42.6 7 26.8V10L32 2.5Z" />
+    <path className="steel-mark-inner" d="M32 8.5 50.5 14v12.6c0 12.2-6.2 21.8-18.5 27.6C19.7 48.4 13.5 38.8 13.5 26.6V14L32 8.5Z" />
+    <path className="steel-mark-s" d="M19 19.5h27l-7.5 6.2H28c-2.4 0-3.6 1.1-3.6 2.8 0 1.8 1.4 2.8 4.2 2.8h7.8c6.4 0 10 3.1 10 8.2 0 5.3-4.2 8.7-10.8 8.7H18l7.5-6.2h9.8c2.4 0 3.6-1 3.6-2.5 0-1.7-1.4-2.5-4.2-2.5h-7.8c-6.4 0-10-3.3-10-8.7 0-5.3 4.1-8.8 10.7-8.8Z" />
   </svg>
 }
