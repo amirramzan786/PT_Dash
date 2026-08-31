@@ -40,40 +40,26 @@ export function onAuthChange(callback) {
 
 export async function loadWorkouts(userId) {
   const client = requireSupabase()
-  const { data: workoutRows, error: workoutError } = await client
-    .from('workouts')
-    .select('id,name,sort_order,active')
-    .eq('user_id', userId)
-    .eq('active', true)
-    .order('sort_order')
+  const { data: workoutRows, error: workoutError } = await client.from('workouts').select('id,name,sort_order,active').eq('user_id', userId).eq('active', true).order('sort_order')
   if (workoutError) throw workoutError
-
   if (!workoutRows?.length) return []
-
   const workoutIds = workoutRows.map((row) => row.id)
-  const { data: links, error: linkError } = await client
-    .from('workout_exercises')
-    .select('id,workout_id,exercise_id,sort_order,sets,rep_target,exercises(id,name,equipment,youtube_url,active)')
-    .in('workout_id', workoutIds)
-    .order('sort_order')
+  const { data: links, error: linkError } = await client.from('workout_exercises').select('id,workout_id,exercise_id,sort_order,sets,rep_target,exercises(id,name,equipment,youtube_url,active)').in('workout_id', workoutIds).order('sort_order')
   if (linkError) throw linkError
-
   return workoutRows.map((workout) => ({
     id: workout.id,
     name: workout.name,
     duration: '~45 min',
     finisher: '5–10 min incline walk',
-    exercises: (links ?? [])
-      .filter((link) => link.workout_id === workout.id && link.exercises?.active !== false)
-      .map((link) => ({
-        id: link.exercise_id,
-        programmeId: link.id,
-        name: link.exercises?.name ?? 'Exercise',
-        equipment: link.exercises?.equipment ?? 'Gym',
-        youtubeUrl: link.exercises?.youtube_url ?? null,
-        sets: link.sets,
-        reps: link.rep_target,
-      })),
+    exercises: (links ?? []).filter((link) => link.workout_id === workout.id && link.exercises?.active !== false).map((link) => ({
+      id: link.exercise_id,
+      programmeId: link.id,
+      name: link.exercises?.name ?? 'Exercise',
+      equipment: link.exercises?.equipment ?? 'Gym',
+      youtubeUrl: link.exercises?.youtube_url ?? null,
+      sets: link.sets,
+      reps: link.rep_target,
+    })),
   }))
 }
 
@@ -87,57 +73,30 @@ export async function getDashboardStats(userId) {
   if (weightResult.error) throw weightResult.error
   if (sessionResult.error) throw sessionResult.error
   if (recentResult.error) throw recentResult.error
-  return {
-    latestWeightLb: weightResult.data?.[0]?.weight_lb ?? null,
-    sessionCount: sessionResult.count ?? 0,
-    latestSession: recentResult.data?.[0] ?? null,
-  }
+  return { latestWeightLb: weightResult.data?.[0]?.weight_lb ?? null, sessionCount: sessionResult.count ?? 0, latestSession: recentResult.data?.[0] ?? null }
 }
 
 export async function getWeightHistory(userId, limit = 30) {
   const client = requireSupabase()
-  const { data, error } = await client
-    .from('weight_checkins')
-    .select('id,checkin_date,weight_lb')
-    .eq('user_id', userId)
-    .order('checkin_date', { ascending: true })
-    .limit(limit)
+  const { data, error } = await client.from('weight_checkins').select('id,checkin_date,weight_lb').eq('user_id', userId).order('checkin_date', { ascending: true }).limit(limit)
   if (error) throw error
   return data ?? []
 }
 
 export async function getRecentSessions(userId, limit = 8) {
   const client = requireSupabase()
-  const { data, error } = await client
-    .from('sessions')
-    .select('id,workout_name,session_date,duration_min,notes,created_at')
-    .eq('user_id', userId)
-    .order('session_date', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(limit)
+  const { data, error } = await client.from('sessions').select('id,workout_name,session_date,duration_min,notes,created_at').eq('user_id', userId).order('session_date', { ascending: false }).order('created_at', { ascending: false }).limit(limit)
   if (error) throw error
   return data ?? []
 }
 
 export async function getPreviousExerciseSets(userId, exerciseId) {
   const client = requireSupabase()
-  const { data: sessions, error: sessionError } = await client
-    .from('sessions')
-    .select('id')
-    .eq('user_id', userId)
-    .order('session_date', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(12)
+  const { data: sessions, error: sessionError } = await client.from('sessions').select('id').eq('user_id', userId).order('session_date', { ascending: false }).order('created_at', { ascending: false }).limit(12)
   if (sessionError) throw sessionError
   const ids = (sessions ?? []).map((row) => row.id)
   if (!ids.length) return []
-
-  const { data, error } = await client
-    .from('set_logs')
-    .select('session_id,set_no,reps,weight_kg,created_at')
-    .eq('exercise_id', exerciseId)
-    .in('session_id', ids)
-    .order('created_at', { ascending: false })
+  const { data, error } = await client.from('set_logs').select('session_id,set_no,reps,weight_kg,created_at').eq('exercise_id', exerciseId).in('session_id', ids).order('created_at', { ascending: false })
   if (error) throw error
   if (!data?.length) return []
   const latestSessionId = data[0].session_id
@@ -146,62 +105,72 @@ export async function getPreviousExerciseSets(userId, exerciseId) {
 
 export async function saveWeight(userId, checkinDate, weightLb) {
   const client = requireSupabase()
-  const { data, error } = await client
-    .from('weight_checkins')
-    .upsert({ user_id: userId, checkin_date: checkinDate, weight_lb: weightLb }, { onConflict: 'user_id,checkin_date' })
-    .select()
-    .single()
+  const { data, error } = await client.from('weight_checkins').upsert({ user_id: userId, checkin_date: checkinDate, weight_lb: weightLb }, { onConflict: 'user_id,checkin_date' }).select().single()
   if (error) throw error
   return data
 }
 
+export async function getProfile(userId) {
+  const client = requireSupabase()
+  const { data, error } = await client.from('profiles').select('id,display_name,goal,avatar_url,created_at,updated_at').eq('id', userId).maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function saveProfile(userId, { displayName, goal, avatarUrl }) {
+  const client = requireSupabase()
+  const payload = { id: userId, display_name: displayName || null, goal: goal || 'Lose fat and gain muscle', updated_at: new Date().toISOString() }
+  if (avatarUrl !== undefined) payload.avatar_url = avatarUrl || null
+  const { data, error } = await client.from('profiles').upsert(payload, { onConflict: 'id' }).select().single()
+  if (error) throw error
+  return data
+}
+
+export async function updateAccount({ displayName, email }) {
+  const client = requireSupabase()
+  const changes = { data: { full_name: displayName } }
+  if (email) changes.email = email
+  const { data, error } = await client.auth.updateUser(changes)
+  if (error) throw error
+  return data.user
+}
+
+export async function uploadAvatar(userId, file) {
+  const client = requireSupabase()
+  if (!file) throw new Error('Choose an image first.')
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Use a JPG, PNG or WebP image.')
+  if (file.size > 5 * 1024 * 1024) throw new Error('Profile image must be under 5 MB.')
+  const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  const path = `${userId}/profile.${extension}`
+  const { error } = await client.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type, cacheControl: '3600' })
+  if (error) throw error
+  const { data } = client.storage.from('avatars').getPublicUrl(path)
+  return `${data.publicUrl}?v=${Date.now()}`
+}
+
+export async function getTodaySteps(userId) {
+  const client = requireSupabase()
+  const today = new Date().toISOString().slice(0, 10)
+  const { data, error } = await client.from('daily_steps').select('steps,source,synced_at').eq('user_id', userId).eq('step_date', today).order('synced_at', { ascending: false }).limit(1)
+  if (error) throw error
+  return data?.[0] ?? { steps: 0, source: null, synced_at: null }
+}
+
 export async function saveWorkoutSession({ userId, workout, draft, durationMin = 45, notes = '' }) {
   const client = requireSupabase()
-  const { data: session, error: sessionError } = await client
-    .from('sessions')
-    .insert({
-      user_id: userId,
-      workout_id: workout.id,
-      workout_name: workout.name,
-      session_date: new Date().toISOString().slice(0, 10),
-      duration_min: durationMin,
-      notes,
-    })
-    .select()
-    .single()
+  const { data: session, error: sessionError } = await client.from('sessions').insert({ user_id: userId, workout_id: workout.id, workout_name: workout.name, session_date: new Date().toISOString().slice(0, 10), duration_min: durationMin, notes }).select().single()
   if (sessionError) throw sessionError
-
   const setRows = workout.exercises.flatMap((exercise) => {
     if (draft.removedExercises.includes(exercise.id)) return []
-    return (draft.sets[exercise.id] ?? [])
-      .filter((set) => set.complete && !set.removed)
-      .map((set) => ({
-        session_id: session.id,
-        exercise_id: exercise.id,
-        exercise_name: exercise.name,
-        set_no: set.setNo,
-        reps: set.reps,
-        weight_kg: set.weight,
-        completed: true,
-      }))
+    return (draft.sets[exercise.id] ?? []).filter((set) => set.complete && !set.removed).map((set) => ({ session_id: session.id, exercise_id: exercise.id, exercise_name: exercise.name, set_no: set.setNo, reps: set.reps, weight_kg: set.weight, completed: true }))
   })
-
   if (setRows.length) {
     const { error } = await client.from('set_logs').insert(setRows)
     if (error) throw error
   }
-
   if (draft.cardio.complete) {
-    const { error } = await client.from('cardio_logs').insert({
-      session_id: session.id,
-      activity: 'Incline treadmill walk',
-      duration_min: draft.cardio.minutes,
-      incline_percent: draft.cardio.incline,
-      rpe: draft.cardio.rpe,
-      intensity: 'Medium',
-    })
+    const { error } = await client.from('cardio_logs').insert({ session_id: session.id, activity: 'Incline treadmill walk', duration_min: draft.cardio.minutes, incline_percent: draft.cardio.incline, rpe: draft.cardio.rpe, intensity: 'Medium' })
     if (error) throw error
   }
-
   return session
 }
