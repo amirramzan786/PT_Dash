@@ -36,13 +36,15 @@ st.markdown(
     .stButton>button,.stFormSubmitButton>button {min-height:46px;border-radius:12px;font-weight:750;border:1px solid #364152;}
     .stButton>button[kind="primary"],.stFormSubmitButton>button[kind="primary"] {background:#D6A84B;color:#0B1018;border-color:#D6A84B;}
     [data-baseweb="input"] input,[data-baseweb="select"],textarea {font-size:16px !important;}
-    div[data-testid="stHorizontalBlock"] {gap:.35rem;}
+    div[data-testid="stHorizontalBlock"] {gap:.35rem; flex-wrap:nowrap !important;}
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {min-width:0 !important; width:auto !important; flex:1 1 0 !important;}
     .nav-note {color:#667085;font-size:.74rem;text-align:center;margin-top:-.25rem;}
     @media (max-width:640px){
       .block-container{padding:.5rem .7rem 4rem;}
       .steel-logo{font-size:1.75rem;}
-      [data-testid="column"]{min-width:0 !important;}
-      .stButton>button,.stFormSubmitButton>button{width:100%;font-size:.82rem;padding-left:.35rem;padding-right:.35rem;}
+      div[data-testid="stHorizontalBlock"]{flex-wrap:nowrap !important; gap:.3rem !important;}
+      div[data-testid="stHorizontalBlock"] > div[data-testid="column"]{min-width:0 !important; width:auto !important; flex:1 1 0 !important;}
+      .stButton>button,.stFormSubmitButton>button{width:100%;font-size:.78rem;padding-left:.2rem;padding-right:.2rem;white-space:nowrap;}
     }
     </style>
     """,
