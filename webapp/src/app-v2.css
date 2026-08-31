@@ -36,6 +36,7 @@ button { cursor: pointer; }
 .toast-note { margin: 0 0 15px; padding: 11px 13px; border: 1px solid #4e673f; border-radius: 13px; color: #cde4bf; background: #122018; font-size: .83rem; }
 
 .v2-loading { min-height: 70vh; display: grid; place-items: center; align-content: center; gap: 12px; color: var(--steel-muted); }
+.settings-page { display: none !important; }
 .app-load-error { padding: 32px 20px; text-align: center; }
 .app-load-error > div:last-child { width: min(100%, 420px); display: grid; justify-items: center; gap: 10px; }
 .app-load-error h2 { margin: 0; color: #f5f6f7; font-size: clamp(1.45rem, 4vw, 2rem); }
