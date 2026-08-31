@@ -161,6 +161,13 @@
 .settings-disclosure-content > .steel-card { margin: 0; }
 .settings-disclosure-content .password-form { border-color: #293746; }
 .settings-support-footer { margin-top: auto; }
+.settings-footer-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, .85fr); align-items: center; gap: 18px; }
+.settings-footer-layout .settings-security-card { grid-template-columns: 30px minmax(0, 1fr); gap: 8px; padding: 10px 12px; border-color: rgba(49,68,59,.7); border-radius: 14px; background: rgba(18,32,25,.5); opacity: .78; }
+.settings-footer-layout .settings-security-icon { width: 30px; height: 30px; }
+.settings-footer-layout .settings-security-icon svg { width: 17px; }
+.settings-footer-layout .settings-security-card h3 { margin: 2px 0 3px; font-size: .76rem; }
+.settings-footer-layout .settings-security-card p { font-size: .64rem; line-height: 1.35; }
+.settings-footer-layout .settings-security-card .eyebrow { font-size: .55rem; }
 .nutrition-page { max-width: 760px; margin-inline: auto; }
 .nutrition-view-switcher { display: inline-flex; gap: 4px; padding: 4px; margin-top: 14px; border: 1px solid var(--steel-line); border-radius: 12px; background: rgba(10,16,24,.7); }
 .nutrition-view-switcher button { min-height: 34px; padding: 0 11px; border: 0; border-radius: 9px; color: var(--steel-muted); background: transparent; font: inherit; font-size: .7rem; font-weight: 800; }
@@ -199,6 +206,7 @@
   .nutrition-view-switcher button { width: 100%; }
   .nutrition-plan-summary { align-items: flex-start; flex-direction: column; }
   .nutrition-next-card { display: grid; }
+  .settings-footer-layout { grid-template-columns: 1fr; gap: 8px; }
   .progress-stat-grid { grid-template-columns: repeat(2, 1fr); }
   .progress-detail-grid, .progress-chart-grid { grid-template-columns: 1fr; }
   .progress-detail-values { gap: 6px; }
