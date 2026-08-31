@@ -313,15 +313,16 @@ button { cursor: pointer; }
 }
 
 /* Generated Steel artwork pack: Hero 1 plus focused muscle-group crops. */
-.v4-hero-art { inset: 0 0 74px 0; background-image: linear-gradient(90deg,rgba(8,13,20,.98) 0%,rgba(8,13,20,.92) 19%,rgba(8,13,20,.62) 43%,rgba(8,13,20,.2) 72%,rgba(8,13,20,.08) 100%),linear-gradient(180deg,rgba(8,13,20,.12),rgba(8,13,20,.8)),url('/assets/steel-hero.png'); background-size: cover; background-position: center; filter: saturate(.9) sepia(.12); }
+.v4-hero-art { inset: 0 0 74px 0; background-image: linear-gradient(90deg,rgba(8,13,20,.98) 0%,rgba(8,13,20,.92) 19%,rgba(8,13,20,.62) 43%,rgba(8,13,20,.2) 72%,rgba(8,13,20,.08) 100%),linear-gradient(180deg,rgba(8,13,20,.08),rgba(8,13,20,.68)),url('/assets/steel-hero.png'); background-size: cover; background-position: center 64%; filter: saturate(.9) sepia(.12); }
+.v4-metric-grid { background: rgba(8,17,27,.58); backdrop-filter: blur(8px); }
 .v4-hero-figure { display: none; }
-.hero-step-counter { position: absolute; top: 16%; right: 14%; z-index: 3; width: 92px; height: 92px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: #f5f6f7; background: conic-gradient(var(--steel-gold-2) var(--step-progress),rgba(111,123,138,.34) 0); box-shadow: 0 0 0 1px rgba(217,173,85,.48), 0 9px 24px rgba(0,0,0,.28); cursor: pointer; transition: transform .2s ease, box-shadow .2s ease; }
+.hero-step-counter { position: absolute; top: 8%; right: 7%; z-index: 3; width: 68px; height: 68px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; color: #f5f6f7; background: conic-gradient(var(--steel-gold-2) var(--step-progress),rgba(111,123,138,.34) 0); box-shadow: 0 0 0 1px rgba(217,173,85,.48), 0 9px 24px rgba(0,0,0,.28); cursor: pointer; transition: transform .2s ease, box-shadow .2s ease; }
 .hero-step-counter::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: rgba(8,13,20,.86); }
 .hero-step-counter:hover, .hero-step-counter:focus-visible { transform: scale(1.05); box-shadow: 0 0 0 2px var(--steel-gold-2), 0 12px 28px rgba(0,0,0,.38); outline: none; }
 .hero-step-ring { position: relative; z-index: 1; display: grid; justify-items: center; gap: 2px; }
 .hero-step-ring svg { color: var(--steel-gold-2); }
-.hero-step-ring strong { font-size: .98rem; line-height: 1; }
-.hero-step-ring small { color: #aeb5bf; font-size: .5rem; text-transform: uppercase; letter-spacing: .04em; }
+.hero-step-ring strong { font-size: .78rem; line-height: 1; }
+.hero-step-ring small { color: #aeb5bf; font-size: .39rem; text-transform: uppercase; letter-spacing: .03em; }
 .workout-tile .tile-art { position: relative; }
 .workout-tile .tile-art svg { display: none; }
 .workout-tile .tile-art::before { content: ''; position: absolute; inset: 0; width: auto; height: auto; border-radius: 0; background-image: linear-gradient(90deg,rgba(8,13,19,.08),rgba(8,13,19,.62)),url('/assets/steel-push.png'); background-size: cover; background-position: center 42%; clip-path: none; filter: saturate(.9) sepia(.16) contrast(1.05); }
