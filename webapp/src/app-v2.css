@@ -291,7 +291,7 @@ button { cursor: pointer; }
 
 .v4-desktop-nav { display: none; }
 
-.v2-bottom-nav { position: fixed; z-index: 20; left: 50%; bottom: 0; transform: translateX(-50%); width: min(100%,760px); display: grid; grid-template-columns: repeat(4,1fr); gap: 2px; padding: 8px 7px calc(8px + env(safe-area-inset-bottom)); background: rgba(7,11,17,.95); border-top: 1px solid #28313c; backdrop-filter: blur(18px); }
+.v2-bottom-nav { position: fixed; z-index: 20; left: 50%; bottom: 0; transform: translateX(-50%); width: min(100%,760px); display: grid; grid-template-columns: repeat(5,1fr); gap: 2px; padding: 8px 7px calc(8px + env(safe-area-inset-bottom)); background: rgba(7,11,17,.95); border-top: 1px solid #28313c; backdrop-filter: blur(18px); }
 .v2-bottom-nav button { min-width: 0; min-height: 57px; border: 0; border-radius: 12px; background: transparent; color: #687381; display: grid; place-items: center; gap: 3px; padding: 4px 2px; }
 .v2-bottom-nav button span { font-size: .61rem; }
 .v2-bottom-nav button.active { color: var(--steel-gold-2); background: linear-gradient(180deg,rgba(217,173,85,.11),rgba(217,173,85,.03)); }
