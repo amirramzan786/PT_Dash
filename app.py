@@ -176,7 +176,7 @@ if page == "Home":
     cardio_minutes = rows("SELECT COALESCE(SUM(duration_min),0) AS n FROM cardio_logs WHERE activity='Incline treadmill walk'")[0]["n"]
     current_weight_text = "—"
     if latest_weight:
-        current_weight_text = f"{lb_to_kg(latest_weight[0]['weight_lb']):.1f} kg"
+        current_weight_text = f"{float(latest_weight[0]['weight_lb']):.1f} lb"
 
     c1, c2 = st.columns(2)
     with c1:
@@ -528,8 +528,8 @@ elif page == "Plan":
 elif page == "Weight":
     st.markdown("## Weight check-ins")
     history = df("SELECT week_date,weight_lb FROM checkins WHERE weight_lb IS NOT NULL ORDER BY week_date DESC")
-    latest_kg = lb_to_kg(history.iloc[0]["weight_lb"]) if not history.empty else None
-    latest_text = f"{latest_kg:.1f} kg" if latest_kg is not None else "—"
+    latest_lb = float(history.iloc[0]["weight_lb"]) if not history.empty else None
+    latest_text = f"{latest_lb:.1f} lb" if latest_lb is not None else "—"
 
     st.markdown(
         f"<div class='steel-card gold'><div class='steel-label'>Current weight</div><div class='steel-value'>{latest_text}</div><div class='steel-meta'>Track the trend, not a single day</div></div>",
@@ -538,29 +538,29 @@ elif page == "Weight":
 
     with st.form("weight_form"):
         check_date = st.date_input("Check-in date", value=date.today())
-        weight_kg = st.number_input("Weight (kg)", min_value=30.0, max_value=300.0, value=float(latest_kg or 90.0), step=.1)
+        weight_lb = st.number_input("Weight (lb)", min_value=66.0, max_value=660.0, value=float(latest_lb or 198.0), step=.1)
         save = st.form_submit_button("SAVE WEIGHT", type="primary", use_container_width=True)
     if save:
         execute(
             """INSERT INTO checkins(week_date,weight_lb) VALUES (?,?)
                ON CONFLICT(week_date) DO UPDATE SET weight_lb=excluded.weight_lb""",
-            (check_date.isoformat(), kg_to_lb(weight_kg)),
+            (check_date.isoformat(), float(weight_lb)),
         )
-        flash(f"Saved {weight_kg:.1f} kg.")
+        flash(f"Saved {weight_lb:.1f} lb.")
 
     if not history.empty:
         chart_data = history.copy()
         chart_data["date"] = pd.to_datetime(chart_data["week_date"])
-        chart_data["weight_kg"] = chart_data["weight_lb"] * KG_PER_LB
+        chart_data["weight_lb"] = chart_data["weight_lb"].astype(float)
         chart = (
             alt.Chart(chart_data)
             .mark_line(point=True, color="#D6A84B", strokeWidth=3)
             .encode(
                 x=alt.X("date:T", title=None),
-                y=alt.Y("weight_kg:Q", title="kg", scale=alt.Scale(zero=False)),
+                y=alt.Y("weight_lb:Q", title="lb", scale=alt.Scale(zero=False)),
                 tooltip=[
                     alt.Tooltip("date:T", title="Date", format="%d %b %Y"),
-                    alt.Tooltip("weight_kg:Q", title="kg", format=".1f"),
+                    alt.Tooltip("weight_lb:Q", title="lb", format=".1f"),
                 ],
             )
             .properties(height=260)
