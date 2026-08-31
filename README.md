@@ -70,12 +70,15 @@ The logical next upgrade is a review screen that exports de-identified check-in/
 - [ ] Progress Quick Action: connect the Home quick action to the Progress experience.
 - [ ] Progress navigation: add Progress as a clearly available primary navigation destination on mobile and desktop.
 - [ ] Progress experience: build the full section with relevant live content, including training history, consistency/streak trends, volume, weight and steps where available.
-- [ ] Active Workout UX: make exercise replacement/swap intuitive and redesign the current Remove exercise action with a clearer, safer interaction and recovery path.
-- [ ] Workout library: add search, filters, exercise replacement and a user-created Log Workout flow.
+- [x] Active Workout UX: make exercise replacement/swap intuitive and redesign the current Remove exercise action with a clearer, safer interaction and recovery path.
+- [x] Workout library foundation: search, filters, exercise detail guidance, form-video links, same-muscle exercise replacement and a user-created Log Workout flow.
+- [ ] Workout library expansion: grow the exercise catalogue and content coverage while keeping the library and active-workout swap flow consistent.
 - [ ] UX quality: complete mobile/desktop QA and add polished loading, empty, error and success states.
 - [ ] Brand polish: finalise the bold Steel logo and app icon treatment.
 - [ ] AI foundation: generate goals and personalised journeys from onboarding answers, then add the AI trainer chat and recommendation engine.
-- [ ] Nutrition foundation: add meal planning, meal logging and daily nutrition tracking.
+- [ ] Nutrition experience: build an intuitive MyFitnessPal-style flow with daily calorie totals, target-versus-actual progress, per-meal totals and clear logging feedback.
+- [ ] Meal choices and editing: let users choose up to 3–4 recipes per meal, delete or swap meals, edit recipe ingredients and amounts, and add custom foods or off-plan/cheat-day meals with totals recalculated immediately.
+- [ ] Food database and scanning: connect a nutrition/food API, support barcode scanning and manual food entry, and save verified foods to the user’s nutrition history.
 - [ ] Health integrations: connect supported health platforms for real step data.
 - [ ] Future recipes offering: integrate a recipes API and tailor calorie-aware meal choices as a later subscription feature.
 
