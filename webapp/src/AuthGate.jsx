@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Dumbbell, Loader2, LockKeyhole } from 'lucide-react'
 import App from './App'
+import './auth.css'
 import { getCurrentUser, onAuthChange, signIn, signOut, signUp } from './lib/steelApi'
 
 export default function AuthGate() {
