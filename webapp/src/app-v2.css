@@ -295,5 +295,15 @@ button { cursor: pointer; }
   .v4-desktop-nav > button { min-height: 48px; display: flex; align-items: center; gap: 13px; padding: 0 14px; border: 0; border-radius: 12px; color: #bec6cf; background: transparent; text-align: left; }
   .v4-desktop-nav > button.active { color: var(--steel-gold-2); background: linear-gradient(90deg,#2a261c,#171c20); border: 1px solid var(--steel-gold-dark); }
   .v4-desktop-support { display: grid; gap: 4px; margin-top: auto; padding: 18px 5px 0; border-top: 1px solid #27313d; }
-  .v4-desktop-support button { display: flex; align-items: center; justify-content: space-between; min-height: 36px; border: 0; background: transparent; color: #aab3bd; font-size: .75rem; text-align: left; }
+.v4-desktop-support button { display: flex; align-items: center; justify-content: space-between; min-height: 36px; border: 0; background: transparent; color: #aab3bd; font-size: .75rem; text-align: left; }
 }
+
+/* Generated Steel artwork pack: Hero 1 plus focused muscle-group crops. */
+.v4-hero-art { background-image: linear-gradient(90deg,rgba(10,15,20,.98) 0%,rgba(10,15,20,.52) 34%,rgba(10,15,20,.14) 72%),linear-gradient(180deg,rgba(8,13,20,.28),rgba(8,13,20,.8)),url('/assets/steel-hero.png'); background-size: cover; background-position: center; filter: saturate(.9) sepia(.12); }
+.v4-hero-figure { display: none; }
+.workout-tile .tile-art { position: relative; }
+.workout-tile .tile-art svg { display: none; }
+.workout-tile .tile-art::before { content: ''; position: absolute; inset: 0; width: auto; height: auto; border-radius: 0; background-image: linear-gradient(90deg,rgba(8,13,19,.08),rgba(8,13,19,.62)),url('/assets/steel-push.png'); background-size: cover; background-position: center 42%; clip-path: none; filter: saturate(.9) sepia(.16) contrast(1.05); }
+.workout-tile .tile-art::after { display: none; }
+.workout-tile .tile-art-2::before { transform: none; background-image: linear-gradient(90deg,rgba(8,13,19,.08),rgba(8,13,19,.62)),url('/assets/steel-pull.png'); background-position: center 40%; }
+.workout-tile .tile-art-3::before { background-image: linear-gradient(90deg,rgba(8,13,19,.08),rgba(8,13,19,.62)),url('/assets/steel-legs.png'); background-position: center 44%; }
