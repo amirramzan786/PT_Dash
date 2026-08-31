@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   Activity, ArrowLeft, ArrowRight, Camera, Check, ChevronDown, ChevronRight, Dumbbell, Flame,
   Footprints, HelpCircle, Home, Info, LineChart, LogOut, MessageSquare, Play, RotateCcw, Save, Scale, Settings,
-  ShieldCheck, Trash2, UserRound, Watch, ListChecks,
+  ShieldCheck, Target, Trash2, UserRound, Watch, ListChecks,
 } from 'lucide-react'
 import {
   changePassword, getDashboardStats, getProfile, getRecentSessions, getTodaySteps, getStepHistory, getWeightHistory,
