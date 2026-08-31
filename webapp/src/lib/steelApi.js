@@ -156,6 +156,14 @@ export async function updateAccount({ displayName, email }) {
   return data.user
 }
 
+export async function changePassword({ email, currentPassword, newPassword }) {
+  const client = requireSupabase()
+  const { error: verifyError } = await client.auth.signInWithPassword({ email, password: currentPassword })
+  if (verifyError) throw new Error('Current password is incorrect.')
+  const { error } = await client.auth.updateUser({ password: newPassword })
+  if (error) throw error
+}
+
 export async function uploadAvatar(userId, file) {
   const client = requireSupabase()
   if (!file) throw new Error('Choose an image first.')

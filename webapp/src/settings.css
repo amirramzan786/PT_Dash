@@ -60,6 +60,15 @@
 .settings-support-jump span { color: var(--steel-muted); font-size: .68rem; }
 .settings-support-jump strong { margin-right: auto; color: var(--steel-gold-2); font-size: .74rem; }
 .settings-support-jump:hover { border-color: var(--steel-gold); background: rgba(217,173,85,.16); }
+.password-form { display: grid; gap: 12px; }
+.settings-form-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.settings-form-heading h3 { margin: 4px 0 0; }
+.settings-form-heading > svg { color: var(--steel-green); }
+.settings-form-copy { margin: -4px 0 1px; color: var(--steel-muted); font-size: .74rem; line-height: 1.4; }
+.password-form label { display: grid; gap: 5px; }
+.password-form label > span { color: var(--steel-muted); font-size: .68rem; font-weight: 800; }
+.password-form input { min-height: 44px; border: 1px solid #333e4a; border-radius: 11px; background: #0a1017; color: white; padding: 0 11px; font-size: 16px; outline: none; }
+.password-form input:focus { border-color: var(--steel-gold); box-shadow: 0 0 0 3px rgba(217,173,85,.12); }
 .settings-support-card .section-heading { margin-bottom: 2px; }
 .settings-support-card h3 { margin: 3px 0 0; font-size: .9rem; }
 .settings-support-list { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; }
