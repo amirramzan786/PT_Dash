@@ -199,6 +199,10 @@
   .nutrition-view-switcher button { width: 100%; }
   .nutrition-plan-summary { align-items: flex-start; flex-direction: column; }
   .nutrition-next-card { display: grid; }
+  .progress-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .progress-detail-grid, .progress-chart-grid { grid-template-columns: 1fr; }
+  .progress-detail-values { gap: 6px; }
+  .progress-detail-values strong { font-size: .75rem; }
 }
 
 @media (max-width: 480px) {
