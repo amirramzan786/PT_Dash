@@ -133,15 +133,21 @@ export async function saveWeight(userId, checkinDate, weightLb) {
 
 export async function getProfile(userId) {
   const client = requireSupabase()
-  const { data, error } = await client.from('profiles').select('id,display_name,goal,avatar_url,created_at,updated_at').eq('id', userId).maybeSingle()
+  const { data, error } = await client.from('profiles').select('id,display_name,goal,avatar_url,experience_level,available_equipment,training_days,units,limitations,onboarding_completed,created_at,updated_at').eq('id', userId).maybeSingle()
   if (error) throw error
   return data
 }
 
-export async function saveProfile(userId, { displayName, goal, avatarUrl }) {
+export async function saveProfile(userId, { displayName, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, units, limitations, onboardingCompleted }) {
   const client = requireSupabase()
   const payload = { id: userId, display_name: displayName || null, goal: goal || 'Lose fat and gain muscle', updated_at: new Date().toISOString() }
   if (avatarUrl !== undefined) payload.avatar_url = avatarUrl || null
+  if (experienceLevel !== undefined) payload.experience_level = experienceLevel
+  if (availableEquipment !== undefined) payload.available_equipment = availableEquipment
+  if (trainingDays !== undefined) payload.training_days = trainingDays
+  if (units !== undefined) payload.units = units
+  if (limitations !== undefined) payload.limitations = limitations || null
+  if (onboardingCompleted !== undefined) payload.onboarding_completed = onboardingCompleted
   const { data, error } = await client.from('profiles').upsert(payload, { onConflict: 'id' }).select().single()
   if (error) throw error
   return data

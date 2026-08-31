@@ -8,6 +8,12 @@ create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   display_name text,
   goal text default 'Lose fat and gain muscle',
+  experience_level text not null default 'Intermediate' check (experience_level in ('Beginner','Intermediate','Advanced')),
+  available_equipment text[] not null default array['Machines']::text[],
+  training_days smallint not null default 3 check (training_days between 1 and 7),
+  units text not null default 'lb' check (units in ('lb','kg')),
+  limitations text,
+  onboarding_completed boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
