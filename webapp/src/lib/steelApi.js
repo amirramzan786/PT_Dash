@@ -265,14 +265,21 @@ export async function deleteMealPlanItem({ userId, id }) {
 
 export async function getLatestWeeklyCheckin(userId) {
   const client = requireSupabase()
-  const { data, error } = await client.from('weekly_checkins').select('id,week_start,energy,sleep,stress,soreness,workouts_completed,nutrition_days,pain_or_injury,wins,challenges,questions,submitted_at,created_at').eq('user_id', userId).order('week_start', { ascending: false }).limit(1).maybeSingle()
+  const { data, error } = await client.from('weekly_checkins').select('id,week_start,energy,sleep,stress,soreness,weight_lb,waist_cm,chest_bust_cm,hips_cm,arm_cm,thigh_cm,workouts_completed,nutrition_days,pain_or_injury,wins,challenges,questions,submitted_at,created_at').eq('user_id', userId).order('week_start', { ascending: false }).limit(1).maybeSingle()
   if (error) throw error
   return data
 }
 
-export async function saveWeeklyCheckin({ userId, weekStart, energy, sleep, stress, soreness, workoutsCompleted, nutritionDays, painOrInjury, wins, challenges, questions }) {
+export async function getWeeklyCheckinHistory(userId, limit = 12) {
   const client = requireSupabase()
-  const { data, error } = await client.from('weekly_checkins').upsert({ user_id: userId, week_start: weekStart, energy, sleep, stress, soreness, workouts_completed: workoutsCompleted, nutrition_days: nutritionDays, pain_or_injury: painOrInjury || null, wins: wins || null, challenges: challenges || null, questions: questions || null, submitted_at: new Date().toISOString() }, { onConflict: 'user_id,week_start' }).select().single()
+  const { data, error } = await client.from('weekly_checkins').select('id,week_start,energy,sleep,stress,soreness,weight_lb,waist_cm,chest_bust_cm,hips_cm,arm_cm,thigh_cm,workouts_completed,nutrition_days,pain_or_injury,wins,challenges,questions,submitted_at,created_at').eq('user_id', userId).order('week_start', { ascending: false }).limit(limit)
+  if (error) throw error
+  return data ?? []
+}
+
+export async function saveWeeklyCheckin({ userId, weekStart, energy, sleep, stress, soreness, weightLb, waistCm, chestBustCm, hipsCm, armCm, thighCm, workoutsCompleted, nutritionDays, painOrInjury, wins, challenges, questions }) {
+  const client = requireSupabase()
+  const { data, error } = await client.from('weekly_checkins').upsert({ user_id: userId, week_start: weekStart, energy, sleep, stress, soreness, weight_lb: Number(weightLb) || null, waist_cm: Number(waistCm) || null, chest_bust_cm: Number(chestBustCm) || null, hips_cm: Number(hipsCm) || null, arm_cm: Number(armCm) || null, thigh_cm: Number(thighCm) || null, workouts_completed: workoutsCompleted, nutrition_days: nutritionDays, pain_or_injury: painOrInjury || null, wins: wins || null, challenges: challenges || null, questions: questions || null, submitted_at: new Date().toISOString() }, { onConflict: 'user_id,week_start' }).select().single()
   if (error) throw error
   return data
 }
@@ -308,7 +315,7 @@ export async function getWeeklyActivitySummary(userId, weekStart, weekEnd) {
   return { workoutsCompleted: sessionsResult.count || 0, nutritionDays: new Set((mealsResult.data ?? []).map((row) => row.meal_date)).size }
 }
 
-export async function uploadCheckinMedia({ userId, weekStart, file }) {
+export async function uploadCheckinMedia({ userId, weekStart, file, mediaType = 'other' }) {
   const client = requireSupabase()
   if (!file || (!file.type.startsWith('image/') && !file.type.startsWith('video/'))) throw new Error('Upload an image or video file.')
   if (file.size > 25 * 1024 * 1024) throw new Error('Each check-in upload must be under 25 MB.')
@@ -316,7 +323,7 @@ export async function uploadCheckinMedia({ userId, weekStart, file }) {
   const path = `${userId}/${weekStart}/${crypto.randomUUID()}.${extension}`
   const { error: uploadError } = await client.storage.from('checkin-media').upload(path, file, { contentType: file.type, cacheControl: '3600' })
   if (uploadError) throw uploadError
-  const { data, error } = await client.from('weekly_checkin_media').insert({ user_id: userId, week_start: weekStart, storage_path: path, file_name: file.name, mime_type: file.type, file_size: file.size }).select().single()
+  const { data, error } = await client.from('weekly_checkin_media').insert({ user_id: userId, week_start: weekStart, media_type: mediaType, storage_path: path, file_name: file.name, mime_type: file.type, file_size: file.size }).select().single()
   if (error) throw error
   return data
 }
