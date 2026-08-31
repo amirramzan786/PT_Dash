@@ -250,8 +250,10 @@ export default function AppV3({ user, onSignOut }) {
   const activeExercises = selectedWorkout && draft ? selectedWorkout.exercises.filter((e) => !draft.removedExercises.includes(e.id)) : []
   const atFinisher = Boolean(draft && draft.step >= activeExercises.length)
   const currentExercise = draft && !atFinisher ? activeExercises[draft.step] : null
+  const currentExerciseName = currentExercise?.name?.trim().toLowerCase()
   const occupiedExerciseNames = new Set((selectedWorkout?.exercises ?? []).map((exercise) => exercise.name.trim().toLowerCase()))
-  const replacementOptions = exerciseOptions.filter((row) => row.id !== currentExercise?.id && !occupiedExerciseNames.has(row.name.trim().toLowerCase()))
+  const unusedReplacementOptions = exerciseOptions.filter((row) => row.id !== currentExercise?.id && row.name.trim().toLowerCase() !== currentExerciseName && !occupiedExerciseNames.has(row.name.trim().toLowerCase()))
+  const replacementOptions = unusedReplacementOptions.length ? unusedReplacementOptions : exerciseOptions.filter((row) => row.id !== currentExercise?.id && row.name.trim().toLowerCase() !== currentExerciseName)
   const firstName = (profile?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'there').split(' ')[0]
   const accountName = profile?.display_name || user.user_metadata?.full_name || firstName
   const avatarUrl = profile?.avatar_url || user.user_metadata?.avatar_url || null
