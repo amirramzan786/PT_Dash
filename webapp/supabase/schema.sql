@@ -139,6 +139,28 @@ create table if not exists weekly_checkins (
   unique (user_id, week_start)
 );
 
+create table if not exists meal_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  meal_date date not null,
+  meal_type text not null,
+  recipe_name text,
+  calories integer,
+  created_at timestamptz not null default now(),
+  unique (user_id, meal_date, meal_type)
+);
+
+create table if not exists weekly_checkin_media (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  week_start date not null,
+  storage_path text not null unique,
+  file_name text not null,
+  mime_type text not null,
+  file_size integer not null,
+  created_at timestamptz not null default now()
+);
+
 alter table profiles enable row level security;
 alter table workouts enable row level security;
 alter table exercises enable row level security;
@@ -150,6 +172,8 @@ alter table weight_checkins enable row level security;
 alter table nutrition_targets enable row level security;
 alter table meal_plan_items enable row level security;
 alter table weekly_checkins enable row level security;
+alter table meal_logs enable row level security;
+alter table weekly_checkin_media enable row level security;
 
 create policy "own profile" on profiles for all using (auth.uid() = id) with check (auth.uid() = id);
 create policy "own workouts" on workouts for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
@@ -159,6 +183,15 @@ create policy "own weight checkins" on weight_checkins for all using (auth.uid()
 create policy "own nutrition targets" on nutrition_targets for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "own meal plan" on meal_plan_items for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "own weekly checkins" on weekly_checkins for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "own meal logs" on meal_logs for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "own checkin media" on weekly_checkin_media for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Private check-in uploads. Files are stored under <user_id>/<week_start>/...
+insert into storage.buckets (id, name, public) values ('checkin-media', 'checkin-media', false) on conflict (id) do nothing;
+drop policy if exists "own checkin media files" on storage.objects;
+create policy "own checkin media files" on storage.objects for all to authenticated
+using (bucket_id = 'checkin-media' and (storage.foldername(name))[1] = (select auth.uid())::text)
+with check (bucket_id = 'checkin-media' and (storage.foldername(name))[1] = (select auth.uid())::text);
 
 create policy "own workout exercises" on workout_exercises for all
 using (exists (select 1 from workouts w where w.id = workout_id and w.user_id = auth.uid()))

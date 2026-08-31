@@ -277,6 +277,50 @@ export async function saveWeeklyCheckin({ userId, weekStart, energy, sleep, stre
   return data
 }
 
+export async function getMealLogs(userId, startDate, endDate) {
+  const client = requireSupabase()
+  const { data, error } = await client.from('meal_logs').select('id,meal_date,meal_type,recipe_name,calories').eq('user_id', userId).gte('meal_date', startDate).lte('meal_date', endDate).order('meal_date', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function saveMealLog({ userId, mealDate, mealType, recipeName, calories }) {
+  const client = requireSupabase()
+  const { data, error } = await client.from('meal_logs').upsert({ user_id: userId, meal_date: mealDate, meal_type: mealType, recipe_name: recipeName || null, calories: Number(calories) || 0 }, { onConflict: 'user_id,meal_date,meal_type' }).select().single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteMealLog({ userId, mealDate, mealType }) {
+  const client = requireSupabase()
+  const { error } = await client.from('meal_logs').delete().eq('user_id', userId).eq('meal_date', mealDate).eq('meal_type', mealType)
+  if (error) throw error
+}
+
+export async function getWeeklyActivitySummary(userId, weekStart, weekEnd) {
+  const client = requireSupabase()
+  const [sessionsResult, mealsResult] = await Promise.all([
+    client.from('sessions').select('id', { count: 'exact', head: true }).eq('user_id', userId).gte('session_date', weekStart).lte('session_date', weekEnd),
+    client.from('meal_logs').select('meal_date,meal_type').eq('user_id', userId).gte('meal_date', weekStart).lte('meal_date', weekEnd),
+  ])
+  if (sessionsResult.error) throw sessionsResult.error
+  if (mealsResult.error) throw mealsResult.error
+  return { workoutsCompleted: sessionsResult.count || 0, nutritionDays: new Set((mealsResult.data ?? []).map((row) => row.meal_date)).size }
+}
+
+export async function uploadCheckinMedia({ userId, weekStart, file }) {
+  const client = requireSupabase()
+  if (!file || (!file.type.startsWith('image/') && !file.type.startsWith('video/'))) throw new Error('Upload an image or video file.')
+  if (file.size > 25 * 1024 * 1024) throw new Error('Each check-in upload must be under 25 MB.')
+  const extension = file.name.split('.').pop()?.toLowerCase() || 'bin'
+  const path = `${userId}/${weekStart}/${crypto.randomUUID()}.${extension}`
+  const { error: uploadError } = await client.storage.from('checkin-media').upload(path, file, { contentType: file.type, cacheControl: '3600' })
+  if (uploadError) throw uploadError
+  const { data, error } = await client.from('weekly_checkin_media').insert({ user_id: userId, week_start: weekStart, storage_path: path, file_name: file.name, mime_type: file.type, file_size: file.size }).select().single()
+  if (error) throw error
+  return data
+}
+
 export async function saveProfile(userId, { displayName, phone, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, units, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay }) {
   const client = requireSupabase()
   const payload = { id: userId, display_name: displayName || null, goal: goal || 'Lose fat and gain muscle', updated_at: new Date().toISOString() }
