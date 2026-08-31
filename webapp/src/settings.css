@@ -55,6 +55,15 @@
 .settings-security-icon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: var(--steel-green); background: #12241a; border: 1px solid #365640; }
 .settings-security-card h3 { margin: 4px 0 5px; }
 .settings-security-card p { margin: 0; color: #8d9b93; line-height: 1.45; font-size: .76rem; }
+.settings-support-card { border: 1px solid var(--steel-line); border-radius: 18px; padding: 16px; background: linear-gradient(145deg,#141c25,#0e151e); }
+.settings-support-card .section-heading { margin-bottom: 7px; }
+.settings-support-card h3 { margin: 4px 0 0; }
+.settings-support-list { display: grid; }
+.settings-support-list button { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border: 0; border-top: 1px solid var(--steel-line); background: transparent; color: var(--steel-text); text-align: left; }
+.settings-support-list button > span { display: grid; gap: 3px; }
+.settings-support-list strong { font-size: .82rem; }
+.settings-support-list small { color: var(--steel-muted); font-size: .68rem; }
+.settings-support-list svg { color: var(--steel-gold); flex: 0 0 auto; }
 .signout-button { min-height: 50px; width: 100%; border-radius: 14px; border: 1px solid #713d3d; background: linear-gradient(145deg,#251616,#171117); color: #edaaaa; font-weight: 850; display: flex; justify-content: center; align-items: center; gap: 8px; }
 
 @media (max-width: 480px) {
