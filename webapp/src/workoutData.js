@@ -2,6 +2,9 @@ export const workouts = [
   {
     id: 'back-biceps',
     name: 'Back + Biceps',
+    shortName: 'Pull',
+    focus: 'Back · Biceps',
+    artClass: 'art-pull',
     duration: '~45 min',
     finisher: '5–10 min incline walk',
     exercises: [
@@ -16,6 +19,9 @@ export const workouts = [
   {
     id: 'chest-triceps',
     name: 'Chest + Triceps',
+    shortName: 'Push',
+    focus: 'Chest · Shoulders · Triceps',
+    artClass: 'art-push',
     duration: '~45 min',
     finisher: '5–10 min incline walk',
     exercises: [
@@ -30,6 +36,9 @@ export const workouts = [
   {
     id: 'shoulders-legs',
     name: 'Shoulders + Legs',
+    shortName: 'Legs',
+    focus: 'Quads · Hamstrings · Calves',
+    artClass: 'art-legs',
     duration: '~45 min',
     finisher: '5–10 min incline walk',
     exercises: [
