@@ -156,6 +156,13 @@ export async function getTodaySteps(userId) {
   return data?.[0] ?? { steps: 0, source: null, synced_at: null }
 }
 
+export async function getStepHistory(userId, limit = 31) {
+  const client = requireSupabase()
+  const { data, error } = await client.from('daily_steps').select('step_date,steps').eq('user_id', userId).order('step_date', { ascending: true }).limit(limit)
+  if (error) throw error
+  return data ?? []
+}
+
 export async function saveWorkoutSession({ userId, workout, draft, durationMin = 45, notes = '' }) {
   const client = requireSupabase()
   const { data: session, error: sessionError } = await client.from('sessions').insert({ user_id: userId, workout_id: workout.id, workout_name: workout.name, session_date: new Date().toISOString().slice(0, 10), duration_min: durationMin, notes }).select().single()

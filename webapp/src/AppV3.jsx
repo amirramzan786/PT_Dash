@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   Activity, ArrowLeft, ArrowRight, Camera, Check, ChevronDown, ChevronRight, Dumbbell, Flame,
   Footprints, Home, LineChart, LogOut, Play, RotateCcw, Save, Scale,
-  ShieldCheck, Trash2, Trophy, UserRound, Watch, ListChecks,
+  ShieldCheck, Trash2, UserRound, Watch, ListChecks,
 } from 'lucide-react'
 import {
-  getDashboardStats, getProfile, getRecentSessions, getTodaySteps, getWeightHistory,
+  getDashboardStats, getProfile, getRecentSessions, getTodaySteps, getStepHistory, getWeightHistory,
   loadWorkouts, saveProfile, saveWeight, saveWorkoutSession, updateAccount, uploadAvatar,
 } from './lib/steelApi'
 import './app-v2.css'
@@ -45,6 +45,13 @@ function WeightChart({ data }) {
   return <svg className="weight-chart" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Body weight trend"><polyline className="chart-line" points={points} /></svg>
 }
 
+function StepsChart({ data }) {
+  if (!data.length) return <div className="empty-chart">Step history will appear when your health data syncs.</div>
+  const values = data.map((item) => Number(item.steps || 0)); const max = Math.max(...values, 1)
+  const points = values.map((value, index) => `${data.length === 1 ? 50 : (index / (data.length - 1)) * 100},${88 - (value / max) * 68}`).join(' ')
+  return <svg className="steps-chart" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Steps over the last 30 days"><polyline className="chart-line" points={points} /></svg>
+}
+
 function Avatar({ url, size = 36 }) {
   return url ? <img className="profile-image" src={url} alt="Profile" style={{ width: size, height: size }} /> : <span className="account-avatar" style={{ width: size, height: size }}><UserRound size={Math.max(17, size * .45)} /></span>
 }
@@ -55,6 +62,7 @@ export default function AppV3({ user, onSignOut }) {
   const [workouts, setWorkouts] = useState([])
   const [stats, setStats] = useState({ latestWeightLb: null, sessionCount: 0 })
   const [steps, setSteps] = useState({ steps: 0, source: null })
+  const [stepHistory, setStepHistory] = useState([])
   const [weights, setWeights] = useState([])
   const [sessions, setSessions] = useState([])
   const [profile, setProfile] = useState(null)
@@ -70,11 +78,12 @@ export default function AppV3({ user, onSignOut }) {
   const [progressOpen, setProgressOpen] = useState(false)
 
   async function refresh() {
-    const [programme, dashboard, todaySteps, history, recent, profileRow] = await Promise.all([
+    const [programme, dashboard, todaySteps, stepHistoryRows, history, recent, profileRow] = await Promise.all([
       loadWorkouts(user.id), getDashboardStats(user.id), getTodaySteps(user.id),
+      getStepHistory(user.id, 31),
       getWeightHistory(user.id, 30), getRecentSessions(user.id, 8), getProfile(user.id),
     ])
-    setWorkouts(programme); setStats(dashboard); setSteps(todaySteps); setWeights(history); setSessions(recent); setProfile(profileRow)
+    setWorkouts(programme); setStats(dashboard); setSteps(todaySteps); setStepHistory(stepHistoryRows); setWeights(history); setSessions(recent); setProfile(profileRow)
     const fallbackName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Account'
     setProfileName(profileRow?.display_name || fallbackName)
     setProfileEmail(user.email || '')
@@ -148,8 +157,8 @@ export default function AppV3({ user, onSignOut }) {
       {tab === 'Home' && <div className="page-stack">
         <section className="v4-welcome-card"><div className="v4-hero-art" aria-hidden="true"><div className="v4-hero-figure" /></div><div className="v4-hero-copy"><span className="eyebrow">WELCOME BACK,</span><h2>{firstName}</h2><p>You’ve got this. Let’s build something strong today.</p></div><div className="v4-metric-grid"><article><Dumbbell size={17}/><span>WORKOUTS</span><strong>{stats.sessionCount}</strong><small>This month</small></article><article><Flame size={17}/><span>STREAK</span><strong>—</strong><small>Days</small></article><article><Scale size={17}/><span>VOLUME</span><strong>—</strong><small>kg lifted</small></article><article><Check size={17}/><span>SESSIONS</span><strong>{stats.sessionCount}</strong><small>Completed</small></article></div></section>
         <section className="v4-quick-actions"><div className="section-heading"><div><span className="eyebrow">MAKE IT EASY</span><h3>Quick actions</h3></div></div><div className="v4-action-grid">{workouts[0]&&<button onClick={()=>openWorkout(workouts[0])}><Play/><span>Start workout</span></button>}{workouts[1]&&<button onClick={()=>openWorkout(workouts[1])}><Dumbbell/><span>Push workout</span></button>}<button onClick={()=>setTab('Weight')}><Scale/><span>Log weight</span></button><button onClick={()=>setProgressOpen(true)}><ListChecks/><span>View progress</span></button></div></section>
-        <section className="v4-checkin-card"><div><Footprints size={19}/><span>Today’s steps</span><strong>{Number(steps.steps||0).toLocaleString('en-GB')}</strong></div><div><Scale size={19}/><span>Weight</span><strong>{latestWeight?latestWeight.toFixed(1):'—'} <small>lb</small></strong></div></section>
-        <section className="dashboard-grid"><article className="steel-card weight-summary-card"><div className="card-title-row"><span className="card-icon"><Scale size={17}/></span><span className="eyebrow">BODY WEIGHT</span></div><strong className="big-metric">{latestWeight ? `${latestWeight.toFixed(1)} lb` : '— lb'}</strong><div className={`delta ${weightDelta !== null && weightDelta <= 0 ? 'good' : ''}`}>{weightDelta === null ? 'Start with a weight check-in' : `${weightDelta > 0 ? '+' : ''}${weightDelta.toFixed(1)} lb vs previous`}</div><WeightChart data={weights.slice(-8)}/><button className="mini-link" onClick={() => setTab('Weight')}>Open Weight <ChevronRight size={14}/></button></article><article className="steel-card consistency-card"><div className="card-title-row"><span className="card-icon"><Trophy size={17}/></span><span className="eyebrow">MOVEMENT</span></div><strong className="big-metric">{Number(steps.steps || 0).toLocaleString('en-GB')}</strong><span className="metric-label">steps today</span><div className="ring-wrap"><div className="simple-ring"><span>{steps.source ? 'Live' : 'Soon'}</span></div><p>{steps.source ? `Synced from ${steps.source}` : 'Connect a health service in Settings.'}</p></div></article></section>
+        <section className="home-utility-grid"><button className="home-utility-card" onClick={() => setTab('Weight')}><Scale size={18}/><span className="eyebrow">BODY WEIGHT</span><strong>{latestWeight ? `${latestWeight.toFixed(1)} lb` : '— lb'}</strong><small>Open Weight <ChevronRight size={13}/></small></button><button className="home-utility-card" onClick={() => setTab('Progress')}><Footprints size={18}/><span className="eyebrow">TODAY’S STEPS</span><strong>{Number(steps.steps || 0).toLocaleString('en-GB')}</strong><small>View Progress <ChevronRight size={13}/></small></button></section>
+        <section className="steel-card movement-card"><div className="section-heading"><div><span className="eyebrow">MOVEMENT</span><h3>Steps today</h3></div><button className="text-link" onClick={() => setTab('Progress')}>View progress <ChevronRight size={14}/></button></div><strong className="big-metric">{Number(steps.steps || 0).toLocaleString('en-GB')}</strong><span className="metric-label">{steps.source ? `Synced from ${steps.source}` : 'Connect a health service in Settings.'}</span><StepsChart data={stepHistory}/></section>
         <section><div className="section-heading"><div><span className="eyebrow">YOUR PROGRAMME</span><h3>Choose a workout</h3></div><button className="text-link" onClick={() => setTab('Plan')}>View all</button></div><div className="workout-tile-stack">{workouts.map((w, i) => <button className="workout-tile" key={w.id} onClick={() => openWorkout(w)}><div className={`tile-art tile-art-${i+1}`}><Dumbbell size={30}/></div><div className="tile-copy"><span className="eyebrow">WORKOUT {i+1}</span><strong>{w.name}</strong><small>{w.exercises.length} exercises · {w.duration}</small></div><span className="tile-arrow"><ChevronRight size={19}/></span></button>)}</div></section>
         <section className="v4-progress-section"><button className="v4-progress-heading" onClick={()=>setProgressOpen((open)=>!open)} aria-expanded={progressOpen}><span><span className="eyebrow">AT A GLANCE</span><strong>Progress</strong><small>Relative metrics</small></span><ChevronDown className={progressOpen?'rotated':''}/></button>{progressOpen&&<div className="steel-card v4-progress-card"><div className="v4-progress-top"><strong>This week</strong><span>{sessions.length} recent sessions</span></div><div className="v4-relative-metrics"><div><span>Weekly goal</span><strong>{Math.min(sessions.length,5)} / 5</strong></div><div><span>Check-ins</span><strong>{weights.length}</strong></div><div><span>Sessions total</span><strong>{stats.sessionCount}</strong></div></div></div>}</section>
       </div>}
