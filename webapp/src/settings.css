@@ -56,6 +56,10 @@
 .settings-security-card h3 { margin: 4px 0 5px; }
 .settings-security-card p { margin: 0; color: #8d9b93; line-height: 1.45; font-size: .76rem; }
 .settings-support-card { padding: 8px 2px 2px; border-top: 1px solid var(--steel-line); }
+.settings-support-jump { width: 100%; display: flex; align-items: center; gap: 8px; margin-top: 13px; padding: 10px 12px; border: 1px solid rgba(217,173,85,.36); border-radius: 12px; color: var(--steel-text); background: linear-gradient(90deg,rgba(217,173,85,.12),rgba(217,173,85,.04)); text-align: left; }
+.settings-support-jump span { color: var(--steel-muted); font-size: .68rem; }
+.settings-support-jump strong { margin-right: auto; color: var(--steel-gold-2); font-size: .74rem; }
+.settings-support-jump:hover { border-color: var(--steel-gold); background: rgba(217,173,85,.16); }
 .settings-support-card .section-heading { margin-bottom: 2px; }
 .settings-support-card h3 { margin: 3px 0 0; font-size: .9rem; }
 .settings-support-list { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; }
