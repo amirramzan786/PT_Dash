@@ -10,15 +10,19 @@ import {
   Home,
   LineChart,
   LogOut,
+  Mail,
   Play,
   Plus,
   RotateCcw,
   Salad,
   Scale,
+  Settings,
+  ShieldCheck,
   Sparkles,
   Target,
   Trash2,
   Trophy,
+  UserRound,
 } from 'lucide-react'
 import {
   getDashboardStats,
@@ -61,8 +65,8 @@ function makeDraft(workout) {
 
 function formatDate(value) {
   if (!value) return '—'
-  const [year, month, day] = value.split('-').map(Number)
-  return new Date(year, month - 1, day).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  const [year, month, day] = value.slice(0, 10).split('-').map(Number)
+  return new Date(year, month - 1, day).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 function MiniWeightChart({ data }) {
@@ -220,7 +224,8 @@ export default function AppV2({ user, onSignOut }) {
     }
   }
 
-  const firstName = user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'there'
+  const firstName = user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'Account'
+  const accountName = user.user_metadata?.full_name || firstName
   const latestWeight = stats.latestWeightLb ? Number(stats.latestWeightLb) : null
   const previousWeight = weightHistory.length > 1 ? Number(weightHistory.at(-2).weight_lb) : null
   const weightDelta = latestWeight !== null && previousWeight !== null ? latestWeight - previousWeight : null
@@ -237,7 +242,11 @@ export default function AppV2({ user, onSignOut }) {
             <div className="brand-emblem">PS</div>
             <div><div className="eyebrow">PERSONAL TRAINING SYSTEM</div><h1>PROJECT <span>STEEL</span></h1></div>
           </div>
-          <button className="ghost-icon" onClick={onSignOut} aria-label="Sign out"><LogOut size={18} /></button>
+          <button className={`account-button ${tab === 'Settings' ? 'active' : ''}`} onClick={() => setTab('Settings')} aria-label="Open account settings">
+            <span className="account-avatar"><UserRound size={17} /></span>
+            <span className="account-copy"><strong>{accountName}</strong><small>Account</small></span>
+            <ChevronRight size={15} />
+          </button>
         </header>
 
         {message && <div className="toast-note">{message}</div>}
@@ -292,9 +301,9 @@ export default function AppV2({ user, onSignOut }) {
             </section>
 
             <section className="steel-card quick-strip">
-              <div><Scale size={18} /><span>Log weight</span></div>
-              <div><Salad size={18} /><span>Nutrition</span></div>
-              <div><BarChart3 size={18} /><span>Progress</span></div>
+              <button type="button" onClick={() => setTab('Progress')}><Scale size={18} /><span>Log weight</span></button>
+              <button type="button" onClick={() => setTab('Nutrition')}><Salad size={18} /><span>Nutrition</span></button>
+              <button type="button" onClick={() => setTab('Progress')}><BarChart3 size={18} /><span>Progress</span></button>
             </section>
           </div>
         )}
@@ -392,6 +401,31 @@ export default function AppV2({ user, onSignOut }) {
             <section className="steel-card"><div className="section-heading"><div><span className="eyebrow">RECENT CHECK-INS</span><h3>Weight history</h3></div><Scale size={20} /></div>{weightHistory.length ? [...weightHistory].reverse().slice(0, 6).map((row, index, arr) => { const previous = arr[index + 1] ? Number(arr[index + 1].weight_lb) : null; const delta = previous === null ? null : Number(row.weight_lb) - previous; return <div className="history-row" key={row.id}><span>{formatDate(row.checkin_date)}</span><strong>{Number(row.weight_lb).toFixed(1)} lb</strong><small className={delta !== null && delta <= 0 ? 'good' : ''}>{delta === null ? '—' : `${delta > 0 ? '+' : ''}${delta.toFixed(1)}`}</small></div> }) : <p className="muted-copy">No check-ins yet.</p>}</section>
             <section className="steel-card"><div className="section-heading"><div><span className="eyebrow">TRAINING HISTORY</span><h3>Recent sessions</h3></div><Dumbbell size={20} /></div>{recentSessions.length ? recentSessions.map((session) => <div className="history-row session-history" key={session.id}><div><strong>{session.workout_name}</strong><span>{formatDate(session.session_date)}</span></div><small>{session.duration_min || 45} min</small></div>) : <p className="muted-copy">Your completed sessions will appear here.</p>}</section>
             <article className="goal-card"><div className="goal-icon"><Sparkles size={20} /></div><div><span className="eyebrow">YOUR GOAL</span><h3>Lose fat. Build muscle.</h3><p>Steel will connect body-weight trend, training progress and nutrition here as the app develops.</p></div></article>
+          </div>
+        )}
+
+        {tab === 'Settings' && (
+          <div className="page-stack settings-page">
+            <section className="page-intro"><span className="eyebrow">ACCOUNT</span><h2>Settings</h2><p>Your Project Steel account, privacy and app details.</p></section>
+
+            <article className="settings-profile-card">
+              <div className="settings-avatar"><UserRound size={30} /></div>
+              <div><span className="eyebrow">SIGNED IN AS</span><h3>{accountName}</h3><p>{user.email}</p></div>
+            </article>
+
+            <section className="steel-card settings-list">
+              <div className="settings-row"><span className="settings-row-icon"><UserRound size={18} /></span><div><small>Name</small><strong>{accountName}</strong></div></div>
+              <div className="settings-row"><span className="settings-row-icon"><Mail size={18} /></span><div><small>Email</small><strong>{user.email}</strong></div></div>
+              <div className="settings-row"><span className="settings-row-icon"><Target size={18} /></span><div><small>Primary goal</small><strong>Lose fat and gain muscle</strong></div></div>
+              <div className="settings-row"><span className="settings-row-icon"><Settings size={18} /></span><div><small>Member since</small><strong>{formatDate(user.created_at)}</strong></div></div>
+            </section>
+
+            <article className="settings-security-card">
+              <span className="settings-security-icon"><ShieldCheck size={22} /></span>
+              <div><span className="eyebrow">YOUR DATA</span><h3>Private by default</h3><p>Your workouts, weight and future nutrition data are protected by Supabase authentication and Row Level Security.</p></div>
+            </article>
+
+            <button className="signout-button" type="button" onClick={onSignOut}><LogOut size={18} /> Sign out of Project Steel</button>
           </div>
         )}
       </main>
