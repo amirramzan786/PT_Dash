@@ -3,10 +3,19 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  ChevronDown,
+  ChevronRight,
+  CirclePlus,
+  Footprints,
   Dumbbell,
   Flame,
   Home,
+  Info,
   LineChart,
+  MessageSquare,
+  Settings,
+  HelpCircle,
+  ListChecks,
   RotateCcw,
   Salad,
   Scale,
@@ -17,11 +26,11 @@ import {
 import { workouts } from './workoutData'
 
 const tabs = [
-  { id: 'Home', icon: Home },
-  { id: 'Plan', icon: Target },
-  { id: 'Train', icon: Dumbbell },
-  { id: 'Nutrition', icon: Salad },
-  { id: 'Progress', icon: LineChart },
+  { id: 'Home', label: 'Home', icon: Home },
+  { id: 'Plan', label: 'Workouts', icon: Dumbbell },
+  { id: 'Progress', label: 'Progress', icon: LineChart },
+  { id: 'Train', label: 'Train', icon: Target },
+  { id: 'Settings', label: 'Settings', icon: Settings },
 ]
 
 function makeDraft(workout) {
@@ -50,6 +59,7 @@ function App() {
   const [selectedWorkoutId, setSelectedWorkoutId] = useState(workouts[0].id)
   const [draft, setDraft] = useState(() => makeDraft(workouts[0]))
   const [savedSessions, setSavedSessions] = useState([])
+  const [progressOpen, setProgressOpen] = useState(false)
 
   const selectedWorkout = useMemo(
     () => workouts.find((workout) => workout.id === selectedWorkoutId) ?? workouts[0],
@@ -140,55 +150,61 @@ function App() {
       <main className="screen">
         <header className="topbar">
           <div>
-            <div className="eyebrow">PERSONAL TRAINING SYSTEM</div>
-            <h1>PROJECT <span>STEEL</span></h1>
+            <div className="eyebrow">DISCIPLINE · CONSISTENCY · STRENGTH</div>
+            <h1>STEEL</h1>
           </div>
-          <div className="mark">PS</div>
+          <button className="profile-button" aria-label="Open settings" onClick={() => setTab('Settings')}>A <ChevronDown size={15} /></button>
         </header>
 
         {tab === 'Home' && (
           <>
-            <section className="hero-card">
+            <section className="hero-card home-hero">
+              <div className="hero-artwork" aria-hidden="true"><div className="hero-figure" /></div>
               <div>
-                <div className="muted">TODAY</div>
-                <h2>Build strength.<br />Build consistency.</h2>
-                <p>Your next session is ready.</p>
+                <div className="muted">WELCOME BACK,</div>
+                <h2>Amir</h2>
+                <p>You’ve got this. Let’s build something strong today.</p>
               </div>
-              <Flame size={42} />
             </section>
 
-            <section className="metric-grid">
-              <article className="card metric-card">
-                <Scale size={20} />
-                <div className="muted">BODY WEIGHT</div>
-                <strong>— lb</strong>
-                <small>Latest check-in</small>
-              </article>
-              <article className="card metric-card">
-                <Dumbbell size={20} />
-                <div className="muted">SESSIONS</div>
-                <strong>{savedSessions.length}</strong>
-                <small>Logged workouts</small>
-              </article>
+            <section className="metric-grid welcome-metrics">
+              <article className="card metric-card"><Dumbbell size={18} /><div className="muted">WORKOUTS</div><strong>12</strong><small>This month</small></article>
+              <article className="card metric-card"><Flame size={18} /><div className="muted">STREAK</div><strong>7</strong><small>Days</small></article>
+              <article className="card metric-card"><Scale size={18} /><div className="muted">VOLUME</div><strong>4,580</strong><small>kg lifted</small></article>
+              <article className="card metric-card"><Check size={18} /><div className="muted">SESSIONS</div><strong>{Math.max(28, savedSessions.length)}</strong><small>Completed</small></article>
+            </section>
+
+            <section className="quick-actions-section">
+              <div className="section-head"><h3>Quick actions</h3></div>
+              <div className="quick-actions">
+                <button className="quick-action" onClick={() => openWorkout(workouts[0])}><CirclePlus /><span>Start<br />workout</span></button>
+                <button className="quick-action" onClick={() => openWorkout(workouts[1])}><Dumbbell /><span>Push<br />workout</span></button>
+                <button className="quick-action" onClick={() => setTab('Train')}><Flame /><span>Cardio<br />session</span></button>
+                <button className="quick-action" onClick={() => setProgressOpen(true)}><ListChecks /><span>View<br />progress</span></button>
+              </div>
+            </section>
+
+            <section className="card daily-checkin">
+              <div className="daily-checkin-item"><Footprints size={20} /><div><span>Today’s steps</span><strong>6,240</strong></div></div>
+              <div className="daily-checkin-item"><Scale size={20} /><div><span>Weight</span><strong>— <small>lb</small></strong></div></div>
             </section>
 
             <section>
-              <div className="section-head">
-                <h3>Choose today’s workout</h3>
-                <button className="text-button" onClick={() => setTab('Plan')}>View plan</button>
-              </div>
-              <div className="stack">
+              <div className="section-head"><h3>Upcoming workouts</h3><button className="text-button" onClick={() => setTab('Plan')}>View all</button></div>
+              <div className="upcoming-list">
                 {workouts.map((workout, index) => (
-                  <article className="card workout-card" key={workout.id}>
-                    <div>
-                      <div className="muted">WORKOUT {index + 1}</div>
-                      <h2>{workout.name}</h2>
-                      <p>{workout.exercises.length} exercises · {workout.duration} · {workout.finisher}</p>
-                    </div>
-                    <button className="primary" onClick={() => openWorkout(workout)}>Start workout</button>
-                  </article>
+                  <button className="card upcoming-card" key={workout.id} onClick={() => openWorkout(workout)}>
+                    <div className={`workout-art ${workout.artClass}`}><div className="art-silhouette" /></div>
+                    <div className="upcoming-copy"><strong>{workout.shortName}</strong><span>{workout.focus}</span><small>{index === 0 ? 'Tomorrow · 10:00 AM' : index === 1 ? 'Thu, 4 Sept · 6:00 PM' : 'Sat, 6 Sept · 11:00 AM'}</small></div>
+                    <span className="exercise-count">{workout.exercises.length} exercises</span><ChevronRight className="upcoming-chevron" size={20} />
+                  </button>
                 ))}
               </div>
+            </section>
+
+            <section className="progress-section">
+              <button className="progress-heading" onClick={() => setProgressOpen((open) => !open)} aria-expanded={progressOpen}><span><h3>Progress</h3><small>Relative metrics</small></span><ChevronDown className={progressOpen ? 'rotated' : ''} /></button>
+              {progressOpen && <div className="card progress-card"><div className="progress-card-head"><strong>This week</strong><span>4 workouts</span></div><div className="bar-chart">{[1, 2, 3, 1.5, 2.5, 1, 2].map((height, index) => <div className="bar-column" key={index}><span style={{ height: `${height * 24}px` }} /><small>{['M','T','W','T','F','S','S'][index]}</small></div>)}</div><div className="relative-metrics"><div><span>Weekly goal</span><strong>4 / 5</strong></div><div><span>Volume change</span><strong>+12%</strong></div><div><span>Consistency</span><strong>86%</strong></div></div></div>}
             </section>
 
             {savedSessions[0] && (
@@ -438,15 +454,30 @@ function App() {
             <p>Body weight in lbs, strength progression and workout history will live here once Supabase is connected.</p>
           </section>
         )}
+
+        {tab === 'Settings' && (
+          <section className="settings-page">
+            <div className="page-heading"><div className="muted">ACCOUNT</div><h2>Settings</h2><p>Manage your profile and Steel preferences.</p></div>
+            <div className="card profile-row"><div className="avatar">A</div><div><strong>Amir</strong><small>amir@example.com</small></div><ChevronRight /></div>
+            <div className="settings-group"><div className="muted">SUPPORT</div><button className="settings-row"><HelpCircle /><span>Help & Support</span><ChevronRight /></button><button className="settings-row"><MessageSquare /><span>Send Feedback</span><ChevronRight /></button><button className="settings-row"><Info /><span>About Steel</span><ChevronRight /></button></div>
+            <button className="danger-button sign-out">Sign out</button>
+          </section>
+        )}
       </main>
 
       <nav className="bottom-nav" aria-label="Project Steel navigation">
-        {tabs.map(({ id, icon: Icon }) => (
+        {tabs.map(({ id, label, icon: Icon }) => (
           <button key={id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}>
             <Icon size={20} />
-            <span>{id}</span>
+            <span>{label}</span>
           </button>
         ))}
+      </nav>
+
+      <nav className="desktop-nav" aria-label="Project Steel desktop navigation">
+        <div className="desktop-profile"><div className="avatar">A</div><div><strong>Amir</strong><small>amir@example.com</small></div><ChevronRight size={18} /></div>
+        {tabs.filter(({ id }) => ['Home','Plan','Progress','Settings'].includes(id)).map(({ id, label, icon: Icon }) => <button key={id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}><Icon size={22} /><span>{label}</span></button>)}
+        <div className="desktop-support"><div className="muted">SUPPORT</div><button onClick={() => setTab('Settings')}><HelpCircle size={20} />Help & Support<ChevronRight size={18} /></button><button onClick={() => setTab('Settings')}><MessageSquare size={20} />Send Feedback<ChevronRight size={18} /></button><button onClick={() => setTab('Settings')}><Info size={20} />About Steel<ChevronRight size={18} /></button></div>
       </nav>
     </div>
   )
