@@ -4,11 +4,14 @@ import {
   ArrowRight,
   BarChart3,
   Check,
+  ChevronDown,
   ChevronRight,
   Dumbbell,
   Flame,
+  Footprints,
   Home,
   LineChart,
+  ListChecks,
   LogOut,
   Mail,
   Play,
@@ -110,6 +113,7 @@ export default function AppV2({ user, onSignOut }) {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [weightInput, setWeightInput] = useState('')
+  const [progressOpen, setProgressOpen] = useState(false)
 
   async function refreshCloud() {
     const [programme, dashboard, weights, sessions] = await Promise.all([
@@ -258,6 +262,33 @@ export default function AppV2({ user, onSignOut }) {
               <div className="streak-orb"><Flame size={22} /><span>{stats.sessionCount}</span><small>sessions</small></div>
             </section>
 
+            <section className="v4-welcome-card">
+              <div className="v4-hero-art" aria-hidden="true"><div className="v4-hero-figure" /></div>
+              <div className="v4-hero-copy"><span className="eyebrow">TODAY’S FOCUS</span><h2>Build strength.<br />Build consistency.</h2><p>Your next session is ready when you are.</p></div>
+            </section>
+
+            <section className="v4-metric-grid">
+              <article><Dumbbell size={17} /><span>SESSIONS</span><strong>{stats.sessionCount}</strong><small>Logged</small></article>
+              <article><Flame size={17} /><span>STREAK</span><strong>—</strong><small>Needs history</small></article>
+              <article><Scale size={17} /><span>VOLUME</span><strong>—</strong><small>Needs history</small></article>
+              <article><Check size={17} /><span>WEIGHT</span><strong>{latestWeight ? latestWeight.toFixed(1) : '—'}</strong><small>lb · latest</small></article>
+            </section>
+
+            <section className="v4-quick-actions">
+              <div className="section-heading"><div><span className="eyebrow">MAKE IT EASY</span><h3>Quick actions</h3></div></div>
+              <div className="v4-action-grid">
+                {workouts[0] && <button onClick={() => openWorkout(workouts[0])}><Play /><span>Start workout</span></button>}
+                {workouts[1] && <button onClick={() => openWorkout(workouts[1])}><Dumbbell /><span>Push workout</span></button>}
+                <button onClick={() => setTab('Progress')}><Scale /><span>Log weight</span></button>
+                <button onClick={() => setProgressOpen(true)}><ListChecks /><span>View progress</span></button>
+              </div>
+            </section>
+
+            <section className="v4-checkin-card">
+              <div><Footprints size={19} /><span>Today’s steps</span><strong>Not connected</strong></div>
+              <div><Scale size={19} /><span>Weight</span><strong>{latestWeight ? latestWeight.toFixed(1) : '—'} <small>lb</small></strong></div>
+            </section>
+
             <section className="hero-panel">
               <div className="hero-copy">
                 <span className="gold-kicker">TODAY’S FOCUS</span>
@@ -298,6 +329,11 @@ export default function AppV2({ user, onSignOut }) {
                   </button>
                 ))}
               </div>
+            </section>
+
+            <section className="v4-progress-section">
+              <button className="v4-progress-heading" onClick={() => setProgressOpen((open) => !open)} aria-expanded={progressOpen}><span><span className="eyebrow">AT A GLANCE</span><strong>Progress</strong><small>Relative metrics</small></span><ChevronDown className={progressOpen ? 'rotated' : ''} /></button>
+              {progressOpen && <div className="steel-card v4-progress-card"><div className="v4-progress-top"><strong>This week</strong><span>{recentSessions.length} recent sessions</span></div><div className="v4-relative-metrics"><div><span>Weekly goal</span><strong>{Math.min(recentSessions.length, 5)} / 5</strong></div><div><span>Check-ins</span><strong>{weightHistory.length}</strong></div><div><span>Sessions total</span><strong>{stats.sessionCount}</strong></div></div></div>}
             </section>
 
             <section className="steel-card quick-strip">
@@ -432,6 +468,12 @@ export default function AppV2({ user, onSignOut }) {
 
       <nav className="v2-bottom-nav" aria-label="Project Steel navigation">
         {tabs.map(({ id, icon: Icon }) => <button key={id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}><Icon size={20} /><span>{id}</span></button>)}
+      </nav>
+
+      <nav className="v4-desktop-nav" aria-label="Project Steel desktop navigation">
+        <div className="v4-desktop-brand"><div className="brand-emblem">PS</div><strong>PROJECT STEEL</strong></div>
+        {tabs.filter(({ id }) => id !== 'Nutrition').map(({ id, icon: Icon }) => <button key={id} className={tab === id ? 'active' : ''} onClick={() => setTab(id)}><Icon size={20} /><span>{id === 'Plan' ? 'Workouts' : id}</span></button>)}
+        <div className="v4-desktop-support"><span className="eyebrow">SUPPORT</span><button onClick={() => setTab('Settings')}>Help & Support <ChevronRight size={15} /></button><button onClick={() => setTab('Settings')}>About Steel <ChevronRight size={15} /></button></div>
       </nav>
     </div>
   )
