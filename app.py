@@ -16,8 +16,7 @@ st.markdown(
     <style>
     .block-container {max-width:760px; padding-top:.65rem; padding-bottom:4rem;}
     header[data-testid="stHeader"] {background:rgba(11,16,24,.88);}
-    #MainMenu {visibility:hidden;}
-    footer {visibility:hidden;}
+    #MainMenu, footer {visibility:hidden;}
     h1,h2,h3 {letter-spacing:-.02em;}
     .steel-hero {padding:.3rem 0 1rem;}
     .steel-eyebrow {color:#D6A84B;font-size:.75rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;}
@@ -28,14 +27,12 @@ st.markdown(
     .steel-label {font-size:.72rem;color:#98A2B3;text-transform:uppercase;letter-spacing:.12em;font-weight:800;}
     .steel-value {font-size:1.55rem;font-weight:850;margin-top:.1rem;color:#F4F6F8;}
     .steel-meta {font-size:.86rem;color:#98A2B3;margin-top:.2rem;}
-    .exercise-title {font-size:1.02rem;font-weight:800;color:#F4F6F8;}
-    .exercise-meta {font-size:.82rem;color:#98A2B3;margin-bottom:.35rem;}
+    .exercise-title {font-size:1.08rem;font-weight:800;color:#F4F6F8;}
+    .exercise-meta {font-size:.82rem;color:#98A2B3;margin-top:.2rem;}
     .progress-track {height:8px;border-radius:999px;background:#202938;overflow:hidden;margin:.3rem 0 .9rem;}
     .progress-fill {height:100%;background:#D6A84B;border-radius:999px;}
-    .set-header {display:grid;grid-template-columns:.6fr 1fr 1fr .8fr;gap:.4rem;color:#98A2B3;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin:.9rem 0 .1rem;}
     .step-chip {display:inline-block;border:1px solid #6D562A;background:#201A10;color:#E6C878;border-radius:999px;padding:.32rem .65rem;font-size:.78rem;font-weight:800;margin-bottom:.45rem;}
-    .summary-row {display:flex;justify-content:space-between;gap:1rem;padding:.5rem 0;border-bottom:1px solid #293241;color:#D9DEE7;}
-    [data-testid="stMetric"] {border:1px solid #293241;border-radius:16px;padding:.8rem;background:#151C27;}
+    .summary-row {display:flex;justify-content:space-between;gap:1rem;padding:.55rem 0;border-bottom:1px solid #293241;color:#D9DEE7;}
     .stButton>button,.stFormSubmitButton>button {min-height:48px;border-radius:12px;font-weight:750;border:1px solid #364152;}
     .stButton>button[kind="primary"],.stFormSubmitButton>button[kind="primary"] {background:#D6A84B;color:#0B1018;border-color:#D6A84B;}
     [data-baseweb="input"] input,[data-baseweb="select"],textarea {font-size:16px !important;}
@@ -80,7 +77,7 @@ def flash(message):
 
 def reset_workout_draft(day_name):
     for key in list(st.session_state.keys()):
-        if key.startswith("draft_") or key in {"workout_step", "draft_day", "draft_date", "draft_duration", "draft_notes"}:
+        if key.startswith("draft_") or key == "workout_step":
             del st.session_state[key]
     st.session_state["draft_day"] = day_name
     st.session_state["workout_step"] = 0
@@ -99,7 +96,13 @@ def exercise_previous_sets(day_name, exercise_id):
     )
 
 
-active_days = [r["day_name"] for r in rows("SELECT day_name,MIN(id) AS n FROM programme WHERE active=1 GROUP BY day_name ORDER BY n")]
+active_days = [
+    r["day_name"]
+    for r in rows(
+        "SELECT day_name,MIN(id) AS n FROM programme WHERE active=1 GROUP BY day_name ORDER BY n"
+    )
+]
+
 page = st.session_state.get("steel_page", "Home")
 if page not in {"Home", "Train", "Plan", "Weight"}:
     page = "Home"
@@ -116,38 +119,68 @@ st.markdown(
 )
 
 nav1, nav2, nav3, nav4 = st.columns(4)
-if nav1.button("⌂ Home", use_container_width=True): set_page("Home")
-if nav2.button("▶ Train", use_container_width=True): set_page("Train")
-if nav3.button("▤ Plan", use_container_width=True): set_page("Plan")
-if nav4.button("⚖ Weight", use_container_width=True): set_page("Weight")
+if nav1.button("⌂ Home", use_container_width=True):
+    set_page("Home")
+if nav2.button("▶ Train", use_container_width=True):
+    set_page("Train")
+if nav3.button("▤ Plan", use_container_width=True):
+    set_page("Plan")
+if nav4.button("⚖ Weight", use_container_width=True):
+    set_page("Weight")
 st.markdown("<div class='nav-note'>Tap a section to move around Steel</div>", unsafe_allow_html=True)
 
 if msg := st.session_state.pop("steel_flash", None):
     st.success(msg)
 
 if page == "Home":
-    latest_weight = rows("SELECT weight_lb FROM checkins WHERE weight_lb IS NOT NULL ORDER BY week_date DESC LIMIT 1")
+    latest_weight = rows(
+        "SELECT weight_lb FROM checkins WHERE weight_lb IS NOT NULL ORDER BY week_date DESC LIMIT 1"
+    )
     total_sessions = rows("SELECT COUNT(*) AS n FROM sessions")[0]["n"]
-    cardio_minutes = rows("SELECT COALESCE(SUM(duration_min),0) AS n FROM cardio_logs WHERE activity='Incline treadmill walk'")[0]["n"]
+    cardio_minutes = rows(
+        "SELECT COALESCE(SUM(duration_min),0) AS n FROM cardio_logs WHERE activity='Incline treadmill walk'"
+    )[0]["n"]
+    current_weight_text = "—"
+    if latest_weight:
+        current_weight_text = f"{lb_to_kg(latest_weight[0]['weight_lb']):.1f} kg"
 
     c1, c2 = st.columns(2)
     with c1:
-        st.markdown(f"<div class='steel-card'><div class='steel-label'>Current weight</div><div class='steel-value'>{f'{lb_to_kg(latest_weight[0][\"weight_lb\"]):.1f} kg' if latest_weight else '—'}</div><div class='steel-meta'>Latest check-in</div></div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='steel-card'><div class='steel-label'>Current weight</div><div class='steel-value'>{current_weight_text}</div><div class='steel-meta'>Latest check-in</div></div>",
+            unsafe_allow_html=True,
+        )
     with c2:
-        st.markdown(f"<div class='steel-card'><div class='steel-label'>Sessions logged</div><div class='steel-value'>{total_sessions}</div><div class='steel-meta'>{cardio_minutes} min incline cardio</div></div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='steel-card'><div class='steel-label'>Sessions logged</div><div class='steel-value'>{total_sessions}</div><div class='steel-meta'>{cardio_minutes} min incline cardio</div></div>",
+            unsafe_allow_html=True,
+        )
 
     st.markdown("### Choose today’s workout")
     if not active_days:
         st.warning("No active workouts are available.")
     else:
         for idx, day_name in enumerate(active_days[:3], start=1):
-            count = rows("SELECT COUNT(*) AS n FROM programme WHERE day_name=? AND active=1", (day_name,))[0]["n"]
-            st.markdown(f"<div class='steel-card gold'><div class='steel-label'>Workout {idx}</div><div class='steel-value' style='font-size:1.25rem'>{day_name}</div><div class='steel-meta'>{count} lifts · ~45 min · + 5–10 min incline walk</div></div>", unsafe_allow_html=True)
-            if st.button(f"Start {day_name}", key=f"start_{idx}", type="primary", use_container_width=True):
+            count = rows(
+                "SELECT COUNT(*) AS n FROM programme WHERE day_name=? AND active=1",
+                (day_name,),
+            )[0]["n"]
+            st.markdown(
+                f"<div class='steel-card gold'><div class='steel-label'>Workout {idx}</div><div class='steel-value' style='font-size:1.25rem'>{day_name}</div><div class='steel-meta'>{count} lifts · ~45 min · + 5–10 min incline walk</div></div>",
+                unsafe_allow_html=True,
+            )
+            if st.button(
+                f"Start {day_name}",
+                key=f"start_{idx}",
+                type="primary",
+                use_container_width=True,
+            ):
                 reset_workout_draft(day_name)
                 set_page("Train", day_name)
 
-    last_session = rows("SELECT session_date,day_name,duration_min FROM sessions ORDER BY session_date DESC,id DESC LIMIT 1")
+    last_session = rows(
+        "SELECT session_date,day_name,duration_min FROM sessions ORDER BY session_date DESC,id DESC LIMIT 1"
+    )
     if last_session:
         s = last_session[0]
         st.markdown("### Last session")
@@ -162,7 +195,9 @@ elif page == "Train":
         if default_day not in active_days:
             default_day = active_days[0]
 
-        selected_day = st.selectbox("Workout", active_days, index=active_days.index(default_day))
+        selected_day = st.selectbox(
+            "Workout", active_days, index=active_days.index(default_day)
+        )
         if st.session_state.get("draft_day") != selected_day:
             reset_workout_draft(selected_day)
         st.session_state["selected_workout"] = selected_day
@@ -180,82 +215,137 @@ elif page == "Train":
         st.session_state["workout_step"] = step
         progress = ((step + 1) / total_steps) * 100
 
-        st.markdown(f"<div class='steel-card gold'><div class='steel-label'>Current session</div><div class='steel-value' style='font-size:1.3rem'>{selected_day}</div><div class='steel-meta'>{len(plan)} exercises · guided logging</div></div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='progress-track'><div class='progress-fill' style='width:{progress:.0f}%'></div></div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='steel-card gold'><div class='steel-label'>Current session</div><div class='steel-value' style='font-size:1.3rem'>{selected_day}</div><div class='steel-meta'>{len(plan)} exercises · guided logging</div></div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f"<div class='progress-track'><div class='progress-fill' style='width:{progress:.0f}%'></div></div>",
+            unsafe_allow_html=True,
+        )
 
         if step < len(plan):
             ex = plan[step]
             previous_sets = exercise_previous_sets(selected_day, ex["exercise_id"])
             previous_by_no = {int(r["set_no"]): r for r in previous_sets}
 
-            st.markdown(f"<span class='step-chip'>Exercise {step + 1} of {len(plan)}</span>", unsafe_allow_html=True)
-            st.markdown(f"<div class='steel-card'><div class='exercise-title' style='font-size:1.35rem'>{ex['name']}</div><div class='exercise-meta'>{ex['equipment']} · target {ex['sets']} sets × {ex['rep_target']}</div></div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<span class='step-chip'>Exercise {step + 1} of {len(plan)}</span>",
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                f"<div class='steel-card'><div class='exercise-title' style='font-size:1.35rem'>{ex['name']}</div><div class='exercise-meta'>{ex['equipment']} · target {ex['sets']} sets × {ex['rep_target']}</div></div>",
+                unsafe_allow_html=True,
+            )
 
             if previous_sets:
                 last_text = " · ".join(
-                    f"S{r['set_no']} {r['weight_kg']:.1f}kg×{r['reps']}" for r in previous_sets
+                    f"S{r['set_no']} {r['weight_kg']:.1f}kg×{r['reps']}"
+                    for r in previous_sets
                 )
                 st.caption(f"Last time: {last_text}")
             else:
                 st.caption("First logged session for this exercise — set a comfortable baseline.")
 
-            st.markdown("<div class='set-header'><span>Set</span><span>Weight</span><span>Reps</span><span>Done</span></div>", unsafe_allow_html=True)
             completed_count = 0
             for set_no in range(1, int(ex["sets"]) + 1):
                 prev = previous_by_no.get(set_no)
-                c1, c2, c3, c4 = st.columns([.55, 1, 1, .72])
-                c1.markdown(f"**{set_no}**")
+                st.markdown(f"**Set {set_no}**")
+                c1, c2, c3 = st.columns([1, 1, .8])
                 weight_key = f"draft_w_{ex['programme_id']}_{set_no}"
                 reps_key = f"draft_r_{ex['programme_id']}_{set_no}"
                 done_key = f"draft_d_{ex['programme_id']}_{set_no}"
                 if weight_key not in st.session_state:
-                    st.session_state[weight_key] = float(prev["weight_kg"]) if prev and prev["weight_kg"] is not None else 0.0
+                    st.session_state[weight_key] = (
+                        float(prev["weight_kg"])
+                        if prev and prev["weight_kg"] is not None
+                        else 0.0
+                    )
                 if reps_key not in st.session_state:
-                    st.session_state[reps_key] = int(prev["reps"]) if prev and prev["reps"] else 10
-                c2.number_input("kg", min_value=0.0, max_value=500.0, step=2.5, key=weight_key, label_visibility="collapsed")
-                c3.number_input("reps", min_value=1, max_value=50, step=1, key=reps_key, label_visibility="collapsed")
-                c4.checkbox("Done", key=done_key, label_visibility="collapsed")
+                    st.session_state[reps_key] = (
+                        int(prev["reps"]) if prev and prev["reps"] else 10
+                    )
+                c1.number_input(
+                    "Weight (kg)",
+                    min_value=0.0,
+                    max_value=500.0,
+                    step=2.5,
+                    key=weight_key,
+                )
+                c2.number_input(
+                    "Reps",
+                    min_value=1,
+                    max_value=50,
+                    step=1,
+                    key=reps_key,
+                )
+                c3.checkbox("Done", key=done_key)
                 if st.session_state.get(done_key):
                     completed_count += 1
 
             st.caption(f"{completed_count}/{ex['sets']} sets completed")
 
             left, right = st.columns(2)
-            if left.button("← Previous", disabled=step == 0, use_container_width=True):
+            if left.button(
+                "← Previous", disabled=step == 0, use_container_width=True
+            ):
                 st.session_state["workout_step"] = step - 1
                 st.rerun()
-            next_label = "Next exercise →" if step < len(plan) - 1 else "Go to finisher →"
+            next_label = (
+                "Next exercise →" if step < len(plan) - 1 else "Go to finisher →"
+            )
             if right.button(next_label, type="primary", use_container_width=True):
                 st.session_state["workout_step"] = step + 1
                 st.rerun()
 
             with st.expander("Jump to another exercise"):
-                jump_labels = [f"{i+1}. {p['name']}" for i, p in enumerate(plan)] + ["Finisher + save"]
-                jump = st.selectbox("Step", jump_labels, index=step, label_visibility="collapsed")
-                jump_index = jump_labels.index(jump)
+                jump_labels = [
+                    f"{i + 1}. {p['name']}" for i, p in enumerate(plan)
+                ] + ["Finisher + save"]
+                jump = st.selectbox(
+                    "Step", jump_labels, index=step, label_visibility="collapsed"
+                )
                 if st.button("Go", use_container_width=True):
-                    st.session_state["workout_step"] = jump_index
+                    st.session_state["workout_step"] = jump_labels.index(jump)
                     st.rerun()
 
         else:
-            st.markdown("<span class='step-chip'>Final step</span>", unsafe_allow_html=True)
+            st.markdown(
+                "<span class='step-chip'>Final step</span>",
+                unsafe_allow_html=True,
+            )
             st.markdown("### Incline finisher")
             st.caption("Medium-intensity treadmill walk after lifting.")
 
-            if "draft_cardio_done" not in st.session_state:
-                st.session_state["draft_cardio_done"] = True
-            if "draft_cardio_minutes" not in st.session_state:
-                st.session_state["draft_cardio_minutes"] = 7
-            if "draft_cardio_incline" not in st.session_state:
-                st.session_state["draft_cardio_incline"] = 6.0
-            if "draft_cardio_rpe" not in st.session_state:
-                st.session_state["draft_cardio_rpe"] = 6.0
+            defaults = {
+                "draft_cardio_done": True,
+                "draft_cardio_minutes": 7,
+                "draft_cardio_incline": 6.0,
+                "draft_cardio_rpe": 6.0,
+            }
+            for key, value in defaults.items():
+                if key not in st.session_state:
+                    st.session_state[key] = value
 
             st.checkbox("Completed incline cardio", key="draft_cardio_done")
             ca, cb, cc = st.columns(3)
-            ca.number_input("Minutes", min_value=5, max_value=10, step=1, key="draft_cardio_minutes")
-            cb.number_input("Incline %", min_value=1.0, max_value=15.0, step=.5, key="draft_cardio_incline")
-            cc.number_input("Effort /10", min_value=1.0, max_value=10.0, step=.5, key="draft_cardio_rpe")
+            ca.number_input(
+                "Minutes", min_value=5, max_value=10, step=1, key="draft_cardio_minutes"
+            )
+            cb.number_input(
+                "Incline %",
+                min_value=1.0,
+                max_value=15.0,
+                step=.5,
+                key="draft_cardio_incline",
+            )
+            cc.number_input(
+                "Effort /10",
+                min_value=1.0,
+                max_value=10.0,
+                step=.5,
+                key="draft_cardio_rpe",
+            )
 
             st.markdown("### Session summary")
             total_done_sets = 0
@@ -268,20 +358,48 @@ elif page == "Train":
                     if st.session_state.get(done_key, False):
                         done_sets += 1
                         total_done_sets += 1
-                        weight = float(st.session_state.get(f"draft_w_{p['programme_id']}_{set_no}", 0.0))
-                        reps = int(st.session_state.get(f"draft_r_{p['programme_id']}_{set_no}", 10))
+                        weight = float(
+                            st.session_state.get(
+                                f"draft_w_{p['programme_id']}_{set_no}", 0.0
+                            )
+                        )
+                        reps = int(
+                            st.session_state.get(
+                                f"draft_r_{p['programme_id']}_{set_no}", 10
+                            )
+                        )
                         details.append(f"{weight:g}kg×{reps}")
                 summary_lines.append((p["name"], done_sets, int(p["sets"]), details))
 
             for name, done_sets, target_sets, details in summary_lines:
                 detail_text = " · ".join(details) if details else "Not logged"
-                st.markdown(f"<div class='summary-row'><span><strong>{name}</strong><br><small>{detail_text}</small></span><span>{done_sets}/{target_sets}</span></div>", unsafe_allow_html=True)
+                st.markdown(
+                    f"<div class='summary-row'><span><strong>{name}</strong><br><small>{detail_text}</small></span><span>{done_sets}/{target_sets}</span></div>",
+                    unsafe_allow_html=True,
+                )
 
             st.markdown("### Finish session")
+            if "draft_date" not in st.session_state:
+                st.session_state["draft_date"] = date.today()
+            if "draft_duration" not in st.session_state:
+                st.session_state["draft_duration"] = 45
+            if "draft_notes" not in st.session_state:
+                st.session_state["draft_notes"] = ""
+
             date_col, duration_col = st.columns(2)
-            session_date = date_col.date_input("Date", value=st.session_state.get("draft_date", date.today()), key="draft_date")
-            duration = duration_col.number_input("Lifting min", min_value=20, max_value=90, value=int(st.session_state.get("draft_duration", 45)), step=5, key="draft_duration")
-            notes = st.text_area("Notes", placeholder="Optional: energy, anything to remember next time", key="draft_notes")
+            session_date = date_col.date_input("Date", key="draft_date")
+            duration = duration_col.number_input(
+                "Lifting min",
+                min_value=20,
+                max_value=90,
+                step=5,
+                key="draft_duration",
+            )
+            notes = st.text_area(
+                "Notes",
+                placeholder="Optional: energy, anything to remember next time",
+                key="draft_notes",
+            )
 
             back_col, save_col = st.columns([1, 1.4])
             if back_col.button("← Back", use_container_width=True):
@@ -294,19 +412,36 @@ elif page == "Train":
                 else:
                     session_id = execute(
                         "INSERT INTO sessions(session_date,day_name,duration_min,notes) VALUES (?,?,?,?)",
-                        (session_date.isoformat(), selected_day, int(duration), notes.strip()),
+                        (
+                            session_date.isoformat(),
+                            selected_day,
+                            int(duration),
+                            notes.strip(),
+                        ),
                     )
                     for p in plan:
                         for set_no in range(1, int(p["sets"]) + 1):
-                            if st.session_state.get(f"draft_d_{p['programme_id']}_{set_no}", False):
+                            if st.session_state.get(
+                                f"draft_d_{p['programme_id']}_{set_no}", False
+                            ):
                                 execute(
                                     "INSERT INTO set_logs(session_id,exercise_id,set_no,reps,weight_kg) VALUES (?,?,?,?,?)",
                                     (
                                         session_id,
                                         p["exercise_id"],
                                         set_no,
-                                        int(st.session_state.get(f"draft_r_{p['programme_id']}_{set_no}", 10)),
-                                        float(st.session_state.get(f"draft_w_{p['programme_id']}_{set_no}", 0.0)),
+                                        int(
+                                            st.session_state.get(
+                                                f"draft_r_{p['programme_id']}_{set_no}",
+                                                10,
+                                            )
+                                        ),
+                                        float(
+                                            st.session_state.get(
+                                                f"draft_w_{p['programme_id']}_{set_no}",
+                                                0.0,
+                                            )
+                                        ),
                                     ),
                                 )
                     if st.session_state.get("draft_cardio_done", True):
@@ -323,7 +458,11 @@ elif page == "Train":
                                 "Project Steel finisher",
                             ),
                         )
-                    cardio_text = f" + {int(st.session_state['draft_cardio_minutes'])} min incline" if st.session_state.get("draft_cardio_done", True) else ""
+                    cardio_text = ""
+                    if st.session_state.get("draft_cardio_done", True):
+                        cardio_text = (
+                            f" + {int(st.session_state['draft_cardio_minutes'])} min incline"
+                        )
                     reset_workout_draft(selected_day)
                     st.session_state["steel_page"] = "Home"
                     flash(f"Session saved: {total_done_sets} working sets{cardio_text}.")
@@ -342,57 +481,101 @@ elif page == "Plan":
             (selected_day,),
         )
         for _, r in plan.iterrows():
-            st.markdown(f"<div class='steel-card'><div class='exercise-title'>{int(r.sort_order)}. {r.exercise}</div><div class='exercise-meta'>{r.equipment} · {int(r.sets)} sets × {r.reps}</div></div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div class='steel-card'><div class='exercise-title'>{int(r.sort_order)}. {r.exercise}</div><div class='exercise-meta'>{r.equipment} · {int(r.sets)} sets × {r.reps}</div></div>",
+                unsafe_allow_html=True,
+            )
 
-        st.markdown("<div class='steel-card gold'><div class='steel-label'>Finisher</div><div class='steel-value' style='font-size:1.1rem'>Incline treadmill walk</div><div class='steel-meta'>5–10 min · medium intensity · default 6% incline</div></div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div class='steel-card gold'><div class='steel-label'>Finisher</div><div class='steel-value' style='font-size:1.1rem'>Incline treadmill walk</div><div class='steel-meta'>5–10 min · medium intensity · default 6% incline</div></div>",
+            unsafe_allow_html=True,
+        )
 
         with st.expander("Add an exercise"):
-            exercise_rows = rows("SELECT id,name,equipment FROM exercises WHERE active=1 ORDER BY name")
-            labels = {f"{r['name']} · {r['equipment']}": r["id"] for r in exercise_rows}
+            exercise_rows = rows(
+                "SELECT id,name,equipment FROM exercises WHERE active=1 ORDER BY name"
+            )
+            labels = {
+                f"{r['name']} · {r['equipment']}": r["id"] for r in exercise_rows
+            }
             with st.form("add_exercise_form"):
                 chosen = st.selectbox("Exercise", list(labels))
                 sets = st.number_input("Sets", 1, 6, 3)
                 reps = st.text_input("Rep target", "10–12")
                 add = st.form_submit_button("Add exercise")
             if add:
-                next_order = rows("SELECT COALESCE(MAX(sort_order),0)+1 AS n FROM programme WHERE day_name=?", (selected_day,))[0]["n"]
-                execute("INSERT INTO programme(day_name,sort_order,exercise_id,sets,rep_target,superset) VALUES (?,?,?,?,?,?)", (selected_day, next_order, labels[chosen], sets, reps, "X"))
+                next_order = rows(
+                    "SELECT COALESCE(MAX(sort_order),0)+1 AS n FROM programme WHERE day_name=?",
+                    (selected_day,),
+                )[0]["n"]
+                execute(
+                    "INSERT INTO programme(day_name,sort_order,exercise_id,sets,rep_target,superset) VALUES (?,?,?,?,?,?)",
+                    (selected_day, next_order, labels[chosen], sets, reps, "X"),
+                )
                 flash(f"Added {chosen.split(' · ')[0]} to {selected_day}.")
 
         if not plan.empty:
             with st.expander("Remove an exercise"):
-                options = {f"{int(r.sort_order)}. {r.exercise}": int(r.id) for _, r in plan.iterrows()}
+                options = {
+                    f"{int(r.sort_order)}. {r.exercise}": int(r.id)
+                    for _, r in plan.iterrows()
+                }
                 remove_label = st.selectbox("Remove", list(options))
                 if st.button("Remove from plan", use_container_width=True):
-                    execute("UPDATE programme SET active=0 WHERE id=?", (options[remove_label],))
+                    execute(
+                        "UPDATE programme SET active=0 WHERE id=?",
+                        (options[remove_label],),
+                    )
                     flash(f"Removed {remove_label}.")
 
 elif page == "Weight":
     st.markdown("## Weight check-ins")
-    history = df("SELECT week_date,weight_lb FROM checkins WHERE weight_lb IS NOT NULL ORDER BY week_date DESC")
+    history = df(
+        "SELECT week_date,weight_lb FROM checkins WHERE weight_lb IS NOT NULL ORDER BY week_date DESC"
+    )
     latest_kg = lb_to_kg(history.iloc[0]["weight_lb"]) if not history.empty else None
+    latest_text = f"{latest_kg:.1f} kg" if latest_kg is not None else "—"
 
-    st.markdown(f"<div class='steel-card gold'><div class='steel-label'>Current weight</div><div class='steel-value'>{f'{latest_kg:.1f} kg' if latest_kg is not None else '—'}</div><div class='steel-meta'>Track the trend, not a single day</div></div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div class='steel-card gold'><div class='steel-label'>Current weight</div><div class='steel-value'>{latest_text}</div><div class='steel-meta'>Track the trend, not a single day</div></div>",
+        unsafe_allow_html=True,
+    )
 
     with st.form("weight_form"):
         check_date = st.date_input("Check-in date", value=date.today())
-        weight_kg = st.number_input("Weight (kg)", min_value=30.0, max_value=300.0, value=float(latest_kg or 90.0), step=.1)
-        save = st.form_submit_button("SAVE WEIGHT", type="primary", use_container_width=True)
+        weight_kg = st.number_input(
+            "Weight (kg)",
+            min_value=30.0,
+            max_value=300.0,
+            value=float(latest_kg or 90.0),
+            step=.1,
+        )
+        save = st.form_submit_button(
+            "SAVE WEIGHT", type="primary", use_container_width=True
+        )
     if save:
-        execute("""INSERT INTO checkins(week_date,weight_lb) VALUES (?,?)
-                   ON CONFLICT(week_date) DO UPDATE SET weight_lb=excluded.weight_lb""", (check_date.isoformat(), kg_to_lb(weight_kg)))
+        execute(
+            """INSERT INTO checkins(week_date,weight_lb) VALUES (?,?)
+               ON CONFLICT(week_date) DO UPDATE SET weight_lb=excluded.weight_lb""",
+            (check_date.isoformat(), kg_to_lb(weight_kg)),
+        )
         flash(f"Saved {weight_kg:.1f} kg.")
 
     if not history.empty:
         chart_data = history.copy()
         chart_data["date"] = pd.to_datetime(chart_data["week_date"])
         chart_data["weight_kg"] = chart_data["weight_lb"] * KG_PER_LB
-        chart = alt.Chart(chart_data).mark_line(point=True, color="#D6A84B", strokeWidth=3).encode(
-            x=alt.X("date:T", title=None),
-            y=alt.Y("weight_kg:Q", title="kg", scale=alt.Scale(zero=False)),
-            tooltip=[alt.Tooltip("date:T", title="Date", format="%d %b %Y"), alt.Tooltip("weight_kg:Q", title="kg", format=".1f")],
-        ).properties(height=260)
+        chart = (
+            alt.Chart(chart_data)
+            .mark_line(point=True, color="#D6A84B", strokeWidth=3)
+            .encode(
+                x=alt.X("date:T", title=None),
+                y=alt.Y("weight_kg:Q", title="kg", scale=alt.Scale(zero=False)),
+                tooltip=[
+                    alt.Tooltip("date:T", title="Date", format="%d %b %Y"),
+                    alt.Tooltip("weight_kg:Q", title="kg", format=".1f"),
+                ],
+            )
+            .properties(height=260)
+        )
         st.altair_chart(chart, use_container_width=True)
-        display = chart_data[["week_date", "weight_kg"]].rename(columns={"week_date": "Date", "weight_kg": "Weight (kg)"})
-        display["Weight (kg)"] = display["Weight (kg)"].round(1)
-        st.dataframe(display, hide_index=True, use_container_width=True)
