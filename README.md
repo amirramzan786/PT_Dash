@@ -69,5 +69,6 @@ The logical next upgrade is a review screen that exports de-identified check-in/
 - [ ] Progress Quick Action: connect the Home quick action to the Progress experience.
 - [ ] Progress navigation: add Progress as a clearly available primary navigation destination on mobile and desktop.
 - [ ] Progress experience: build the full section with relevant live content, including training history, consistency/streak trends, volume, weight and steps where available.
+- [ ] Active Workout UX: make exercise replacement/swap intuitive and redesign the current Remove exercise action with a clearer, safer interaction and recovery path.
 
 This backlog item is intentionally deferred; the current sprint should not alter the existing Progress UI.
