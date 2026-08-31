@@ -335,14 +335,6 @@ export default function AppV3({ user, onSignOut }) {
     }
     setExerciseSwapMode(false); navigateToTab('Train'); setMessage(`${row.name} added for this session.`)
   }
-  function replaceExercise(row) {
-    if (!selectedWorkout || !draft || !currentExercise) return
-    const oldId = currentExercise.id
-    const replacement = { id: row.id, source: 'catalog', programmeId: null, name: row.name, equipment: (row.equipment ?? []).join(' / ') || 'Gym', muscleGroup: row.primary_muscle_group ?? null, secondaryMuscleGroups: row.secondary_muscle_groups ?? [], movementPattern: row.movement_pattern ?? null, difficulty: row.difficulty ?? null, instructions: row.instructions ?? null, youtubeUrl: row.video_url ?? null, thumbnailUrl: row.thumbnail_url ?? null, sets: currentExercise.sets, reps: currentExercise.reps, restSeconds: currentExercise.rest_seconds ?? null }
-    setWorkouts((items) => items.map((workout) => workout.id === selectedWorkout.id ? { ...workout, exercises: workout.exercises.map((exercise) => exercise.id === oldId ? replacement : exercise) } : workout))
-    setDraft((value) => ({ ...value, sets: { ...value.sets, [replacement.id]: value.sets[oldId] ?? value.sets[replacement.id] }, removedExercises: value.removedExercises.filter((id) => id !== oldId) }))
-    setExercisePickerOpen(false); setRemoveConfirmId(null); setMessage(`${row.name} added for this session.`)
-  }
   function confirmRemoveExercise() { if (currentExercise) { removeExercise(currentExercise.id); setRemoveConfirmId(null); setMessage('Exercise removed for this session. You can restore it before saving.') } }
 
   const completedSets = selectedWorkout && draft ? selectedWorkout.exercises.reduce((total, exercise) => total + (draft.sets[exercise.id] || []).filter((s) => s.complete && !s.removed).length, 0) : 0
