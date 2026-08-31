@@ -161,11 +161,28 @@
 .settings-disclosure-content > .steel-card { margin: 0; }
 .settings-disclosure-content .password-form { border-color: #293746; }
 .settings-support-footer { margin-top: auto; }
+.nutrition-page { max-width: 760px; margin-inline: auto; }
+.nutrition-plan-list { display: grid; gap: 10px; }
+.nutrition-progress { color: var(--steel-gold-2); font-size: .74rem; font-weight: 800; }
+.nutrition-meal-card { display: grid; grid-template-columns: 40px minmax(0,1fr) auto; align-items: center; gap: 11px; padding: 13px; }
+.nutrition-meal-icon { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid var(--steel-gold-dark); border-radius: 11px; color: var(--steel-gold); background: rgba(217,173,85,.1); }
+.nutrition-meal-card h3 { margin: 3px 0 2px; font-size: .88rem; }
+.nutrition-meal-card p { margin: 0 0 4px; color: var(--steel-muted); font-size: .72rem; }
+.nutrition-meal-card small { color: var(--steel-gold-2); font-size: .68rem; font-weight: 750; }
+.nutrition-meal-card.is-logged { border-color: #365640; background: linear-gradient(145deg,#122018,#0e151e); }
+.nutrition-log-button { min-height: 34px; min-width: 52px; padding: 0 9px; border: 1px solid var(--steel-gold-dark); border-radius: 10px; color: var(--steel-gold-2); background: rgba(217,173,85,.09); font-size: .7rem; font-weight: 850; }
+.nutrition-meal-card.is-logged .nutrition-log-button { border-color: #365640; color: #cde4bf; background: #122018; }
+.nutrition-next-card { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 14px; border: 1px solid var(--steel-line); border-radius: 16px; background: rgba(17,24,33,.6); }
+.nutrition-next-card h3 { margin: 4px 0; font-size: .88rem; }
+.nutrition-next-card p { max-width: 520px; margin: 0; color: var(--steel-muted); font-size: .74rem; line-height: 1.45; }
+.nutrition-next-card .text-link { flex: 0 0 auto; }
 
 @media (max-width: 520px) {
   .settings-page-v5 { min-height: calc(100vh - 126px); }
   .settings-disclosure-trigger { min-height: 66px; }
   .settings-disclosure-content { padding-inline: 9px; }
+  .nutrition-meal-card { grid-template-columns: 36px minmax(0,1fr) auto; gap: 8px; }
+  .nutrition-next-card { display: grid; }
 }
 
 @media (max-width: 480px) {
