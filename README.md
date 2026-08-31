@@ -63,3 +63,11 @@ ChatGPT should not receive unrestricted database or server access. Safer pattern
 - Keep an audit trail, backups, user confirmation, validation limits, and separate `Proposed` from `Applied` states.
 
 The logical next upgrade is a review screen that exports de-identified check-in/training summaries and imports validated proposals.
+
+## Deferred Project Steel backlog
+
+- [ ] Progress Quick Action: connect the Home quick action to the Progress experience.
+- [ ] Progress navigation: add Progress as a clearly available primary navigation destination on mobile and desktop.
+- [ ] Progress experience: build the full section with relevant live content, including training history, consistency/streak trends, volume, weight and steps where available.
+
+This backlog item is intentionally deferred; the current sprint should not alter the existing Progress UI.
