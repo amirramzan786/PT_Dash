@@ -81,5 +81,8 @@ The logical next upgrade is a review screen that exports de-identified check-in/
 - [ ] Food database and scanning: connect a nutrition/food API, support barcode scanning and manual food entry, and save verified foods to the user’s nutrition history.
 - [ ] Health integrations: connect supported health platforms for real step data.
 - [ ] Future recipes offering: integrate a recipes API and tailor calorie-aware meal choices as a later subscription feature.
+- [ ] Professional Trainer platform: create a desktop-first PT dashboard with assigned client workspaces, client health/profile data, workout dates and details, nutrition history, progress and check-in records.
+- [ ] Client check-ins: add scheduled check-in periods where users can submit progress images, measurements, notes and other agreed details for their trainer to review.
+- [ ] Trainer communication: add secure in-app two-way messaging between trainers and clients, including text, voice notes, images and videos, with conversation history and check-in context.
 
-This backlog item is intentionally deferred; the current sprint should not alter the existing Progress UI.
+These platform items are intentionally deferred; the current sprint should not alter the existing Progress UI.
