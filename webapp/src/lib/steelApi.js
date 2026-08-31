@@ -179,9 +179,9 @@ export async function getTodaySteps(userId) {
 
 export async function getStepHistory(userId, limit = 31) {
   const client = requireSupabase()
-  const { data, error } = await client.from('daily_steps').select('step_date,steps').eq('user_id', userId).order('step_date', { ascending: true }).limit(limit)
+  const { data, error } = await client.from('daily_steps').select('step_date,steps').eq('user_id', userId).order('step_date', { ascending: false }).limit(limit)
   if (error) throw error
-  return data ?? []
+  return (data ?? []).reverse()
 }
 
 export async function saveWorkoutSession({ userId, workout, draft, durationMin = 45, notes = '' }) {
