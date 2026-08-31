@@ -36,29 +36,31 @@ st.markdown(
     .stButton>button,.stFormSubmitButton>button {min-height:46px;border-radius:12px;font-weight:750;border:1px solid #364152;}
     .stButton>button[kind="primary"],.stFormSubmitButton>button[kind="primary"] {background:#D6A84B;color:#0B1018;border-color:#D6A84B;}
     [data-baseweb="input"] input,[data-baseweb="select"],textarea {font-size:16px !important;}
-    div[data-testid="stHorizontalBlock"] {gap:.35rem; flex-wrap:nowrap !important;}
-    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {min-width:0 !important; width:auto !important; flex:1 1 0 !important;}
+    div[data-testid="stHorizontalBlock"] {gap:.45rem;}
     .nav-note {color:#667085;font-size:.74rem;text-align:center;margin-top:-.25rem;}
     @media (max-width:640px){
       .block-container{padding:.5rem .7rem 4rem;}
       .steel-logo{font-size:1.75rem;}
-      div[data-testid="stHorizontalBlock"]{flex-wrap:nowrap !important; gap:.3rem !important;}
-      div[data-testid="stHorizontalBlock"] > div[data-testid="column"]{min-width:0 !important; width:auto !important; flex:1 1 0 !important;}
-      .stButton>button,.stFormSubmitButton>button{width:100%;font-size:.78rem;padding-left:.2rem;padding-right:.2rem;white-space:nowrap;}
+      [data-testid="column"]{min-width:0 !important;}
+      .stButton>button,.stFormSubmitButton>button{font-size:.84rem;}
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
+
 def df(sql, params=()):
     return pd.DataFrame(rows(sql, params))
+
 
 def lb_to_kg(value):
     return None if value is None else round(float(value) * KG_PER_LB, 1)
 
+
 def kg_to_lb(value):
     return float(value) / KG_PER_LB
+
 
 def set_page(name, workout=None):
     st.session_state["steel_page"] = name
@@ -66,14 +68,17 @@ def set_page(name, workout=None):
         st.session_state["selected_workout"] = workout
     st.rerun()
 
+
 def flash(message):
     st.session_state["steel_flash"] = message
     st.rerun()
+
 
 def clear_draft():
     for key in list(st.session_state.keys()):
         if key.startswith("draft_") or key in {"workout_step", "selected_workout"}:
             del st.session_state[key]
+
 
 def start_draft(day_name):
     clear_draft()
@@ -82,6 +87,7 @@ def start_draft(day_name):
     st.session_state["workout_step"] = 0
     st.session_state["draft_removed_exercises"] = []
     st.session_state["draft_removed_sets"] = {}
+
 
 def exercise_previous_sets(day_name, exercise_id):
     latest = rows(
@@ -95,12 +101,15 @@ def exercise_previous_sets(day_name, exercise_id):
         (latest[0]["id"], exercise_id),
     )
 
+
 def draft_removed_exercises():
     return set(st.session_state.get("draft_removed_exercises", []))
+
 
 def set_removed(programme_id):
     removed = st.session_state.setdefault("draft_removed_sets", {})
     return set(removed.get(str(programme_id), []))
+
 
 def remove_set(programme_id, set_no):
     removed = st.session_state.setdefault("draft_removed_sets", {})
@@ -110,6 +119,7 @@ def remove_set(programme_id, set_no):
     removed[key] = sorted(values)
     st.session_state["draft_removed_sets"] = removed
 
+
 def restore_set(programme_id, set_no):
     removed = st.session_state.setdefault("draft_removed_sets", {})
     key = str(programme_id)
@@ -118,11 +128,14 @@ def restore_set(programme_id, set_no):
     removed[key] = sorted(values)
     st.session_state["draft_removed_sets"] = removed
 
+
 def complete_set(programme_id, set_no):
     st.session_state[f"draft_d_{programme_id}_{set_no}"] = True
 
+
 def uncomplete_set(programme_id, set_no):
     st.session_state[f"draft_d_{programme_id}_{set_no}"] = False
+
 
 active_days = [
     r["day_name"]
@@ -226,12 +239,12 @@ elif page == "Train":
             removed_lookup = {p["programme_id"]: p for p in base_plan}
             for pid in sorted(removed_exercises):
                 p = removed_lookup.get(pid)
-                if p and st.button(f"Restore {p['name']}", key=f"restore_ex_{pid}", use_container_width=True):
+                if p and st.button(f"Restore {p['name']}", key=f"restore_ex_{pid}"):
                     vals = set(st.session_state.get("draft_removed_exercises", []))
                     vals.discard(pid)
                     st.session_state["draft_removed_exercises"] = sorted(vals)
                     st.rerun()
-            if st.button("Go to finisher →", type="primary", use_container_width=True):
+            if st.button("Go to finisher →", type="primary"):
                 st.session_state["workout_step"] = 0
                 st.session_state["force_finisher"] = True
                 st.rerun()
@@ -289,55 +302,46 @@ elif page == "Train":
                         st.session_state[done_key] = False
 
                     if removed:
-                        st.caption("Removed from this session")
-                    else:
-                        active_set_count += 1
-                        c1, c2 = st.columns(2)
-                        c1.number_input("Weight (kg)", min_value=0.0, max_value=500.0, step=2.5, key=weight_key)
-                        c2.number_input("Reps", min_value=1, max_value=50, step=1, key=reps_key)
-                        if st.session_state.get(done_key):
-                            complete_count += 1
+                        left, right = st.columns([1.2, 2.8])
+                        with left:
+                            if st.button("Restore", key=f"restore_set_{ex['programme_id']}_{set_no}"):
+                                restore_set(ex["programme_id"], set_no)
+                                st.rerun()
+                        with right:
+                            st.caption("Removed from this session")
+                        continue
 
-                    complete_col, remove_col, restore_col = st.columns(3)
+                    active_set_count += 1
+                    c1, c2 = st.columns(2)
+                    c1.number_input("Weight (kg)", min_value=0.0, max_value=500.0, step=2.5, key=weight_key)
+                    c2.number_input("Reps", min_value=1, max_value=50, step=1, key=reps_key)
+                    if st.session_state.get(done_key):
+                        complete_count += 1
 
+                    action1, action2, spacer = st.columns([1.15, 1.0, 2.85])
                     complete_label = "✓ Complete" if st.session_state.get(done_key) else "Complete"
-                    if complete_col.button(
-                        complete_label,
-                        key=f"toggle_complete_{ex['programme_id']}_{set_no}",
-                        type="primary" if not st.session_state.get(done_key) and not removed else "secondary",
-                        disabled=removed,
-                        use_container_width=True,
-                    ):
-                        if st.session_state.get(done_key):
+                    with action1:
+                        if st.button(
+                            complete_label,
+                            key=f"toggle_complete_{ex['programme_id']}_{set_no}",
+                            type="primary" if not st.session_state.get(done_key) else "secondary",
+                        ):
+                            if st.session_state.get(done_key):
+                                uncomplete_set(ex["programme_id"], set_no)
+                            else:
+                                complete_set(ex["programme_id"], set_no)
+                            st.rerun()
+                    with action2:
+                        if st.button("Remove", key=f"remove_set_{ex['programme_id']}_{set_no}"):
+                            remove_set(ex["programme_id"], set_no)
                             uncomplete_set(ex["programme_id"], set_no)
-                        else:
-                            complete_set(ex["programme_id"], set_no)
-                        st.rerun()
-
-                    if remove_col.button(
-                        "Remove",
-                        key=f"remove_set_{ex['programme_id']}_{set_no}",
-                        disabled=removed,
-                        use_container_width=True,
-                    ):
-                        remove_set(ex["programme_id"], set_no)
-                        uncomplete_set(ex["programme_id"], set_no)
-                        st.rerun()
-
-                    if restore_col.button(
-                        "Restore",
-                        key=f"restore_set_{ex['programme_id']}_{set_no}",
-                        disabled=not removed,
-                        use_container_width=True,
-                    ):
-                        restore_set(ex["programme_id"], set_no)
-                        st.rerun()
+                            st.rerun()
 
                 st.caption(f"{complete_count}/{active_set_count} active sets completed")
 
                 with st.expander("Exercise options"):
                     st.caption("Remove only affects this workout session. Your saved plan stays unchanged.")
-                    if st.button("Remove exercise from this session", key=f"remove_ex_{ex['programme_id']}", use_container_width=True):
+                    if st.button("Remove exercise from this session", key=f"remove_ex_{ex['programme_id']}"):
                         vals = set(st.session_state.get("draft_removed_exercises", []))
                         vals.add(ex["programme_id"])
                         st.session_state["draft_removed_exercises"] = sorted(vals)
@@ -357,7 +361,7 @@ elif page == "Train":
                 with st.expander("Jump to another exercise"):
                     jump_labels = [f"{i + 1}. {p['name']}" for i, p in enumerate(plan)] + ["Finisher + save"]
                     jump = st.selectbox("Step", jump_labels, index=step, label_visibility="collapsed")
-                    if st.button("Go", key="jump_go", use_container_width=True):
+                    if st.button("Go", key="jump_go"):
                         st.session_state["workout_step"] = jump_labels.index(jump)
                         st.rerun()
 
