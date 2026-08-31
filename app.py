@@ -18,6 +18,7 @@ st.markdown(
       .steel-kicker {font-size:.78rem; text-transform:uppercase; letter-spacing:.14em; color:#667085; font-weight:700;}
       .steel-title {font-size:1.25rem; font-weight:800; margin:.1rem 0;}
       .steel-muted {color:#667085; font-size:.92rem;}
+      .steel-finisher {border:1px solid #dfe5ee; border-radius:18px; padding:1rem 1.05rem; margin:.5rem 0 1rem; background:#f8fafc;}
       .stButton>button, .stFormSubmitButton>button {min-height:44px; border-radius:12px;}
       input, textarea, [data-baseweb="select"] {min-height:44px;}
       @media (max-width: 768px) {
@@ -64,7 +65,7 @@ if page is None:
 st.session_state["steel_page"] = page
 
 st.title("PROJECT STEEL")
-st.caption("3 workouts · 6 exercises · ~45 minutes · machine focused")
+st.caption("3 workouts · 6 exercises · ~45 minutes lifting · 5–10 min incline finisher")
 if msg := st.session_state.pop("steel_flash", None):
     st.success(msg)
 
@@ -83,14 +84,18 @@ if page == "Dashboard":
     last_session = rows(
         "SELECT session_date, day_name, duration_min FROM sessions ORDER BY session_date DESC, id DESC LIMIT 1"
     )
+    cardio_summary = rows(
+        "SELECT COUNT(*) AS sessions, COALESCE(SUM(duration_min),0) AS minutes FROM cardio_logs"
+    )[0]
 
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3, c4 = st.columns(4)
     c1.metric(
         "Current weight",
         f"{lb_to_kg(latest_weight[0]['weight_lb']):.1f} kg" if latest_weight else "—",
     )
     c2.metric("Workouts logged", total_sessions)
-    c3.metric("Session target", "45 min")
+    c3.metric("Lifting target", "45 min")
+    c4.metric("Incline cardio", f"{cardio_summary['minutes']} min")
 
     if active_days:
         st.subheader("Your plan")
@@ -102,7 +107,7 @@ if page == "Dashboard":
             )[0]["n"]
             with cols[idx]:
                 st.markdown(
-                    f"<div class='steel-card'><div class='steel-kicker'>Workout {idx+1}</div><div class='steel-title'>{day_name}</div><div class='steel-muted'>{count} exercises · ~45 min</div></div>",
+                    f"<div class='steel-card'><div class='steel-kicker'>Workout {idx+1}</div><div class='steel-title'>{day_name}</div><div class='steel-muted'>{count} exercises · ~45 min lifting<br>+ 5–10 min medium incline walk</div></div>",
                     unsafe_allow_html=True,
                 )
 
@@ -110,7 +115,7 @@ if page == "Dashboard":
     if last_session:
         s = last_session[0]
         st.info(
-            f"Last workout: **{s['day_name']}** on {s['session_date']} · {s['duration_min'] or '—'} min"
+            f"Last workout: **{s['day_name']}** on {s['session_date']} · {s['duration_min'] or '—'} min lifting"
         )
     else:
         st.info("No workouts logged yet. Open **Workout** when you’re ready to train.")
@@ -148,12 +153,12 @@ elif page == "Workout":
                WHERE p.day_name=? AND p.active=1 ORDER BY p.sort_order""",
             (selected_day,),
         )
-        st.caption(f"{len(plan)} exercises · aim for roughly 45 minutes")
+        st.caption(f"{len(plan)} exercises · aim for roughly 45 minutes lifting")
 
         with st.form("workout_log"):
             session_date = st.date_input("Date", value=date.today())
             duration = st.number_input(
-                "Duration (minutes)", min_value=10, max_value=120, value=45, step=5
+                "Lifting duration (minutes)", min_value=10, max_value=120, value=45, step=5
             )
             logged_sets = []
             for ex in plan:
@@ -181,6 +186,20 @@ elif page == "Workout":
                 )
                 logged_sets.append((ex, weight, reps, completed))
                 st.divider()
+
+            st.markdown("### Incline cardio finisher")
+            st.caption("Medium-intensity treadmill walk after lifting. Keep it steady rather than turning it into a hard cardio session.")
+            cardio_done = st.checkbox("Completed incline cardio", value=True)
+            cardio_cols = st.columns(3)
+            cardio_minutes = cardio_cols[0].number_input(
+                "Minutes", min_value=5, max_value=10, value=7, step=1
+            )
+            cardio_incline = cardio_cols[1].number_input(
+                "Incline %", min_value=1.0, max_value=15.0, value=6.0, step=0.5
+            )
+            cardio_rpe = cardio_cols[2].number_input(
+                "Effort / 10", min_value=1.0, max_value=10.0, value=6.0, step=0.5
+            )
             notes = st.text_area(
                 "Notes", placeholder="Optional: how did the session feel?"
             )
@@ -205,7 +224,25 @@ elif page == "Workout":
                             ),
                         )
                         set_count += 1
-            flash(f"Saved {selected_day}: {set_count} working sets logged.")
+            cardio_message = ""
+            if cardio_done:
+                execute(
+                    """INSERT INTO cardio_logs(
+                           session_id,cardio_date,activity,duration_min,incline_percent,intensity,rpe,notes
+                       ) VALUES (?,?,?,?,?,?,?,?)""",
+                    (
+                        session_id,
+                        session_date.isoformat(),
+                        "Incline treadmill walk",
+                        int(cardio_minutes),
+                        float(cardio_incline),
+                        "Medium",
+                        float(cardio_rpe),
+                        "Post-workout incline finisher",
+                    ),
+                )
+                cardio_message = f" + {int(cardio_minutes)} min incline cardio"
+            flash(f"Saved {selected_day}: {set_count} working sets{cardio_message}.")
 
         st.markdown("### Last time")
         previous = df(
@@ -226,9 +263,25 @@ elif page == "Workout":
                 use_container_width=True,
             )
 
+        latest_cardio = rows(
+            """SELECT cardio_date,duration_min,incline_percent,rpe
+               FROM cardio_logs WHERE activity='Incline treadmill walk'
+               ORDER BY cardio_date DESC,id DESC LIMIT 1"""
+        )
+        if latest_cardio:
+            c = latest_cardio[0]
+            st.caption(
+                f"Last incline finisher: {c['duration_min']} min · {c['incline_percent']:.1f}% incline · effort {c['rpe']:.1f}/10"
+            )
+
 elif page == "Plan":
     st.subheader("Workout plan")
     st.caption("Edit your three-day split without touching past workout history.")
+
+    st.markdown(
+        "<div class='steel-finisher'><div class='steel-kicker'>Every workout</div><div class='steel-title'>Incline cardio finisher</div><div class='steel-muted'>5–10 minutes · medium intensity · treadmill incline walk · default 6% incline / effort 6 of 10</div></div>",
+        unsafe_allow_html=True,
+    )
 
     selected_day = st.selectbox(
         "Choose workout", active_days if active_days else ["Back + Biceps"]
