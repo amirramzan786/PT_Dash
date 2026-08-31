@@ -33,10 +33,9 @@ st.markdown(
     .progress-fill {height:100%;background:#D6A84B;border-radius:999px;}
     .step-chip {display:inline-block;border:1px solid #6D562A;background:#201A10;color:#E6C878;border-radius:999px;padding:.32rem .65rem;font-size:.78rem;font-weight:800;margin-bottom:.45rem;}
     .summary-row {display:flex;justify-content:space-between;gap:1rem;padding:.55rem 0;border-bottom:1px solid #293241;color:#D9DEE7;}
-    .stButton>button,.stFormSubmitButton>button {min-height:46px;border-radius:12px;font-weight:750;border:1px solid #364152;}
+    .stButton>button,.stFormSubmitButton>button {min-height:44px;border-radius:12px;font-weight:750;border:1px solid #364152;}
     .stButton>button[kind="primary"],.stFormSubmitButton>button[kind="primary"] {background:#D6A84B;color:#0B1018;border-color:#D6A84B;}
     [data-baseweb="input"] input,[data-baseweb="select"],textarea {font-size:16px !important;}
-    div[data-testid="stHorizontalBlock"] {gap:.45rem;}
     .nav-note {color:#667085;font-size:.74rem;text-align:center;margin-top:-.25rem;}
     @media (max-width:640px){
       .block-container{padding:.5rem .7rem 4rem;}
@@ -302,12 +301,10 @@ elif page == "Train":
                         st.session_state[done_key] = False
 
                     if removed:
-                        left, right = st.columns([1.2, 2.8])
-                        with left:
+                        with st.container(horizontal=True, horizontal_alignment="left", gap="xsmall"):
                             if st.button("Restore", key=f"restore_set_{ex['programme_id']}_{set_no}"):
                                 restore_set(ex["programme_id"], set_no)
                                 st.rerun()
-                        with right:
                             st.caption("Removed from this session")
                         continue
 
@@ -318,9 +315,8 @@ elif page == "Train":
                     if st.session_state.get(done_key):
                         complete_count += 1
 
-                    action1, action2, spacer = st.columns([1.15, 1.0, 2.85])
                     complete_label = "✓ Complete" if st.session_state.get(done_key) else "Complete"
-                    with action1:
+                    with st.container(horizontal=True, horizontal_alignment="left", gap="xsmall"):
                         if st.button(
                             complete_label,
                             key=f"toggle_complete_{ex['programme_id']}_{set_no}",
@@ -331,7 +327,6 @@ elif page == "Train":
                             else:
                                 complete_set(ex["programme_id"], set_no)
                             st.rerun()
-                    with action2:
                         if st.button("Remove", key=f"remove_set_{ex['programme_id']}_{set_no}"):
                             remove_set(ex["programme_id"], set_no)
                             uncomplete_set(ex["programme_id"], set_no)
