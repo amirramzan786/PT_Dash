@@ -247,6 +247,10 @@ button { cursor: pointer; }
 .step-total small { color: var(--steel-muted); font-size: .64rem; }
 .movement-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 10px; border-top: 1px solid var(--steel-line); color: var(--steel-muted); font-size: .68rem; }
 .movement-card-meta strong { color: #edf0f3; }
+.movement-card.is-empty { gap: 8px; }
+.movement-card.is-empty .empty-chart { min-height: 42px; }
+.movement-empty-link { justify-self: start; display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--steel-gold-2); font-size: .7rem; font-weight: 850; padding: 3px 0 0; }
+.movement-empty-link:hover { color: #ffe09a; }
 .steps-chart { width: 100%; height: 76px; margin-top: 4px; overflow: visible; }
 .v4-progress-section { display: grid; gap: 9px; }
 .v4-progress-heading { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px; border: 0; background: transparent; color: white; text-align: left; }
@@ -329,3 +333,10 @@ button { cursor: pointer; }
 .workout-tile .tile-art::after { display: none; }
 .workout-tile .tile-art-2::before { transform: none; background-image: linear-gradient(90deg,rgba(8,13,19,.08),rgba(8,13,19,.62)),url('/assets/steel-pull.png'); background-position: center 40%; }
 .workout-tile .tile-art-3::before { background-image: linear-gradient(90deg,rgba(8,13,19,.08),rgba(8,13,19,.62)),url('/assets/steel-legs.png'); background-position: center 44%; }
+.plan-image { position: relative; overflow: hidden; isolation: isolate; background-size: cover; background-position: center; }
+.plan-image::before { content: ''; position: absolute; inset: 0; z-index: 0; background: linear-gradient(90deg,rgba(8,13,19,.72),rgba(8,13,19,.14)),linear-gradient(180deg,rgba(8,13,19,.08),rgba(8,13,19,.72)); }
+.plan-image > * { position: relative; z-index: 1; }
+.plan-image-1 { background-image: url('/assets/steel-pull.png'); background-position: center 38%; }
+.plan-image-2 { background-image: url('/assets/steel-push.png'); background-position: center 38%; }
+.plan-image-3 { background-image: url('/assets/steel-legs.png'); background-position: center 42%; }
+.plan-image .plan-image-icon { background: rgba(8,12,17,.55); }
