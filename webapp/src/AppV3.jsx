@@ -16,7 +16,7 @@ import SteelMark from './components/SteelMark'
 const tabs = [
   { id: 'Home', label: 'Home', icon: Home },
   { id: 'Plan', label: 'Workouts', icon: Dumbbell },
-  { id: 'Train', label: 'Start', icon: Activity },
+  { id: 'Train', label: 'Start workout', icon: Activity },
   { id: 'Progress', label: 'Progress', icon: LineChart },
   { id: 'Weight', label: 'Weight', icon: Scale },
   { id: 'Nutrition', label: 'Nutrition', icon: Salad },
