@@ -65,15 +65,36 @@ export async function loadWorkouts(userId) {
 
 export async function getDashboardStats(userId) {
   const client = requireSupabase()
-  const [weightResult, sessionResult, recentResult] = await Promise.all([
+  const [weightResult, sessionResult, recentResult, sessionRowsResult] = await Promise.all([
     client.from('weight_checkins').select('weight_lb,checkin_date').eq('user_id', userId).order('checkin_date', { ascending: false }).limit(1),
     client.from('sessions').select('id', { count: 'exact', head: true }).eq('user_id', userId),
     client.from('sessions').select('id,workout_name,session_date,duration_min').eq('user_id', userId).order('session_date', { ascending: false }).order('created_at', { ascending: false }).limit(1),
+    client.from('sessions').select('id,session_date').eq('user_id', userId).order('session_date', { ascending: false }).limit(365),
   ])
   if (weightResult.error) throw weightResult.error
   if (sessionResult.error) throw sessionResult.error
   if (recentResult.error) throw recentResult.error
-  return { latestWeightLb: weightResult.data?.[0]?.weight_lb ?? null, sessionCount: sessionResult.count ?? 0, latestSession: recentResult.data?.[0] ?? null }
+  if (sessionRowsResult.error) throw sessionRowsResult.error
+  const sessionRows = sessionRowsResult.data ?? []
+  const sessionIds = sessionRows.map((row) => row.id)
+  let setRows = []
+  if (sessionIds.length) {
+    const { data, error } = await client.from('set_logs').select('session_id,reps,weight_kg').in('session_id', sessionIds)
+    if (error) throw error
+    setRows = data ?? []
+  }
+  const activeDates = [...new Set(sessionRows.map((row) => row.session_date).filter(Boolean))].sort().reverse()
+  let streakDays = 0
+  for (let index = 0; index < activeDates.length; index += 1) {
+    const current = new Date(`${activeDates[index]}T00:00:00`)
+    const previous = index === 0 ? current : new Date(`${activeDates[index - 1]}T00:00:00`)
+    if (index > 0 && Math.round((previous - current) / 86400000) !== 1) break
+    streakDays += 1
+  }
+  const monthKey = new Date().toISOString().slice(0, 7)
+  const monthSessionIds = new Set(sessionRows.filter((row) => row.session_date?.slice(0, 7) === monthKey).map((row) => row.id))
+  const volumeKg = setRows.filter((row) => monthSessionIds.has(row.session_id)).reduce((total, row) => total + (Number(row.weight_kg) || 0) * (Number(row.reps) || 0), 0)
+  return { latestWeightLb: weightResult.data?.[0]?.weight_lb ?? null, sessionCount: sessionResult.count ?? 0, latestSession: recentResult.data?.[0] ?? null, streakDays, volumeKg }
 }
 
 export async function getWeightHistory(userId, limit = 30) {
