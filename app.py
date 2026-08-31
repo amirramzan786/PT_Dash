@@ -6,34 +6,50 @@ import streamlit as st
 
 from pt_dashboard.db import execute, init_db, rows
 
-st.set_page_config(page_title="Project Steel", page_icon="🏋️", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Project Steel", page_icon="⚒️", layout="centered", initial_sidebar_state="collapsed")
 init_db()
+
+KG_PER_LB = 0.45359237
 
 st.markdown(
     """
     <style>
-      .block-container {max-width: 1050px; padding-top: 1rem; padding-bottom: 3rem;}
-      [data-testid="stMetric"] {border:1px solid #dfe5ee; border-radius:16px; padding:.85rem 1rem; background:#fff;}
-      .steel-card {border:1px solid #dfe5ee; border-radius:18px; padding:1rem 1.05rem; margin-bottom:.75rem; background:#fff;}
-      .steel-kicker {font-size:.78rem; text-transform:uppercase; letter-spacing:.14em; color:#667085; font-weight:700;}
-      .steel-title {font-size:1.25rem; font-weight:800; margin:.1rem 0;}
-      .steel-muted {color:#667085; font-size:.92rem;}
-      .steel-finisher {border:1px solid #dfe5ee; border-radius:18px; padding:1rem 1.05rem; margin:.5rem 0 1rem; background:#f8fafc;}
-      .stButton>button, .stFormSubmitButton>button {min-height:44px; border-radius:12px;}
-      input, textarea, [data-baseweb="select"] {min-height:44px;}
-      @media (max-width: 768px) {
-        .block-container {padding: .75rem .7rem 2rem;}
-        h1 {font-size:1.8rem !important;}
-        [data-testid="stHorizontalBlock"] {flex-wrap:wrap; gap:.5rem;}
-        [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {flex:1 1 100% !important; width:100% !important; min-width:100% !important;}
-        .stButton>button, .stFormSubmitButton>button {width:100%;}
-      }
+    .block-container {max-width:760px; padding-top:.65rem; padding-bottom:4rem;}
+    header[data-testid="stHeader"] {background:rgba(11,16,24,.88);}
+    #MainMenu {visibility:hidden;}
+    footer {visibility:hidden;}
+    h1,h2,h3 {letter-spacing:-.02em;}
+    .steel-hero {padding:.3rem 0 1rem;}
+    .steel-eyebrow {color:#D6A84B;font-size:.75rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;}
+    .steel-logo {font-size:2rem;font-weight:900;line-height:1.05;margin:.2rem 0;color:#F4F6F8;}
+    .steel-sub {color:#98A2B3;font-size:.92rem;}
+    .steel-card {border:1px solid #293241;background:linear-gradient(145deg,#151C27,#111722);border-radius:18px;padding:1rem;margin:.55rem 0;}
+    .steel-card.gold {border-color:#6D562A;background:linear-gradient(145deg,#201A10,#15140F);}
+    .steel-label {font-size:.72rem;color:#98A2B3;text-transform:uppercase;letter-spacing:.12em;font-weight:800;}
+    .steel-value {font-size:1.55rem;font-weight:850;margin-top:.1rem;color:#F4F6F8;}
+    .steel-meta {font-size:.86rem;color:#98A2B3;margin-top:.2rem;}
+    .exercise-title {font-size:1.02rem;font-weight:800;color:#F4F6F8;}
+    .exercise-meta {font-size:.82rem;color:#98A2B3;margin-bottom:.35rem;}
+    [data-testid="stMetric"] {border:1px solid #293241;border-radius:16px;padding:.8rem;background:#151C27;}
+    .stButton>button,.stFormSubmitButton>button {min-height:48px;border-radius:12px;font-weight:750;border:1px solid #364152;}
+    .stButton>button[kind="primary"],.stFormSubmitButton>button[kind="primary"] {background:#D6A84B;color:#0B1018;border-color:#D6A84B;}
+    [data-baseweb="input"] input,[data-baseweb="select"],textarea {font-size:16px !important;}
+    div[data-testid="stHorizontalBlock"] {gap:.55rem;}
+    .nav-note {color:#667085;font-size:.74rem;text-align:center;margin-top:-.25rem;}
+    @media (max-width:640px){
+      .block-container{padding:.5rem .7rem 4rem;}
+      .steel-logo{font-size:1.75rem;}
+      [data-testid="column"]{min-width:0 !important;}
+      .stButton>button,.stFormSubmitButton>button{width:100%;}
+    }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-KG_PER_LB = 0.45359237
+
+def df(sql, params=()):
+    return pd.DataFrame(rows(sql, params))
 
 
 def lb_to_kg(value):
@@ -44,8 +60,11 @@ def kg_to_lb(value):
     return float(value) / KG_PER_LB
 
 
-def df(sql, params=()):
-    return pd.DataFrame(rows(sql, params))
+def set_page(name, workout=None):
+    st.session_state["steel_page"] = name
+    if workout is not None:
+        st.session_state["selected_workout"] = workout
+    st.rerun()
 
 
 def flash(message):
@@ -53,318 +72,192 @@ def flash(message):
     st.rerun()
 
 
-PAGES = ["Dashboard", "Workout", "Plan", "Weight"]
-page = st.segmented_control(
-    "Navigation",
-    PAGES,
-    default=st.session_state.get("steel_page", "Dashboard"),
-    label_visibility="collapsed",
-)
-if page is None:
-    page = "Dashboard"
-st.session_state["steel_page"] = page
+active_days = [r["day_name"] for r in rows("SELECT day_name,MIN(id) AS n FROM programme WHERE active=1 GROUP BY day_name ORDER BY n")]
+page = st.session_state.get("steel_page", "Home")
+if page not in {"Home", "Train", "Plan", "Weight"}:
+    page = "Home"
 
-st.title("PROJECT STEEL")
-st.caption("3 workouts · 6 exercises · ~45 minutes lifting · 5–10 min incline finisher")
+st.markdown(
+    """
+    <div class="steel-hero">
+      <div class="steel-eyebrow">Personal training system</div>
+      <div class="steel-logo">PROJECT STEEL</div>
+      <div class="steel-sub">Train hard. Log simply. Build steadily.</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+nav1, nav2, nav3, nav4 = st.columns(4)
+if nav1.button("⌂ Home", use_container_width=True): set_page("Home")
+if nav2.button("▶ Train", use_container_width=True): set_page("Train")
+if nav3.button("▤ Plan", use_container_width=True): set_page("Plan")
+if nav4.button("⚖ Weight", use_container_width=True): set_page("Weight")
+st.markdown("<div class='nav-note'>Tap a section to move around Steel</div>", unsafe_allow_html=True)
+
 if msg := st.session_state.pop("steel_flash", None):
     st.success(msg)
 
-active_days = [
-    r["day_name"]
-    for r in rows(
-        "SELECT day_name, MIN(id) first_id FROM programme WHERE active=1 GROUP BY day_name ORDER BY first_id"
-    )
-]
-
-if page == "Dashboard":
-    latest_weight = rows(
-        "SELECT week_date, weight_lb FROM checkins WHERE weight_lb IS NOT NULL ORDER BY week_date DESC LIMIT 1"
-    )
+if page == "Home":
+    latest_weight = rows("SELECT weight_lb FROM checkins WHERE weight_lb IS NOT NULL ORDER BY week_date DESC LIMIT 1")
     total_sessions = rows("SELECT COUNT(*) AS n FROM sessions")[0]["n"]
-    last_session = rows(
-        "SELECT session_date, day_name, duration_min FROM sessions ORDER BY session_date DESC, id DESC LIMIT 1"
-    )
-    cardio_summary = rows(
-        "SELECT COUNT(*) AS sessions, COALESCE(SUM(duration_min),0) AS minutes FROM cardio_logs"
-    )[0]
+    cardio_minutes = rows("SELECT COALESCE(SUM(duration_min),0) AS n FROM cardio_logs WHERE activity='Incline treadmill walk'")[0]["n"]
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric(
-        "Current weight",
-        f"{lb_to_kg(latest_weight[0]['weight_lb']):.1f} kg" if latest_weight else "—",
-    )
-    c2.metric("Workouts logged", total_sessions)
-    c3.metric("Lifting target", "45 min")
-    c4.metric("Incline cardio", f"{cardio_summary['minutes']} min")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown(f"<div class='steel-card'><div class='steel-label'>Current weight</div><div class='steel-value'>{f'{lb_to_kg(latest_weight[0]["weight_lb"]):.1f} kg' if latest_weight else '—'}</div><div class='steel-meta'>Latest check-in</div></div>", unsafe_allow_html=True)
+    with c2:
+        st.markdown(f"<div class='steel-card'><div class='steel-label'>Sessions logged</div><div class='steel-value'>{total_sessions}</div><div class='steel-meta'>{cardio_minutes} min incline cardio</div></div>", unsafe_allow_html=True)
 
-    if active_days:
-        st.subheader("Your plan")
-        cols = st.columns(3)
-        for idx, day_name in enumerate(active_days[:3]):
-            count = rows(
-                "SELECT COUNT(*) AS n FROM programme WHERE day_name=? AND active=1",
-                (day_name,),
-            )[0]["n"]
-            with cols[idx]:
-                st.markdown(
-                    f"<div class='steel-card'><div class='steel-kicker'>Workout {idx+1}</div><div class='steel-title'>{day_name}</div><div class='steel-muted'>{count} exercises · ~45 min lifting<br>+ 5–10 min medium incline walk</div></div>",
-                    unsafe_allow_html=True,
-                )
+    st.markdown("### Choose today’s workout")
+    if not active_days:
+        st.warning("No active workouts are available.")
+    else:
+        for idx, day_name in enumerate(active_days[:3], start=1):
+            count = rows("SELECT COUNT(*) AS n FROM programme WHERE day_name=? AND active=1", (day_name,))[0]["n"]
+            st.markdown(f"<div class='steel-card gold'><div class='steel-label'>Workout {idx}</div><div class='steel-value' style='font-size:1.25rem'>{day_name}</div><div class='steel-meta'>{count} lifts · ~45 min · + 5–10 min incline walk</div></div>", unsafe_allow_html=True)
+            if st.button(f"Start {day_name}", key=f"start_{idx}", type="primary", use_container_width=True):
+                set_page("Train", day_name)
 
-    st.subheader("Latest activity")
+    last_session = rows("SELECT session_date,day_name,duration_min FROM sessions ORDER BY session_date DESC,id DESC LIMIT 1")
     if last_session:
         s = last_session[0]
-        st.info(
-            f"Last workout: **{s['day_name']}** on {s['session_date']} · {s['duration_min'] or '—'} min lifting"
-        )
-    else:
-        st.info("No workouts logged yet. Open **Workout** when you’re ready to train.")
+        st.markdown("### Last session")
+        st.caption(f"{s['day_name']} · {s['session_date']} · {s['duration_min'] or '—'} min")
 
-    weight_data = df(
-        "SELECT week_date, weight_lb FROM checkins WHERE weight_lb IS NOT NULL ORDER BY week_date"
-    )
-    if not weight_data.empty:
-        weight_data["date"] = pd.to_datetime(weight_data["week_date"])
-        weight_data["weight_kg"] = weight_data["weight_lb"] * KG_PER_LB
-        chart = (
-            alt.Chart(weight_data)
-            .mark_line(point=True)
-            .encode(
-                x=alt.X("date:T", title=None),
-                y=alt.Y("weight_kg:Q", title="Weight (kg)", scale=alt.Scale(zero=False)),
-                tooltip=[
-                    alt.Tooltip("date:T", title="Date", format="%d %b %Y"),
-                    alt.Tooltip("weight_kg:Q", title="kg", format=".1f"),
-                ],
-            )
-            .properties(height=240)
-        )
-        st.altair_chart(chart, use_container_width=True)
-
-elif page == "Workout":
-    st.subheader("Log workout")
+elif page == "Train":
+    st.markdown("## Train")
     if not active_days:
-        st.warning("No active workouts. Add one in Plan.")
+        st.warning("No active workouts are available.")
     else:
-        selected_day = st.selectbox("Workout", active_days)
+        default_day = st.session_state.get("selected_workout", active_days[0])
+        if default_day not in active_days:
+            default_day = active_days[0]
+        selected_day = st.selectbox("Workout", active_days, index=active_days.index(default_day))
+        st.session_state["selected_workout"] = selected_day
+
         plan = rows(
-            """SELECT p.id AS programme_id, p.exercise_id, p.sort_order, p.sets, p.rep_target, e.name, e.equipment
+            """SELECT p.id AS programme_id,p.exercise_id,p.sort_order,p.sets,p.rep_target,e.name,e.equipment
                FROM programme p JOIN exercises e ON e.id=p.exercise_id
                WHERE p.day_name=? AND p.active=1 ORDER BY p.sort_order""",
             (selected_day,),
         )
-        st.caption(f"{len(plan)} exercises · aim for roughly 45 minutes lifting")
 
-        with st.form("workout_log"):
-            session_date = st.date_input("Date", value=date.today())
-            duration = st.number_input(
-                "Lifting duration (minutes)", min_value=10, max_value=120, value=45, step=5
-            )
-            logged_sets = []
-            for ex in plan:
-                st.markdown(
-                    f"**{ex['sort_order']}. {ex['name']}**  ·  {ex['sets']} × {ex['rep_target']}  ·  {ex['equipment']}"
-                )
-                cols = st.columns([1, 1, 1])
-                weight = cols[0].number_input(
-                    "Weight kg",
-                    min_value=0.0,
-                    max_value=500.0,
-                    step=2.5,
-                    key=f"w_{ex['programme_id']}",
-                )
-                reps = cols[1].number_input(
-                    "Reps",
-                    min_value=0,
-                    max_value=50,
-                    value=10,
-                    step=1,
-                    key=f"r_{ex['programme_id']}",
-                )
-                completed = cols[2].checkbox(
-                    "Done", value=False, key=f"d_{ex['programme_id']}"
-                )
-                logged_sets.append((ex, weight, reps, completed))
-                st.divider()
+        st.markdown(f"<div class='steel-card gold'><div class='steel-label'>Current session</div><div class='steel-value' style='font-size:1.3rem'>{selected_day}</div><div class='steel-meta'>{len(plan)} exercises · target 45 min lifting</div></div>", unsafe_allow_html=True)
 
-            st.markdown("### Incline cardio finisher")
-            st.caption("Medium-intensity treadmill walk after lifting. Keep it steady rather than turning it into a hard cardio session.")
-            cardio_done = st.checkbox("Completed incline cardio", value=True)
-            cardio_cols = st.columns(3)
-            cardio_minutes = cardio_cols[0].number_input(
-                "Minutes", min_value=5, max_value=10, value=7, step=1
-            )
-            cardio_incline = cardio_cols[1].number_input(
-                "Incline %", min_value=1.0, max_value=15.0, value=6.0, step=0.5
-            )
-            cardio_rpe = cardio_cols[2].number_input(
-                "Effort / 10", min_value=1.0, max_value=10.0, value=6.0, step=0.5
-            )
-            notes = st.text_area(
-                "Notes", placeholder="Optional: how did the session feel?"
-            )
-            submitted = st.form_submit_button("Save workout", type="primary")
-        if submitted:
-            session_id = execute(
-                "INSERT INTO sessions(session_date,day_name,duration_min,notes) VALUES (?,?,?,?)",
-                (session_date.isoformat(), selected_day, int(duration), notes.strip()),
-            )
-            set_count = 0
-            for ex, weight, reps, completed in logged_sets:
-                if completed:
-                    for set_no in range(1, int(ex["sets"]) + 1):
-                        execute(
-                            "INSERT INTO set_logs(session_id,exercise_id,set_no,reps,weight_kg) VALUES (?,?,?,?,?)",
-                            (
-                                session_id,
-                                ex["exercise_id"],
-                                set_no,
-                                int(reps),
-                                float(weight),
-                            ),
-                        )
-                        set_count += 1
-            cardio_message = ""
-            if cardio_done:
-                execute(
-                    """INSERT INTO cardio_logs(
-                           session_id,cardio_date,activity,duration_min,incline_percent,intensity,rpe,notes
-                       ) VALUES (?,?,?,?,?,?,?,?)""",
-                    (
-                        session_id,
-                        session_date.isoformat(),
-                        "Incline treadmill walk",
-                        int(cardio_minutes),
-                        float(cardio_incline),
-                        "Medium",
-                        float(cardio_rpe),
-                        "Post-workout incline finisher",
-                    ),
-                )
-                cardio_message = f" + {int(cardio_minutes)} min incline cardio"
-            flash(f"Saved {selected_day}: {set_count} working sets{cardio_message}.")
-
-        st.markdown("### Last time")
-        previous = df(
-            """SELECT s.session_date, e.name AS exercise, MAX(l.weight_kg) AS weight_kg, MAX(l.reps) AS reps
+        previous_rows = rows(
+            """SELECT e.id AS exercise_id,MAX(l.weight_kg) AS weight_kg,MAX(l.reps) AS reps
                FROM sessions s JOIN set_logs l ON l.session_id=s.id JOIN exercises e ON e.id=l.exercise_id
-               WHERE s.day_name=? GROUP BY s.id,e.id ORDER BY s.session_date DESC,s.id DESC""",
+               WHERE s.id=(SELECT id FROM sessions WHERE day_name=? ORDER BY session_date DESC,id DESC LIMIT 1)
+               GROUP BY e.id""",
             (selected_day,),
         )
-        if previous.empty:
-            st.caption("No previous session logged for this workout yet.")
-        else:
-            latest_date = previous.iloc[0]["session_date"]
-            st.dataframe(
-                previous[previous["session_date"] == latest_date][
-                    ["exercise", "weight_kg", "reps"]
-                ],
-                hide_index=True,
-                use_container_width=True,
-            )
+        previous = {r["exercise_id"]: r for r in previous_rows}
 
-        latest_cardio = rows(
-            """SELECT cardio_date,duration_min,incline_percent,rpe
-               FROM cardio_logs WHERE activity='Incline treadmill walk'
-               ORDER BY cardio_date DESC,id DESC LIMIT 1"""
-        )
-        if latest_cardio:
-            c = latest_cardio[0]
-            st.caption(
-                f"Last incline finisher: {c['duration_min']} min · {c['incline_percent']:.1f}% incline · effort {c['rpe']:.1f}/10"
-            )
+        with st.form("steel_workout_form", clear_on_submit=False):
+            session_date = st.date_input("Session date", value=date.today())
+            duration = st.number_input("Lifting time (min)", min_value=20, max_value=90, value=45, step=5)
+            logged = []
+            for ex in plan:
+                prev = previous.get(ex["exercise_id"])
+                prev_text = f"Last: {prev['weight_kg']:.1f} kg × {prev['reps']}" if prev and prev["weight_kg"] is not None else "No previous log"
+                st.markdown(f"<div class='steel-card'><div class='exercise-title'>{ex['sort_order']}. {ex['name']}</div><div class='exercise-meta'>{ex['sets']} sets × {ex['rep_target']} · {ex['equipment']} · {prev_text}</div></div>", unsafe_allow_html=True)
+                a, b, c = st.columns([1, 1, .8])
+                weight = a.number_input("kg", min_value=0.0, max_value=500.0, step=2.5, value=float(prev["weight_kg"]) if prev and prev["weight_kg"] is not None else 0.0, key=f"kg_{ex['programme_id']}")
+                reps = b.number_input("reps", min_value=1, max_value=50, value=int(prev["reps"]) if prev and prev["reps"] else 10, step=1, key=f"rep_{ex['programme_id']}")
+                done = c.checkbox("Done", key=f"done_{ex['programme_id']}")
+                logged.append((ex, weight, reps, done))
+
+            st.markdown("### Incline finisher")
+            st.caption("Medium-intensity treadmill walk after the lifting session.")
+            cardio_done = st.checkbox("Log incline cardio", value=True)
+            ca, cb, cc = st.columns(3)
+            cardio_minutes = ca.number_input("Minutes", min_value=5, max_value=10, value=7, step=1)
+            cardio_incline = cb.number_input("Incline %", min_value=1.0, max_value=15.0, value=6.0, step=.5)
+            cardio_rpe = cc.number_input("Effort /10", min_value=1.0, max_value=10.0, value=6.0, step=.5)
+            notes = st.text_area("Session notes", placeholder="Optional")
+            submitted = st.form_submit_button("SAVE SESSION", type="primary", use_container_width=True)
+
+        if submitted:
+            session_id = execute("INSERT INTO sessions(session_date,day_name,duration_min,notes) VALUES (?,?,?,?)", (session_date.isoformat(), selected_day, int(duration), notes.strip()))
+            set_count = 0
+            exercise_count = 0
+            for ex, weight, reps, done in logged:
+                if done:
+                    exercise_count += 1
+                    for set_no in range(1, int(ex["sets"]) + 1):
+                        execute("INSERT INTO set_logs(session_id,exercise_id,set_no,reps,weight_kg) VALUES (?,?,?,?,?)", (session_id, ex["exercise_id"], set_no, int(reps), float(weight)))
+                        set_count += 1
+            if cardio_done:
+                execute("INSERT INTO cardio_logs(session_id,cardio_date,activity,duration_min,incline_percent,intensity,rpe,notes) VALUES (?,?,?,?,?,?,?,?)", (session_id, session_date.isoformat(), "Incline treadmill walk", int(cardio_minutes), float(cardio_incline), "Medium", float(cardio_rpe), "Project Steel finisher"))
+            cardio_text = f" + {int(cardio_minutes)} min incline" if cardio_done else ""
+            flash(f"Saved {selected_day}: {exercise_count}/{len(plan)} exercises, {set_count} sets{cardio_text}.")
 
 elif page == "Plan":
-    st.subheader("Workout plan")
-    st.caption("Edit your three-day split without touching past workout history.")
-
-    st.markdown(
-        "<div class='steel-finisher'><div class='steel-kicker'>Every workout</div><div class='steel-title'>Incline cardio finisher</div><div class='steel-muted'>5–10 minutes · medium intensity · treadmill incline walk · default 6% incline / effort 6 of 10</div></div>",
-        unsafe_allow_html=True,
-    )
-
-    selected_day = st.selectbox(
-        "Choose workout", active_days if active_days else ["Back + Biceps"]
-    )
-    plan = df(
-        """SELECT p.id, p.sort_order, e.name AS exercise, e.equipment, p.sets, p.rep_target AS reps
-           FROM programme p JOIN exercises e ON e.id=p.exercise_id
-           WHERE p.day_name=? AND p.active=1 ORDER BY p.sort_order""",
-        (selected_day,),
-    )
-    if not plan.empty:
-        st.dataframe(
-            plan[["sort_order", "exercise", "equipment", "sets", "reps"]],
-            hide_index=True,
-            use_container_width=True,
+    st.markdown("## Your plan")
+    st.caption("Six lifts per workout. Changes here affect future sessions only.")
+    if not active_days:
+        st.warning("No active workouts are available.")
+    else:
+        selected_day = st.selectbox("Workout", active_days)
+        plan = df(
+            """SELECT p.id,p.sort_order,e.name AS exercise,e.equipment,p.sets,p.rep_target AS reps
+               FROM programme p JOIN exercises e ON e.id=p.exercise_id
+               WHERE p.day_name=? AND p.active=1 ORDER BY p.sort_order""",
+            (selected_day,),
         )
+        for _, r in plan.iterrows():
+            st.markdown(f"<div class='steel-card'><div class='exercise-title'>{int(r.sort_order)}. {r.exercise}</div><div class='exercise-meta'>{r.equipment} · {int(r.sets)} sets × {r.reps}</div></div>", unsafe_allow_html=True)
 
-    with st.expander("Swap / add exercise"):
-        exercise_rows = rows(
-            "SELECT id,name,equipment FROM exercises WHERE active=1 ORDER BY name"
-        )
-        labels = {f"{r['name']} · {r['equipment']}": r["id"] for r in exercise_rows}
-        with st.form("add_exercise"):
-            chosen = st.selectbox("Exercise", list(labels))
-            sets = st.number_input("Sets", 1, 6, 3)
-            reps = st.text_input("Rep target", "10–12")
-            add = st.form_submit_button("Add to workout")
-        if add:
-            next_order = rows(
-                "SELECT COALESCE(MAX(sort_order),0)+1 AS n FROM programme WHERE day_name=?",
-                (selected_day,),
-            )[0]["n"]
-            execute(
-                "INSERT INTO programme(day_name,sort_order,exercise_id,sets,rep_target,superset) VALUES (?,?,?,?,?,?)",
-                (selected_day, next_order, labels[chosen], sets, reps, "X"),
-            )
-            flash(f"Added {chosen.split(' · ')[0]} to {selected_day}.")
+        st.markdown("<div class='steel-card gold'><div class='steel-label'>Finisher</div><div class='steel-value' style='font-size:1.1rem'>Incline treadmill walk</div><div class='steel-meta'>5–10 min · medium intensity · default 6% incline</div></div>", unsafe_allow_html=True)
 
-    if not plan.empty:
-        with st.expander("Remove exercise"):
-            options = {
-                f"{int(r.sort_order)}. {r.exercise}": int(r.id)
-                for _, r in plan.iterrows()
-            }
-            remove_label = st.selectbox("Exercise to remove", list(options))
-            if st.button("Remove from workout"):
-                execute("UPDATE programme SET active=0 WHERE id=?", (options[remove_label],))
-                flash(f"Removed {remove_label}.")
+        with st.expander("Add an exercise"):
+            exercise_rows = rows("SELECT id,name,equipment FROM exercises WHERE active=1 ORDER BY name")
+            labels = {f"{r['name']} · {r['equipment']}": r["id"] for r in exercise_rows}
+            with st.form("add_exercise_form"):
+                chosen = st.selectbox("Exercise", list(labels))
+                sets = st.number_input("Sets", 1, 6, 3)
+                reps = st.text_input("Rep target", "10–12")
+                add = st.form_submit_button("Add exercise")
+            if add:
+                next_order = rows("SELECT COALESCE(MAX(sort_order),0)+1 AS n FROM programme WHERE day_name=?", (selected_day,))[0]["n"]
+                execute("INSERT INTO programme(day_name,sort_order,exercise_id,sets,rep_target,superset) VALUES (?,?,?,?,?,?)", (selected_day, next_order, labels[chosen], sets, reps, "X"))
+                flash(f"Added {chosen.split(' · ')[0]} to {selected_day}.")
+
+        if not plan.empty:
+            with st.expander("Remove an exercise"):
+                options = {f"{int(r.sort_order)}. {r.exercise}": int(r.id) for _, r in plan.iterrows()}
+                remove_label = st.selectbox("Remove", list(options))
+                if st.button("Remove from plan", use_container_width=True):
+                    execute("UPDATE programme SET active=0 WHERE id=?", (options[remove_label],))
+                    flash(f"Removed {remove_label}.")
 
 elif page == "Weight":
-    st.subheader("Weight check-ins")
-    history = df(
-        "SELECT week_date, weight_lb FROM checkins WHERE weight_lb IS NOT NULL ORDER BY week_date DESC"
-    )
+    st.markdown("## Weight check-ins")
+    history = df("SELECT week_date,weight_lb FROM checkins WHERE weight_lb IS NOT NULL ORDER BY week_date DESC")
     latest_kg = lb_to_kg(history.iloc[0]["weight_lb"]) if not history.empty else None
-    st.metric(
-        "Current weight", f"{latest_kg:.1f} kg" if latest_kg is not None else "—"
-    )
 
-    with st.form("weight_checkin"):
+    st.markdown(f"<div class='steel-card gold'><div class='steel-label'>Current weight</div><div class='steel-value'>{f'{latest_kg:.1f} kg' if latest_kg is not None else '—'}</div><div class='steel-meta'>Track the trend, not a single day</div></div>", unsafe_allow_html=True)
+
+    with st.form("weight_form"):
         check_date = st.date_input("Check-in date", value=date.today())
-        weight_kg = st.number_input(
-            "Weight (kg)",
-            min_value=30.0,
-            max_value=300.0,
-            value=float(latest_kg or 90.0),
-            step=0.1,
-        )
-        save_weight = st.form_submit_button("Save check-in", type="primary")
-    if save_weight:
-        execute(
-            """INSERT INTO checkins(week_date,weight_lb) VALUES (?,?)
-               ON CONFLICT(week_date) DO UPDATE SET weight_lb=excluded.weight_lb""",
-            (check_date.isoformat(), kg_to_lb(weight_kg)),
-        )
-        flash(
-            f"Saved {weight_kg:.1f} kg for {check_date.strftime('%d %b %Y')}."
-        )
+        weight_kg = st.number_input("Weight (kg)", min_value=30.0, max_value=300.0, value=float(latest_kg or 90.0), step=.1)
+        save = st.form_submit_button("SAVE WEIGHT", type="primary", use_container_width=True)
+    if save:
+        execute("""INSERT INTO checkins(week_date,weight_lb) VALUES (?,?)
+                   ON CONFLICT(week_date) DO UPDATE SET weight_lb=excluded.weight_lb""", (check_date.isoformat(), kg_to_lb(weight_kg)))
+        flash(f"Saved {weight_kg:.1f} kg.")
 
     if not history.empty:
-        display = history.copy()
-        display["Weight (kg)"] = (display["weight_lb"] * KG_PER_LB).round(1)
-        display = display.rename(columns={"week_date": "Date"})[
-            ["Date", "Weight (kg)"]
-        ]
+        chart_data = history.copy()
+        chart_data["date"] = pd.to_datetime(chart_data["week_date"])
+        chart_data["weight_kg"] = chart_data["weight_lb"] * KG_PER_LB
+        chart = alt.Chart(chart_data).mark_line(point=True, color="#D6A84B", strokeWidth=3).encode(
+            x=alt.X("date:T", title=None),
+            y=alt.Y("weight_kg:Q", title="kg", scale=alt.Scale(zero=False)),
+            tooltip=[alt.Tooltip("date:T", title="Date", format="%d %b %Y"), alt.Tooltip("weight_kg:Q", title="kg", format=".1f")],
+        ).properties(height=260)
+        st.altair_chart(chart, use_container_width=True)
+        display = chart_data[["week_date", "weight_kg"]].rename(columns={"week_date": "Date", "weight_kg": "Weight (kg)"})
+        display["Weight (kg)"] = display["Weight (kg)"].round(1)
         st.dataframe(display, hide_index=True, use_container_width=True)
