@@ -112,6 +112,31 @@
 .support-feedback-form textarea:focus { border-color: var(--steel-gold); box-shadow: 0 0 0 3px rgba(217,173,85,.12); }
 .support-feedback-success { display: grid; gap: 14px; margin-top: 18px; padding: 14px; border: 1px solid #365640; border-radius: 13px; color: #cde4bf; background: #122018; font-size: .8rem; }
 .support-feedback-success .gold-button { width: max-content; }
+.onboarding-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at 80% 0%,rgba(217,173,85,.12),transparent 24rem),#07111b; color: var(--steel-text); }
+.onboarding-card { width: min(100%, 560px); padding: clamp(20px,5vw,38px); border: 1px solid var(--steel-gold-dark); border-radius: 24px; background: linear-gradient(145deg,#17202a,#0b1118); box-shadow: 0 24px 70px rgba(0,0,0,.38); }
+.onboarding-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 28px; }
+.onboarding-brand .brand-emblem { width: 44px; height: 44px; }
+.onboarding-brand > div:last-child { display: grid; gap: 3px; }
+.onboarding-brand strong { font-size: .82rem; letter-spacing: .12em; }
+.onboarding-progress { height: 5px; overflow: hidden; border-radius: 99px; background: #26313c; }
+.onboarding-progress span { display: block; height: 100%; border-radius: inherit; background: var(--steel-gold); transition: width .2s ease; }
+.onboarding-step-copy { margin: 28px 0 24px; }
+.onboarding-step-copy h1 { margin: 7px 0 8px; font-size: clamp(1.55rem,5vw,2.25rem); letter-spacing: -.04em; }
+.onboarding-step-copy p { margin: 0; color: var(--steel-muted); font-size: .86rem; line-height: 1.5; }
+.onboarding-form { display: grid; gap: 20px; }
+.onboarding-form fieldset, .onboarding-form label { display: grid; gap: 8px; }
+.onboarding-form fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.onboarding-form legend, .onboarding-form label > span { padding: 0; color: var(--steel-muted); font-size: .7rem; font-weight: 850; }
+.onboarding-option-list { display: grid; gap: 8px; }
+.onboarding-option-list button { min-height: 49px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 13px; border: 1px solid #35404c; border-radius: 12px; color: var(--steel-text); background: #101821; font-size: .8rem; font-weight: 750; text-align: left; }
+.onboarding-option-list button svg { color: var(--steel-muted); }
+.onboarding-option-list button.selected { border-color: var(--steel-gold-dark); color: var(--steel-gold-2); background: rgba(217,173,85,.12); }
+.onboarding-option-list button.selected svg { color: var(--steel-gold); }
+.onboarding-form select, .onboarding-form textarea { width: 100%; min-height: 45px; border: 1px solid #35404c; border-radius: 11px; background: #0a1017; color: #fff; padding: 0 11px; font: inherit; font-size: .82rem; outline: none; }
+.onboarding-form textarea { min-height: 120px; padding: 11px; resize: vertical; }
+.onboarding-form select:focus, .onboarding-form textarea:focus { border-color: var(--steel-gold); box-shadow: 0 0 0 3px rgba(217,173,85,.12); }
+.onboarding-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 4px; }
+.onboarding-actions .gold-button { display: inline-flex; align-items: center; gap: 8px; }
 
 @media (max-width: 480px) {
   .v2-topbar { align-items: flex-start; }
@@ -122,4 +147,12 @@
   .account-button { max-width: 132px; grid-template-columns: 30px minmax(0,1fr) 14px; padding-inline: 6px; }
   .account-avatar { width: 30px; height: 30px; }
   .account-copy strong { font-size: .7rem; }
+}
+
+@media (max-width: 520px) {
+  .onboarding-shell { padding: 12px; place-items: start center; }
+  .onboarding-card { margin-top: 20px; padding: 22px 18px; }
+  .onboarding-brand { margin-bottom: 22px; }
+  .onboarding-step-copy { margin: 24px 0 20px; }
+  .preference-choice-grid, .equipment-choice-grid { grid-template-columns: repeat(2,1fr); }
 }
