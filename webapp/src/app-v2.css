@@ -163,6 +163,7 @@ button { cursor: pointer; }
 .library-exercise-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .78rem; }
 .library-exercise-copy span, .library-exercise-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--steel-muted); font-size: .64rem; }
 .library-card-actions { display: grid; justify-items: end; gap: 5px; }
+.library-use-button { min-height: 30px; padding: 0 9px; border: 1px solid var(--steel-gold-dark); border-radius: 9px; background: var(--steel-gold); color: #111820; font-size: .64rem; font-weight: 850; }
 .library-details-button, .library-retry { min-height: 30px; padding: 0 9px; border: 1px solid #4b4a35; border-radius: 9px; background: #1c1a13; color: var(--steel-gold-2); font-size: .64rem; font-weight: 850; }
 .library-details-button:hover, .library-retry:hover { border-color: var(--steel-gold); background: #292214; }
 .library-video-link { display: inline-flex; align-items: center; gap: 4px; color: var(--steel-gold-2); font-size: .65rem; font-weight: 850; text-decoration: none; }
@@ -240,6 +241,7 @@ button { cursor: pointer; }
 .train-nav-row { display: grid; grid-template-columns: .85fr 1.15fr; gap: 9px; }
 .train-nav-row > button:not(.gold-button) { min-height: 46px; border-radius: 12px; border: 1px solid #343e49; background: #121923; color: #d2d6dc; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; }
 .train-nav-row > button:disabled { opacity: .35; }
+.add-exercise-from-session { width: 100%; justify-content: center; margin: 12px 0; }
 .jump-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; color: #828d99; font-size: .72rem; }
 .jump-row select { max-width: 72%; }
 .finisher-panel { display: grid; grid-template-columns: 55px 1fr; gap: 12px; border: 1px solid var(--steel-gold-dark); border-radius: 20px; background: linear-gradient(145deg,#1b170f,#101720); padding: 16px; }
