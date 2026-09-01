@@ -193,7 +193,7 @@ function mergeAiPreferences(preferences, profile) {
   return next
 }
 
-function OnboardingAiAssistant({ preferences, setPreferences, onComplete, saving }) {
+function OnboardingAiAssistant({ preferences, setPreferences }) {
   const [open, setOpen] = useState(false)
   const [consent, setConsent] = useState(false)
   const [chatStarted, setChatStarted] = useState(false)
@@ -238,12 +238,6 @@ function OnboardingAiAssistant({ preferences, setPreferences, onComplete, saving
     setOpen(false)
   }
 
-  async function finishWithAi() {
-    const merged = mergeAiPreferences(preferences, profile)
-    setPreferences(merged)
-    await onComplete(merged)
-  }
-
   return <>
     <button type="button" className={`ai-onboarding-launcher ${open ? 'is-open' : ''}`} onClick={() => setOpen((current) => !current)} aria-label={open ? 'Close Atlas' : 'Open Atlas'} aria-expanded={open}>
       {open ? <X size={22}/> : <><span className="ai-launcher-mark"><SteelMark size={22} title="Atlas"/></span><span>Ask Atlas</span></>}
@@ -263,7 +257,7 @@ function OnboardingAiAssistant({ preferences, setPreferences, onComplete, saving
         </div>
         {messages.length === 1 && <div className="ai-prompt-chips">{suggestedPrompts.map((prompt) => <button type="button" key={prompt} onClick={(event) => sendMessage(event, prompt)}>{prompt}</button>)}</div>}
         {error && <div className="ai-chat-error"><span>{error}</span><small>Your manual setup is still available.</small></div>}
-        {profile && <section className="ai-answer-review"><span className="eyebrow">ANSWERS CAPTURED</span><div><strong>{profile.goal || 'Goal pending'}</strong><span>{profile.experienceLevel || 'Level pending'} · {profile.trainingDays || '—'} days · {profile.availableEquipment?.join(', ') || 'Equipment pending'}</span></div><button type="button" onClick={applyAnswers}>Use these answers in the form</button>{readyToConfirm && <button type="button" className="gold-button" disabled={saving} onClick={finishWithAi}>{saving ? 'Building your plan…' : 'Confirm and build my plan'}</button>}</section>}
+        {profile && <section className="ai-answer-review"><span className="eyebrow">ANSWERS CAPTURED</span><div><strong>{profile.goal || 'Goal pending'}</strong><span>{profile.experienceLevel || 'Level pending'} · {profile.trainingDays || '—'} days · {profile.availableEquipment?.join(', ') || 'Equipment pending'}</span></div><button type="button" onClick={applyAnswers}>Use these answers in the form</button>{readyToConfirm && <small>Apply these answers, then finish the required setup questions.</small>}</section>}
         <form className="ai-chat-compose" onSubmit={sendMessage}><label className="sr-only" htmlFor="atlas-message">Message Atlas</label><textarea id="atlas-message" rows="2" maxLength="2000" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Tell Atlas about your goal…"/><button type="submit" disabled={!input.trim() || busy} aria-label="Send message"><Send size={18}/></button></form>
         <small className="ai-chat-disclaimer">AI guidance can be wrong. Medical concerns need a qualified professional.</small>
       </>}
@@ -273,8 +267,8 @@ function OnboardingAiAssistant({ preferences, setPreferences, onComplete, saving
 
 const trainingStyleOptions = ['Strength focused', 'Build muscle', 'General fitness', 'Low impact', 'Athletic conditioning']
 
-function OnboardingScheduleFields({ preferences, setPreferences }) {
-  return <fieldset><legend>Session shape</legend><div className="preference-split"><label><span>Usual session length</span><select value={preferences.sessionDurationMin} onChange={(event) => setPreferences({ ...preferences, sessionDurationMin: Number(event.target.value) })}>{[20, 30, 45, 60, 75, 90].map((minutes) => <option key={minutes} value={minutes}>{minutes} minutes</option>)}</select></label><label><span>Where do you train?</span><select value={preferences.trainingLocation} onChange={(event) => setPreferences({ ...preferences, trainingLocation: event.target.value })}>{['Gym', 'Home', 'Hybrid'].map((location) => <option key={location}>{location}</option>)}</select></label></div><label><span>How many days are you training now?</span><select value={preferences.currentTrainingDays} onChange={(event) => setPreferences({ ...preferences, currentTrainingDays: event.target.value === '' ? '' : Number(event.target.value) })}><option value="">Prefer not to say</option>{[0,1,2,3,4,5,6,7].map((days) => <option key={days} value={days}>{days} day{days === 1 ? '' : 's'}</option>)}</select></label></fieldset>
+function OnboardingScheduleFields({ preferences, setPreferences, invalid = () => false }) {
+  return <fieldset><legend>Session shape</legend><div className="preference-split"><label id="onboarding-session-length" className={invalid('session-length') ? 'onboarding-field-invalid' : ''}><span>Usual session length</span><select value={preferences.sessionDurationMin} onChange={(event) => setPreferences({ ...preferences, sessionDurationMin: Number(event.target.value) })}>{[20, 30, 45, 60, 75, 90].map((minutes) => <option key={minutes} value={minutes}>{minutes} minutes</option>)}</select>{invalid('session-length') && <small className="onboarding-field-error">Choose a session length.</small>}</label><label id="onboarding-training-location" className={invalid('training-location') ? 'onboarding-field-invalid' : ''}><span>Where do you train?</span><select value={preferences.trainingLocation} onChange={(event) => setPreferences({ ...preferences, trainingLocation: event.target.value })}>{['Gym', 'Home', 'Hybrid'].map((location) => <option key={location}>{location}</option>)}</select>{invalid('training-location') && <small className="onboarding-field-error">Choose where you train.</small>}</label></div><label><span>How many days are you training now?</span><select value={preferences.currentTrainingDays} onChange={(event) => setPreferences({ ...preferences, currentTrainingDays: event.target.value === '' ? '' : Number(event.target.value) })}><option value="">Prefer not to say</option>{[0,1,2,3,4,5,6,7].map((days) => <option key={days} value={days}>{days} day{days === 1 ? '' : 's'}</option>)}</select></label></fieldset>
 }
 
 function OnboardingTrainingContextFields({ preferences, setPreferences }) {
@@ -286,13 +280,39 @@ function OnboardingFoodContextFields({ preferences, setPreferences }) {
   return <><label><span>How much time do you usually have to cook?</span><select value={preferences.cookingTime} onChange={(event) => setPreferences({ ...preferences, cookingTime: event.target.value })}><option value="">Prefer not to say</option>{['Minimal', '15–30 minutes', '30–60 minutes', 'Enjoy cooking'].map((option) => <option key={option}>{option}</option>)}</select></label><label><span>Foods or meals you genuinely enjoy</span><textarea value={preferences.preferredFoods} onChange={(event) => setPreferences({ ...preferences, preferredFoods: event.target.value })} placeholder="Optional — tell us cuisines, staple foods or meals you would be happy to repeat." rows="3"/><small className="field-hint">Steel will use this to offer practical meal choices rather than a rigid, generic menu.</small></label></>
 }
 
-function OnboardingFlow({ preferences, setPreferences, toggleEquipment, onComplete, onAiComplete, onSkip, saving, onSignOut }) {
+function OnboardingFlow({ preferences, setPreferences, toggleEquipment, onComplete, saving, onSignOut }) {
   const [step, setStep] = useState(0)
+  const [validationAttempted, setValidationAttempted] = useState(false)
   const isLast = step === 3
+  const requiredFields = [
+    { key: 'goal', step: 0, valid: () => Boolean(preferences.goal) },
+    { key: 'experience', step: 0, valid: () => Boolean(preferences.experienceLevel) },
+    { key: 'timeframe', step: 0, valid: () => Number(preferences.goalTimeframeWeeks) > 0 },
+    { key: 'equipment', step: 1, valid: () => preferences.availableEquipment.length > 0 },
+    { key: 'training-days', step: 1, valid: () => Number(preferences.trainingDays) > 0 },
+    { key: 'checkin-day', step: 1, valid: () => Number.isInteger(Number(preferences.checkinDay)) && Number(preferences.checkinDay) >= 0 && Number(preferences.checkinDay) <= 6 },
+    { key: 'units', step: 1, valid: () => ['lb', 'kg'].includes(preferences.units) },
+    { key: 'session-length', step: 1, valid: () => Number(preferences.sessionDurationMin) > 0 },
+    { key: 'training-location', step: 1, valid: () => Boolean(preferences.trainingLocation) },
+    { key: 'dietary-preference', step: 3, valid: () => Boolean(preferences.dietaryPreference) },
+    { key: 'meals-per-day', step: 3, valid: () => Number(preferences.mealsPerDay) > 0 },
+  ]
+  const missingFields = validationAttempted ? requiredFields.filter((field) => !field.valid()) : []
+  const invalid = (key) => missingFields.some((field) => field.key === key)
+
+  function showMissingInformation() {
+    const first = missingFields[0]
+    if (!first) return
+    setStep(first.step)
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => document.getElementById(`onboarding-${first.key}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })))
+  }
 
   function advance(event) {
     event.preventDefault()
-    if (isLast) return onComplete(event)
+    const missing = requiredFields.filter((field) => (isLast || field.step === step) && !field.valid())
+    if (missing.length) { setValidationAttempted(true); return }
+    setValidationAttempted(false)
+    if (isLast) return onComplete()
     setStep((current) => current + 1)
   }
 
@@ -305,8 +325,6 @@ function OnboardingFlow({ preferences, setPreferences, toggleEquipment, onComple
       <div className="onboarding-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow={step + 1}>
         <span style={{ width: String(((step + 1) / 4) * 100) + '%' }}/>
       </div>
-      <button type="button" className="onboarding-skip" onClick={onSkip}>Set up later</button>
-
       <div className="onboarding-step-copy">
         <span className="eyebrow">STEP {step + 1} OF 4</span>
         {step === 0 && <><h1>What are you building toward?</h1><p>Tell Steel the outcome and timeframe that matter to you.</p></>}
@@ -317,35 +335,37 @@ function OnboardingFlow({ preferences, setPreferences, toggleEquipment, onComple
 
       <form className="onboarding-form" onSubmit={advance}>
         {step === 0 && <>
-          <fieldset>
+          <fieldset id="onboarding-goal" className={invalid('goal') ? 'onboarding-field-invalid' : ''}>
             <legend>Primary goal</legend>
             <div className="onboarding-option-list">
               {['Lose fat and gain muscle','Build muscle','Get stronger','Improve fitness','Train consistently'].map((option) => <button type="button" key={option} className={preferences.goal === option ? 'selected' : ''} aria-pressed={preferences.goal === option} onClick={() => setPreferences({ ...preferences, goal: option })}>{option}<ChevronRight size={17}/></button>)}
             </div>
+            {invalid('goal') && <small className="onboarding-field-error">Choose the outcome you want to build toward.</small>}
           </fieldset>
-          <fieldset>
+          <fieldset id="onboarding-experience" className={invalid('experience') ? 'onboarding-field-invalid' : ''}>
             <legend>Experience level</legend>
             <div className="preference-choice-grid">
               {experienceOptions.map((option) => <button type="button" key={option} className={preferences.experienceLevel === option ? 'selected' : ''} aria-pressed={preferences.experienceLevel === option} onClick={() => setPreferences({ ...preferences, experienceLevel: option })}>{option}</button>)}
             </div>
+            {invalid('experience') && <small className="onboarding-field-error">Choose your current experience level.</small>}
           </fieldset>
-          <label><span>When would you like to feel meaningful progress?</span><select value={preferences.goalTimeframeWeeks} onChange={(event) => setPreferences({ ...preferences, goalTimeframeWeeks: Number(event.target.value) })}>{[[4, 'About a month'], [8, 'About two months'], [12, 'About three months'], [24, 'About six months'], [52, 'Over a year']].map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label id="onboarding-timeframe" className={invalid('timeframe') ? 'onboarding-field-invalid' : ''}><span>When would you like to feel meaningful progress?</span><select value={preferences.goalTimeframeWeeks} onChange={(event) => setPreferences({ ...preferences, goalTimeframeWeeks: Number(event.target.value) })}>{[[4, 'About a month'], [8, 'About two months'], [12, 'About three months'], [24, 'About six months'], [52, 'Over a year']].map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>{invalid('timeframe') && <small className="onboarding-field-error">Select a progress timeframe.</small>}</label>
         </>}
 
         {step === 1 && <>
-          <fieldset>
+          <fieldset id="onboarding-equipment" className={invalid('equipment') ? 'onboarding-field-invalid' : ''}>
             <legend>Available equipment</legend>
             <div className="equipment-choice-grid">
               {equipmentOptions.map((option) => <button type="button" key={option} className={preferences.availableEquipment.includes(option) ? 'selected' : ''} aria-pressed={preferences.availableEquipment.includes(option)} onClick={() => toggleEquipment(option)}>{preferences.availableEquipment.includes(option) ? '✓ ' : ''}{option}</button>)}
             </div>
-            <small className="field-hint">Select everything you can use. Keep at least one option selected.</small>
+            <small className="field-hint">Select everything you can use. Keep at least one option selected.</small>{invalid('equipment') && <small className="onboarding-field-error">Select at least one type of equipment.</small>}
           </fieldset>
           <div className="preference-split">
-            <label><span>Training days per week</span><select value={preferences.trainingDays} onChange={(event) => setPreferences({ ...preferences, trainingDays: Number(event.target.value) })}>{[1,2,3,4,5,6,7].map((day) => <option key={day} value={day}>{day} {day === 1 ? 'day' : 'days'}</option>)}</select></label>
-            <label><span>Weekly check-in day</span><select value={preferences.checkinDay} onChange={(event) => setPreferences({ ...preferences, checkinDay: Number(event.target.value) })}>{checkinDays.map(([day, value]) => <option key={day} value={value}>{day}</option>)}</select></label>
+            <label id="onboarding-training-days" className={invalid('training-days') ? 'onboarding-field-invalid' : ''}><span>Training days per week</span><select value={preferences.trainingDays} onChange={(event) => setPreferences({ ...preferences, trainingDays: Number(event.target.value) })}>{[1,2,3,4,5,6,7].map((day) => <option key={day} value={day}>{day} {day === 1 ? 'day' : 'days'}</option>)}</select>{invalid('training-days') && <small className="onboarding-field-error">Choose your training days.</small>}</label>
+            <label id="onboarding-checkin-day" className={invalid('checkin-day') ? 'onboarding-field-invalid' : ''}><span>Weekly check-in day</span><select value={preferences.checkinDay} onChange={(event) => setPreferences({ ...preferences, checkinDay: Number(event.target.value) })}>{checkinDays.map(([day, value]) => <option key={day} value={value}>{day}</option>)}</select>{invalid('checkin-day') && <small className="onboarding-field-error">Choose a check-in day.</small>}</label>
           </div>
-          <label><span>Weight units</span><select value={preferences.units} onChange={(event) => setPreferences({ ...preferences, units: event.target.value })}><option value="lb">Pounds (lb)</option><option value="kg">Kilograms (kg)</option></select></label>
-          <OnboardingScheduleFields preferences={preferences} setPreferences={setPreferences}/>
+          <label id="onboarding-units" className={invalid('units') ? 'onboarding-field-invalid' : ''}><span>Weight units</span><select value={preferences.units} onChange={(event) => setPreferences({ ...preferences, units: event.target.value })}><option value="lb">Pounds (lb)</option><option value="kg">Kilograms (kg)</option></select>{invalid('units') && <small className="onboarding-field-error">Choose pounds or kilograms.</small>}</label>
+          <OnboardingScheduleFields preferences={preferences} setPreferences={setPreferences} invalid={invalid}/>
         </>}
 
         {step === 2 && <>
@@ -354,8 +374,8 @@ function OnboardingFlow({ preferences, setPreferences, toggleEquipment, onComple
         </>}
 
         {step === 3 && <>
-          <label><span>Dietary preference</span><select value={preferences.dietaryPreference} onChange={(event) => setPreferences({ ...preferences, dietaryPreference: event.target.value })}>{dietaryOptions.map((option) => <option key={option}>{option}</option>)}</select></label>
-          <label><span>Preferred meals per day</span><select value={preferences.mealsPerDay} onChange={(event) => setPreferences({ ...preferences, mealsPerDay: Number(event.target.value) })}>{[2,3,4,5,6].map((meals) => <option key={meals} value={meals}>{meals} meals</option>)}</select></label>
+          <label id="onboarding-dietary-preference" className={invalid('dietary-preference') ? 'onboarding-field-invalid' : ''}><span>Dietary preference</span><select value={preferences.dietaryPreference} onChange={(event) => setPreferences({ ...preferences, dietaryPreference: event.target.value })}>{dietaryOptions.map((option) => <option key={option}>{option}</option>)}</select>{invalid('dietary-preference') && <small className="onboarding-field-error">Choose your dietary preference.</small>}</label>
+          <label id="onboarding-meals-per-day" className={invalid('meals-per-day') ? 'onboarding-field-invalid' : ''}><span>Preferred meals per day</span><select value={preferences.mealsPerDay} onChange={(event) => setPreferences({ ...preferences, mealsPerDay: Number(event.target.value) })}>{[2,3,4,5,6].map((meals) => <option key={meals} value={meals}>{meals} meals</option>)}</select>{invalid('meals-per-day') && <small className="onboarding-field-error">Choose the number of meals you prefer.</small>}</label>
           <label><span>Allergies or intolerances</span><textarea value={preferences.allergies} onChange={(event) => setPreferences({ ...preferences, allergies: event.target.value })} placeholder="Optional — for example, nuts, lactose or gluten." rows="3"/><small className="field-hint">You can update this later in Settings.</small></label>
           <OnboardingFoodContextFields preferences={preferences} setPreferences={setPreferences}/>
         </>}
@@ -364,9 +384,10 @@ function OnboardingFlow({ preferences, setPreferences, toggleEquipment, onComple
           <button type="button" className="text-button" onClick={step === 0 ? onSignOut : () => setStep((current) => current - 1)}>{step === 0 ? 'Sign out' : 'Back'}</button>
           <button className="gold-button" disabled={saving}>{isLast ? (saving ? 'Building your plan…' : 'Finish setup') : <><span>Continue</span><ArrowRight size={17}/></>}</button>
         </div>
+        {isLast && missingFields.length > 0 && <div className="onboarding-missing-panel" role="alert"><strong>Finish setup needs {missingFields.length} more answer{missingFields.length === 1 ? '' : 's'}.</strong><button type="button" onClick={showMissingInformation}>Show me missing information</button></div>}
       </form>
     </section>
-    <OnboardingAiAssistant preferences={preferences} setPreferences={setPreferences} onComplete={onAiComplete} saving={saving}/>
+    <OnboardingAiAssistant preferences={preferences} setPreferences={setPreferences}/>
   </main>
 }
 
@@ -828,7 +849,7 @@ export default function AppV3({ user, onSignOut }) {
 
   if (busy) return <div className="v2-loading"><div className="steel-emblem"><SteelMark /></div><span>Loading Steel…</span></div>
   if (loadError) return <div className="v2-loading app-load-error"><div className="steel-emblem"><SteelMark /></div><div><span className="eyebrow">STEEL IS TEMPORARILY OFFLINE</span><h2>We couldn’t load your data</h2><p>Check your connection, then try again. Your account data is still safe.</p><button type="button" className="gold-button" onClick={retryAppLoad}>Try again</button></div></div>
-  if (!profile?.onboarding_completed && !onboardingDismissed) return <OnboardingFlow preferences={preferences} setPreferences={setPreferences} toggleEquipment={toggleEquipment} onComplete={completeOnboarding} onAiComplete={completeOnboarding} onSkip={() => { setOnboardingDismissed(true); setMessage('You can finish your setup any time in Settings.') }} saving={saving} onSignOut={onSignOut} />
+  if (!profile?.onboarding_completed && !onboardingDismissed) return <OnboardingFlow preferences={preferences} setPreferences={setPreferences} toggleEquipment={toggleEquipment} onComplete={completeOnboarding} saving={saving} onSignOut={onSignOut} />
 
   return <div className="steel-app">
     <main className="steel-screen">
