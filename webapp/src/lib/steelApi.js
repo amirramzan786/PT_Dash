@@ -286,6 +286,13 @@ export async function getProfile(userId) {
   return data
 }
 
+export async function getProgrammeIntake(userId) {
+  const client = requireSupabase()
+  const { data, error } = await client.from('programme_intakes').select('user_id,goal_timeframe_weeks,session_duration_min,training_location,current_training_days,daily_activity_level,sleep_quality,training_styles,exercise_preferences,exercise_avoidances,cardio_preference,cardio_experience,cardio_sessions,cooking_time,preferred_foods,updated_at').eq('user_id', userId).maybeSingle()
+  if (error) throw error
+  return data
+}
+
 export async function getNutritionPlan(userId) {
   const client = requireSupabase()
   const [targetResult, mealsResult] = await Promise.all([
@@ -402,6 +409,31 @@ export async function saveProfile(userId, { displayName, phone, goal, avatarUrl,
   if (allergies !== undefined) payload.allergies = allergies || null
   if (mealsPerDay !== undefined) payload.meals_per_day = mealsPerDay
   const { data, error } = await client.from('profiles').upsert(payload, { onConflict: 'id' }).select().single()
+  if (error) throw error
+  return data
+}
+
+export async function saveProgrammeIntake(userId, intake = {}) {
+  const client = requireSupabase()
+  const payload = {
+    user_id: userId,
+    goal_timeframe_weeks: intake.goalTimeframeWeeks || null,
+    session_duration_min: Number(intake.sessionDurationMin) || 45,
+    training_location: intake.trainingLocation || 'Gym',
+    current_training_days: intake.currentTrainingDays === '' || intake.currentTrainingDays === undefined ? null : Number(intake.currentTrainingDays),
+    daily_activity_level: intake.dailyActivityLevel || null,
+    sleep_quality: intake.sleepQuality === '' || intake.sleepQuality === undefined ? null : Number(intake.sleepQuality),
+    training_styles: Array.isArray(intake.trainingStyles) ? intake.trainingStyles : [],
+    exercise_preferences: intake.exercisePreferences?.trim() || null,
+    exercise_avoidances: intake.exerciseAvoidances?.trim() || null,
+    cardio_preference: intake.cardioPreference || 'No preference',
+    cardio_experience: intake.cardioExperience || 'Beginner',
+    cardio_sessions: Number(intake.cardioSessions) || 0,
+    cooking_time: intake.cookingTime || null,
+    preferred_foods: intake.preferredFoods?.trim() || null,
+    updated_at: new Date().toISOString(),
+  }
+  const { data, error } = await client.from('programme_intakes').upsert(payload, { onConflict: 'user_id' }).select().single()
   if (error) throw error
   return data
 }

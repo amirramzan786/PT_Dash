@@ -23,6 +23,30 @@ create table if not exists profiles (
   updated_at timestamptz not null default now()
 );
 
+-- The coaching intake is deliberately separate from the display profile. It is
+-- private assessment data used to generate a versioned training and meal plan.
+create table if not exists programme_intakes (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  goal_timeframe_weeks smallint check (goal_timeframe_weeks between 1 and 104),
+  session_duration_min smallint not null default 45 check (session_duration_min in (20, 30, 45, 60, 75, 90)),
+  training_location text not null default 'Gym' check (training_location in ('Gym', 'Home', 'Hybrid')),
+  current_training_days smallint check (current_training_days between 0 and 7),
+  daily_activity_level text check (daily_activity_level in ('Mostly seated', 'Lightly active', 'Active job', 'Very active')),
+  sleep_quality smallint check (sleep_quality between 1 and 5),
+  training_styles text[] not null default '{}'::text[],
+  exercise_preferences text,
+  exercise_avoidances text,
+  cardio_preference text not null default 'No preference' check (cardio_preference in ('No preference', 'Walking', 'Running', 'Cycling', 'Machines', 'Classes', 'Sports', 'None for now')),
+  cardio_experience text not null default 'Beginner' check (cardio_experience in ('Beginner', 'Comfortable', 'Experienced')),
+  cardio_sessions smallint not null default 0 check (cardio_sessions between 0 and 7),
+  cooking_time text check (cooking_time in ('Minimal', '15–30 minutes', '30–60 minutes', 'Enjoy cooking')),
+  preferred_foods text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+grant select, insert, update, delete on table programme_intakes to authenticated;
+
 create table if not exists workouts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -194,6 +218,7 @@ grant select on table user_roles to authenticated;
 grant select on table trainer_client_assignments to authenticated;
 
 alter table profiles enable row level security;
+alter table programme_intakes enable row level security;
 alter table workouts enable row level security;
 alter table exercises enable row level security;
 alter table workout_exercises enable row level security;
@@ -218,6 +243,8 @@ create policy "participant assignment read" on trainer_client_assignments for se
 using ((select auth.uid()) = trainer_id or (select auth.uid()) = client_id);
 
 create policy "own profile" on profiles for all using (auth.uid() = id) with check (auth.uid() = id);
+create policy "own programme intake" on programme_intakes for all to authenticated
+using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 create policy "own workouts" on workouts for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "own exercises" on exercises for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "own sessions" on sessions for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
