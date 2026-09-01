@@ -49,7 +49,7 @@ function makeDraft(workout) {
     sets: Object.fromEntries(workout.exercises.map((exercise) => [exercise.id,
       Array.from({ length: exercise.sets }, (_, index) => ({ setNo: index + 1, weight: Number(exercise.startWeightKg) || 0, reps: Number.parseInt(exercise.reps, 10) || 10, complete: false, removed: false })),
     ])),
-    cardio: workout.cardio ? { complete: true, activity: workout.cardio.activity, minutes: workout.cardio.durationMin, incline: 0, rpe: Number.parseFloat(workout.cardio.rpe) || 6 } : { complete: true, activity: 'Incline treadmill walk', minutes: 7, incline: 6, rpe: 6 },
+    cardio: workout.cardio ? { complete: true, activity: workout.cardio.activity, minutes: workout.cardio.durationMin, incline: 0, rpe: Number.parseFloat(workout.cardio.rpe) || 6 } : null,
   }
 }
 
@@ -702,7 +702,7 @@ export default function AppV3({ user, onSignOut }) {
   function closeExerciseLibrary() { setExerciseSwapMode(false); navigateToTab('Train') }
   function addExerciseToSession(row) {
     if (!selectedWorkout || !draft) return
-    const replacement = { id: row.id, source: 'catalog', programmeId: null, name: row.name, equipment: (row.equipment ?? []).join(' / ') || 'Gym', muscleGroup: row.primary_muscle_group ?? null, secondaryMuscleGroups: row.secondary_muscle_groups ?? [], movementPattern: row.movement_pattern ?? null, difficulty: row.difficulty ?? null, instructions: row.instructions ?? null, youtubeUrl: row.video_url ?? null, thumbnailUrl: row.thumbnail_url ?? null, sets: currentExercise?.sets ?? row.sets ?? 3, reps: currentExercise?.reps ?? row.reps ?? '8–12', restSeconds: currentExercise?.rest_seconds ?? null }
+    const replacement = { id: row.id, source: 'catalog', programmeId: null, name: row.name, equipment: (row.equipment ?? []).join(' / ') || 'Gym', muscleGroup: row.primary_muscle_group ?? null, secondaryMuscleGroups: row.secondary_muscle_groups ?? [], movementPattern: row.movement_pattern ?? null, difficulty: row.difficulty ?? null, instructions: row.instructions ?? null, youtubeUrl: row.video_url ?? null, thumbnailUrl: row.thumbnail_url ?? null, sets: currentExercise?.sets ?? row.sets ?? 3, reps: currentExercise?.reps ?? row.reps ?? '8–12', rpe: currentExercise?.rpe ?? null, restSeconds: currentExercise?.restSeconds ?? null, loadGuidance: currentExercise?.loadGuidance ?? null }
     if (currentExercise) {
       const oldId = currentExercise.id
       setWorkouts((items) => items.map((workout) => workout.id === selectedWorkout.id ? { ...workout, exercises: workout.exercises.map((exercise) => exercise.id === oldId ? replacement : exercise) } : workout))

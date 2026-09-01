@@ -119,7 +119,12 @@ export async function loadGeneratedProgramme(userId) {
       secondaryMuscleGroups: link.exercise_catalog?.secondary_muscle_groups ?? [],
       movementPattern: link.exercise_catalog?.movement_pattern ?? null,
       difficulty: link.exercise_catalog?.difficulty ?? null,
-      instructions: link.exercise_catalog?.instructions ?? null,
+      instructions: [
+        link.exercise_catalog?.instructions,
+        link.rpe_target ? `Target effort: RPE ${link.rpe_target}.` : null,
+        link.rest_seconds ? `Rest ${link.rest_seconds} seconds between sets.` : null,
+        link.load_guidance || null,
+      ].filter(Boolean).join(' ') || null,
       coachingCues: link.exercise_catalog?.coaching_cues ?? [],
       safetyNotes: link.exercise_catalog?.safety_notes ?? null,
       youtubeUrl: link.exercise_catalog?.video_url ?? null,
@@ -564,7 +569,7 @@ export async function saveWorkoutSession({ userId, workout, draft, durationMin =
     const { error } = await client.from('set_logs').insert(setRows)
     if (error) throw error
   }
-  if (draft.cardio.complete) {
+  if (draft.cardio?.complete) {
     const { error } = await client.from('cardio_logs').insert({ session_id: session.id, activity: draft.cardio.activity || 'Incline treadmill walk', duration_min: draft.cardio.minutes, incline_percent: draft.cardio.incline || null, rpe: draft.cardio.rpe, intensity: 'Medium' })
     if (error) throw error
   }
