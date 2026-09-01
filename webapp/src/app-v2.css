@@ -210,6 +210,11 @@ button { cursor: pointer; }
 .exercise-detail-facts div { display: grid; gap: 4px; padding: 10px; border: 1px solid var(--steel-line); border-radius: 12px; background: #111a23; }
 .exercise-detail-facts span { color: var(--steel-muted); font-size: .62rem; }
 .exercise-detail-facts strong { font-size: .72rem; }
+.exercise-detail-guidance, .exercise-detail-safety { display: grid; gap: 7px; padding: 11px 12px; border: 1px solid var(--steel-line); border-radius: 12px; background: rgba(17,26,35,.78); }
+.exercise-detail-guidance strong, .exercise-detail-safety strong { color: var(--steel-gold-2); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; }
+.exercise-detail-guidance ul { display: grid; gap: 5px; margin: 0; padding-left: 18px; color: #c2cbd3; font-size: .74rem; line-height: 1.45; }
+.exercise-detail-safety { border-color: rgba(112,185,133,.3); background: rgba(18,41,31,.5); }
+.exercise-detail-safety span { color: #c2cbd3; font-size: .74rem; line-height: 1.45; }
 .exercise-detail-video { min-height: 42px; justify-content: center; text-decoration: none; }
 .exercise-detail-muted { color: var(--steel-muted) !important; font-size: .72rem !important; }
 .exercise-detail-back { min-height: 42px; border: 1px solid #35404c; border-radius: 11px; background: #121a23; color: #d5dbe1; font-size: .72rem; font-weight: 850; }

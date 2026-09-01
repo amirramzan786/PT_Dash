@@ -73,7 +73,7 @@ export async function loadWorkouts(userId) {
   const workoutIds = workoutRows.map((row) => row.id)
   const { data: links, error: linkError } = await client.from('workout_exercises').select('id,workout_id,exercise_id,sort_order,sets,rep_target,start_weight_kg,exercises(id,name,equipment,youtube_url,active)').in('workout_id', workoutIds).order('sort_order')
   if (linkError) throw linkError
-  const { data: catalogueRows } = await client.from('exercise_catalog').select('name,primary_muscle_group,secondary_muscle_groups,movement_pattern,difficulty,instructions,video_url,thumbnail_url,active').eq('active', true).eq('is_free', true)
+    const { data: catalogueRows } = await client.from('exercise_catalog').select('name,primary_muscle_group,secondary_muscle_groups,movement_pattern,difficulty,instructions,video_url,thumbnail_url,coaching_cues,safety_notes,video_source,active').eq('active', true).eq('is_free', true)
   const catalogueByName = new Map((catalogueRows ?? []).map((row) => [row.name.trim().toLowerCase(), row]))
   return workoutRows.map((workout) => ({
     id: workout.id,
@@ -90,6 +90,8 @@ export async function loadWorkouts(userId) {
       movementPattern: catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.movement_pattern ?? null,
       difficulty: catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.difficulty ?? null,
       instructions: catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.instructions ?? null,
+      coachingCues: catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.coaching_cues ?? [],
+      safetyNotes: catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.safety_notes ?? null,
       youtubeUrl: link.exercises?.youtube_url ?? catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.video_url ?? null,
       thumbnailUrl: catalogueByName.get((link.exercises?.name ?? '').trim().toLowerCase())?.thumbnail_url ?? null,
       sets: link.sets,
@@ -104,7 +106,7 @@ async function loadWorkoutCatalog(client) {
   if (workoutError) throw workoutError
   if (!workoutRows?.length) return []
   const workoutIds = workoutRows.map((row) => row.id)
-  const { data: links, error: linkError } = await client.from('workout_catalog_exercises').select('id,workout_id,exercise_id,sort_order,sets,rep_target,rest_seconds,exercise_catalog(id,slug,name,primary_muscle_group,secondary_muscle_groups,equipment,movement_pattern,difficulty,instructions,video_url,thumbnail_url,active)').in('workout_id', workoutIds).order('sort_order')
+  const { data: links, error: linkError } = await client.from('workout_catalog_exercises').select('id,workout_id,exercise_id,sort_order,sets,rep_target,rest_seconds,exercise_catalog(id,slug,name,primary_muscle_group,secondary_muscle_groups,equipment,movement_pattern,difficulty,instructions,video_url,thumbnail_url,coaching_cues,safety_notes,video_source,active)').in('workout_id', workoutIds).order('sort_order')
   if (linkError) throw linkError
   return workoutRows.map((workout) => ({
     id: workout.id,
@@ -123,6 +125,8 @@ async function loadWorkoutCatalog(client) {
       movementPattern: link.exercise_catalog?.movement_pattern ?? null,
       difficulty: link.exercise_catalog?.difficulty ?? null,
       instructions: link.exercise_catalog?.instructions ?? null,
+      coachingCues: link.exercise_catalog?.coaching_cues ?? [],
+      safetyNotes: link.exercise_catalog?.safety_notes ?? null,
       youtubeUrl: link.exercise_catalog?.video_url ?? null,
       thumbnailUrl: link.exercise_catalog?.thumbnail_url ?? null,
       sets: link.sets,
@@ -134,7 +138,7 @@ async function loadWorkoutCatalog(client) {
 
 export async function loadExerciseCatalog({ muscleGroup, limit = 100 } = {}) {
   const client = requireSupabase()
-  let query = client.from('exercise_catalog').select('id,slug,name,primary_muscle_group,secondary_muscle_groups,equipment,movement_pattern,difficulty,instructions,video_url,thumbnail_url,is_free,active').eq('active', true).eq('is_free', true).order('name').limit(limit)
+  let query = client.from('exercise_catalog').select('id,slug,name,primary_muscle_group,secondary_muscle_groups,equipment,movement_pattern,difficulty,instructions,video_url,thumbnail_url,coaching_cues,safety_notes,video_source,is_free,active').eq('active', true).eq('is_free', true).order('name').limit(limit)
   if (muscleGroup) query = query.eq('primary_muscle_group', muscleGroup)
   const { data, error } = await query
   if (error) throw error

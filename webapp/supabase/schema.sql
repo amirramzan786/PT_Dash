@@ -263,6 +263,9 @@ create table if not exists exercise_catalog (
   instructions text,
   video_url text,
   thumbnail_url text,
+  coaching_cues text[] not null default '{}'::text[],
+  safety_notes text,
+  video_source text not null default 'youtube' check (video_source in ('youtube','vimeo','internal','none')),
   is_free boolean not null default true,
   active boolean not null default true,
   created_at timestamptz not null default now(),
@@ -371,6 +374,49 @@ with links(workout_slug, exercise_slug, sort_order, sets, rep_target, rest_secon
   ('back-biceps','lat-pulldown',1,3,'8–12',90),('back-biceps','seated-row-machine',2,3,'8–12',90),('back-biceps','high-row-machine',3,3,'10–12',75),('back-biceps','preacher-curl-machine',4,3,'10–12',75),('back-biceps','cable-curl',5,3,'10–12',75),('back-biceps','db-hammer-curl',6,2,'10–12',60),
   ('chest-triceps','machine-chest-press',1,3,'8–12',90),('chest-triceps','incline-chest-press-machine',2,3,'8–12',90),('chest-triceps','pec-deck',3,3,'10–15',75),('chest-triceps','rope-tricep-pushdown',4,3,'10–12',75),('chest-triceps','overhead-cable-tricep-extension',5,3,'10–12',75),('chest-triceps','assisted-dip-machine',6,2,'8–12',90),
   ('shoulders-legs','machine-shoulder-press',1,3,'8–12',90),('shoulders-legs','lateral-raise-machine',2,3,'10–15',60),('shoulders-legs','leg-press',3,3,'8–12',120),('shoulders-legs','leg-extension',4,3,'10–15',75),('shoulders-legs','seated-leg-curl',5,3,'10–15',75),('shoulders-legs','calf-raise-machine',6,3,'12–15',60)
+)
+insert into workout_catalog_exercises (workout_id, exercise_id, sort_order, sets, rep_target, rest_seconds)
+select w.id, e.id, l.sort_order, l.sets, l.rep_target, l.rest_seconds from links l join workout_catalog w on w.slug = l.workout_slug join exercise_catalog e on e.slug = l.exercise_slug
+on conflict (workout_id, exercise_id) do update set sort_order = excluded.sort_order, sets = excluded.sets, rep_target = excluded.rep_target, rest_seconds = excluded.rest_seconds;
+
+-- Sprint 2 content expansion: reusable movements with coaching and safety context.
+alter table exercise_catalog add column if not exists coaching_cues text[] not null default '{}'::text[];
+alter table exercise_catalog add column if not exists safety_notes text;
+alter table exercise_catalog add column if not exists video_source text not null default 'youtube';
+
+with content(slug, name, muscle, secondary, equipment, movement, difficulty, instructions, cues, safety) as (
+  values
+  ('goblet-squat','Goblet Squat','Quads',array['Glutes','Core']::text[],array['Dumbbells']::text[],'Squat','Beginner','Hold one dumbbell at your chest, sit between your hips and stand by driving through the floor.',array['Keep the dumbbell close','Brace before each rep','Track knees over the middle toes']::text[],'Use a comfortable depth and stop if knee or back pain appears.'),
+  ('romanian-deadlift','Romanian Deadlift','Hamstrings',array['Glutes','Lower back']::text[],array['Dumbbells','Barbell']::text[],'Hip hinge','Intermediate','Push your hips back with a soft knee bend, keep the weight close and stand by squeezing your glutes.',array['Keep the spine long','Move from the hips','Stop at a strong stretch']::text[],'Keep the load light enough to maintain a neutral spine.'),
+  ('hip-thrust','Hip Thrust','Glutes',array['Hamstrings','Core']::text[],array['Barbell','Machine']::text[],'Hip extension','Beginner','Drive through your feet and extend the hips until your torso and thighs form a straight line.',array['Tuck the chin slightly','Finish with glutes','Pause at the top']::text[],'Use a pad for a barbell and avoid forcing the range.'),
+  ('walking-lunge','Walking Lunge','Quads',array['Glutes','Hamstrings']::text[],array['Bodyweight','Dumbbells']::text[],'Single-leg squat','Beginner','Step forward, lower under control and push through the front foot into the next rep.',array['Take a stable stride','Track the front knee','Use support for balance']::text[],'Start bodyweight-only if balance is limited.'),
+  ('dumbbell-bench-press','Dumbbell Bench Press','Chest',array['Triceps','Front delts']::text[],array['Dumbbells']::text[],'Horizontal push','Beginner','Lower the dumbbells with control and press them back over the chest.',array['Set the shoulders','Keep wrists stacked','Use a spotter for hard sets']::text[],'Do not force a painful shoulder range.'),
+  ('push-up','Push-up','Chest',array['Triceps','Core']::text[],array['Bodyweight']::text[],'Horizontal push','Beginner','Keep the body in one line, lower the chest and press the floor away.',array['Brace the trunk','Hands under shoulders','Use an incline to scale']::text[],'Use an elevated surface for wrist, shoulder or back discomfort.'),
+  ('cable-face-pull','Cable Face Pull','Rear delts',array['Upper back','Rotator cuff']::text[],array['Cable']::text[],'Horizontal pull','Beginner','Pull the rope toward eye level while rotating the hands apart.',array['Lead with elbows','Keep the load light','Control the return']::text[],'Avoid pulling through shoulder pain or momentum.'),
+  ('plank','Plank','Core',array['Shoulders','Glutes']::text[],array['Bodyweight']::text[],'Anti-extension','Beginner','Brace the midsection and hold a straight line from shoulders to heels.',array['Squeeze glutes','Breathe behind the brace','Stop before hips sag']::text[],'Use knees-down or an elevated plank if needed.'),
+  ('cable-wood-chop','Cable Wood Chop','Core',array['Obliques','Shoulders']::text[],array['Cable']::text[],'Rotation','Intermediate','Rotate through the trunk with control while keeping the cable path smooth.',array['Move as one unit','Keep hips stable','Start light']::text[],'Avoid aggressive twisting and stop for back or hip pain.'),
+  ('incline-treadmill-walk','Incline Treadmill Walk','Cardio',array['Calves','Glutes']::text[],array['Cardio']::text[],'Locomotion','Beginner','Walk tall at a sustainable pace and build effort gradually.',array['Keep a conversational pace','Rails are for balance','Increase gradually']::text[],'Reduce incline if dizzy or unsteady.'),
+  ('bike-intervals','Bike Intervals','Cardio',array['Quads','Calves']::text[],array['Cardio']::text[],'Locomotion','Beginner','Alternate controlled hard efforts with easy recovery.',array['Warm up first','Progress gradually','Keep resistance manageable']::text[],'Stop for chest pain or unusual breathlessness.'),
+  ('dead-bug','Dead Bug','Core',array['Hip flexors']::text[],array['Bodyweight']::text[],'Anti-extension','Beginner','Lie on your back and extend opposite arm and leg while keeping the ribs down.',array['Move slowly','Keep the lower back comfortable','Exhale on extension']::text[],'Shorten the range if your back lifts from the floor.')
+)
+insert into exercise_catalog (slug, name, primary_muscle_group, secondary_muscle_groups, equipment, movement_pattern, difficulty, instructions, video_url, video_source, coaching_cues, safety_notes, is_free, active)
+select slug, name, muscle, secondary, equipment, movement, difficulty, instructions,
+  'https://www.youtube.com/results?search_query=' || replace(lower(name), ' ', '+') || '+proper+form', 'youtube', cues, safety, true, true
+from content
+on conflict (slug) do update set name = excluded.name, primary_muscle_group = excluded.primary_muscle_group, secondary_muscle_groups = excluded.secondary_muscle_groups, equipment = excluded.equipment, movement_pattern = excluded.movement_pattern, difficulty = excluded.difficulty, instructions = excluded.instructions, video_url = excluded.video_url, video_source = excluded.video_source, coaching_cues = excluded.coaching_cues, safety_notes = excluded.safety_notes, is_free = excluded.is_free, active = excluded.active, updated_at = now();
+
+insert into workout_catalog (slug, name, description, focus, goal_tags, equipment, difficulty, duration_min, is_free)
+values
+('full-body-foundations','Full Body Foundations','A balanced session built around simple, repeatable movements.','Full body · Strength',array['Build muscle','Get stronger','Train consistently']::text[],array['Dumbbells','Bodyweight']::text[],'Beginner',35,true),
+('lower-body-strength','Lower Body Strength','A controlled lower-body session for confident movement.','Quads · Hamstrings · Glutes',array['Build muscle','Get stronger']::text[],array['Dumbbells','Barbell','Machine']::text[],'Intermediate',45,true),
+('conditioning-and-core','Conditioning + Core','A short conditioning session finished with practical trunk work.','Cardio · Core',array['Improve fitness','Train consistently']::text[],array['Cardio','Bodyweight']::text[],'Beginner',25,true)
+on conflict (slug) do update set name = excluded.name, description = excluded.description, focus = excluded.focus, goal_tags = excluded.goal_tags, equipment = excluded.equipment, difficulty = excluded.difficulty, duration_min = excluded.duration_min, is_free = excluded.is_free, updated_at = now();
+
+with links(workout_slug, exercise_slug, sort_order, sets, rep_target, rest_seconds) as (
+  values
+  ('full-body-foundations','goblet-squat',1,3,'8–12',90),('full-body-foundations','dumbbell-bench-press',2,3,'8–12',90),('full-body-foundations','cable-face-pull',3,3,'10–15',60),('full-body-foundations','romanian-deadlift',4,3,'8–12',90),('full-body-foundations','dead-bug',5,3,'8 each',60),
+  ('lower-body-strength','goblet-squat',1,4,'8–12',120),('lower-body-strength','romanian-deadlift',2,3,'8–12',120),('lower-body-strength','hip-thrust',3,3,'8–12',90),('lower-body-strength','walking-lunge',4,3,'8 each',90),('lower-body-strength','calf-raise-machine',5,3,'12–15',60),
+  ('conditioning-and-core','incline-treadmill-walk',1,1,'15 min',30),('conditioning-and-core','bike-intervals',2,6,'30 sec',45),('conditioning-and-core','cable-wood-chop',3,3,'10 each',60),('conditioning-and-core','plank',4,3,'30–45 sec',60)
 )
 insert into workout_catalog_exercises (workout_id, exercise_id, sort_order, sets, rep_target, rest_seconds)
 select w.id, e.id, l.sort_order, l.sets, l.rep_target, l.rest_seconds from links l join workout_catalog w on w.slug = l.workout_slug join exercise_catalog e on e.slug = l.exercise_slug
