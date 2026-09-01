@@ -546,6 +546,8 @@ button { cursor: pointer; }
 @media (min-width: 900px) {
   .steel-app { max-width: none; padding-left: 240px; }
   .steel-screen { width: min(1180px, calc(100vw - 240px)); max-width: none; margin: 0 auto; }
+  .steel-app.desktop-nav-collapsed { padding-left: 92px; }
+  .steel-app.desktop-nav-collapsed .steel-screen { width: min(1180px, calc(100vw - 92px)); }
   .v4-welcome-card { min-height: 390px; }
   .v4-hero-copy { padding: 38px 42px 42px; }
   .v4-hero-copy h2 { font-size: 2.5rem; }
@@ -557,8 +559,17 @@ button { cursor: pointer; }
   .v4-desktop-brand .brand-emblem { width: 34px; height: 34px; font-size: .75rem; }
   .v4-desktop-nav > button { min-height: 48px; display: flex; align-items: center; gap: 13px; padding: 0 14px; border: 0; border-radius: 12px; color: #bec6cf; background: transparent; text-align: left; }
   .v4-desktop-nav > button.active { color: var(--steel-gold-2); background: linear-gradient(90deg,#2a261c,#171c20); border: 1px solid var(--steel-gold-dark); }
+  .desktop-nav-toggle { margin-bottom: 10px; color: #aab3bd !important; }
+  .desktop-nav-toggle:hover { color: var(--steel-gold-2) !important; background: #141d27 !important; }
   .v4-desktop-support { display: grid; gap: 4px; margin-top: auto; padding: 18px 5px 0; border-top: 1px solid #27313d; }
 .v4-desktop-support button { display: flex; align-items: center; justify-content: space-between; min-height: 36px; border: 0; background: transparent; color: #aab3bd; font-size: .75rem; text-align: left; }
+  .v4-desktop-nav.is-collapsed { width: 72px; align-items: center; padding-inline: 10px; }
+  .v4-desktop-nav.is-collapsed .v4-desktop-brand { margin-inline: 0; }
+  .v4-desktop-nav.is-collapsed .v4-desktop-brand strong,
+  .v4-desktop-nav.is-collapsed > button > span,
+  .v4-desktop-nav.is-collapsed .v4-desktop-support { display: none; }
+  .v4-desktop-nav.is-collapsed > button { width: 48px; justify-content: center; padding: 0; }
+  .v4-desktop-nav.is-collapsed .desktop-nav-toggle { margin-bottom: 10px; transform: rotate(180deg); }
 }
 
 /* Generated Steel artwork pack: Hero 1 plus focused muscle-group crops. */
