@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Activity, ArrowLeft, ArrowRight, Camera, Check, ChevronDown, ChevronRight, Dumbbell, ExternalLink, Flame,
+  Activity, ArrowLeft, ArrowRight, Bot, Camera, Check, ChevronDown, ChevronRight, Dumbbell, ExternalLink, Flame,
   Footprints, HelpCircle, Home, Info, LineChart, LogOut, MessageSquare, MoreHorizontal, Play, RotateCcw, Salad, Save, Scale, Search, Settings,
-  ShieldCheck, Target, Trash2, UserRound, Watch, ListChecks, ClipboardCheck,
+  Send, ShieldCheck, Sparkles, Target, Trash2, UserRound, Watch, ListChecks, ClipboardCheck, X,
 } from 'lucide-react'
 import {
   changePassword, deleteMealLog, getDashboardStats, getLatestWeeklyCheckin, getMealLogs, getProfile, getRecentSessions, getTodaySteps, getStepHistory, getWeightHistory, getWeeklyCheckinHistory,
-  getNutritionPlan, getWeeklyActivitySummary, loadExerciseCatalog, loadUserRole, loadWorkouts, resetOnboarding, saveCustomWorkout, saveMealLog, saveMealPlanItem, saveProfile, saveWeight, saveWeeklyCheckin as saveWeeklyCheckinRecord, saveWorkoutSession, updateAccount, updateCustomWorkout, uploadAvatar, uploadCheckinMedia,
+  getNutritionPlan, getWeeklyActivitySummary, loadExerciseCatalog, loadUserRole, loadWorkouts, resetOnboarding, saveCustomWorkout, saveMealLog, saveMealPlanItem, saveProfile, saveWeight, saveWeeklyCheckin as saveWeeklyCheckinRecord, saveWorkoutSession, sendOnboardingAiMessage, updateAccount, updateCustomWorkout, uploadAvatar, uploadCheckinMedia,
 } from './lib/steelApi'
 import './app-v2.css'
 import './settings.css'
@@ -175,7 +175,100 @@ function LegacyOnboardingFlow({ preferences, setPreferences, toggleEquipment, on
   return <main className="onboarding-shell"><section className="onboarding-card"><div className="onboarding-brand"><div className="brand-emblem"><SteelMark /></div><div><span className="eyebrow">PROJECT STEEL</span><strong>BUILD YOUR BASE</strong></div></div><div className="onboarding-progress" role="progressbar" aria-valuemin="1" aria-valuemax="3" aria-valuenow={step + 1}><span style={{ width: `${((step + 1) / 3) * 100}%` }}/></div><button type="button" className="onboarding-skip" onClick={onSkip}>Set up later</button><div className="onboarding-step-copy"><span className="eyebrow">STEP {step + 1} OF 3</span>{step === 0 && <><h1>What are you building toward?</h1><p>Steel uses this to shape the right training direction for you.</p></>}{step === 1 && <><h1>Make it fit your week.</h1><p>Tell us what you can train with and how often you want to show up.</p></>}{step === 2 && <><h1>Train safely and consistently.</h1><p>Anything you share here helps Steel make more thoughtful recommendations.</p></>}</div><form className="onboarding-form" onSubmit={advance}>{step === 0 && <><fieldset><legend>Primary goal</legend><div className="onboarding-option-list">{['Lose fat and gain muscle','Build muscle','Get stronger','Improve fitness','Train consistently'].map(option=><button type="button" key={option} className={preferences.goal===option?'selected':''} aria-pressed={preferences.goal===option} onClick={()=>setPreferences({...preferences,goal:option})}>{option}<ChevronRight size={17}/></button>)}</div></fieldset><fieldset><legend>Experience level</legend><div className="preference-choice-grid">{experienceOptions.map(option=><button type="button" key={option} className={preferences.experienceLevel===option?'selected':''} aria-pressed={preferences.experienceLevel===option} onClick={()=>setPreferences({...preferences,experienceLevel:option})}>{option}</button>)}</div></fieldset></>}{step === 1 && <><fieldset><legend>Available equipment</legend><div className="equipment-choice-grid">{equipmentOptions.map(option=><button type="button" key={option} className={preferences.availableEquipment.includes(option)?'selected':''} aria-pressed={preferences.availableEquipment.includes(option)} onClick={()=>toggleEquipment(option)}>{preferences.availableEquipment.includes(option)?'✓ ':''}{option}</button>)}</div><small className="field-hint">Select everything you can use. Keep at least one option selected.</small></fieldset><div className="preference-split"><label><span>Training days per week</span><select value={preferences.trainingDays} onChange={e=>setPreferences({...preferences,trainingDays:Number(e.target.value)})}>{[1,2,3,4,5,6,7].map(day=><option key={day} value={day}>{day} {day===1?'day':'days'}</option>)}</select></label><label><span>Weight units</span><select value={preferences.units} onChange={e=>setPreferences({...preferences,units:e.target.value})}><option value="lb">Pounds (lb)</option><option value="kg">Kilograms (kg)</option></select></label></div></>}{step === 2 && <label><span>Injuries, limitations or anything Steel should know</span><textarea value={preferences.limitations} onChange={e=>setPreferences({...preferences,limitations:e.target.value})} placeholder="Optional — for example, shoulder discomfort or a movement to avoid." rows="5"/><small className="field-hint">You can leave this blank and update it later in Settings.</small></label>}<div className="onboarding-actions"><button type="button" className="text-button" onClick={step===0?onSignOut:()=>setStep((current)=>current-1)}>{step===0?'Sign out':'Back'}</button><button className="gold-button" disabled={saving}>{isLast?(saving?'Building your plan…':'Finish setup'):<><span>Continue</span><ArrowRight size={17}/></>}</button></div></form></section></main>
 }
 
-function OnboardingFlow({ preferences, setPreferences, toggleEquipment, onComplete, onSkip, saving, onSignOut }) {
+function mergeAiPreferences(preferences, profile) {
+  const next = { ...preferences }
+  if (profile?.goal) next.goal = profile.goal
+  if (profile?.experienceLevel) next.experienceLevel = profile.experienceLevel
+  if (profile?.availableEquipment?.length) next.availableEquipment = profile.availableEquipment
+  if (Number(profile?.trainingDays) > 0) next.trainingDays = Number(profile.trainingDays)
+  if (Number(profile?.checkinDay) >= 0) next.checkinDay = Number(profile.checkinDay)
+  if (profile?.units) next.units = profile.units
+  if (typeof profile?.limitations === 'string') next.limitations = profile.limitations
+  if (profile?.dietaryPreference) next.dietaryPreference = profile.dietaryPreference
+  if (typeof profile?.allergies === 'string') next.allergies = profile.allergies
+  if (Number(profile?.mealsPerDay) > 0) next.mealsPerDay = Number(profile.mealsPerDay)
+  return next
+}
+
+function OnboardingAiAssistant({ preferences, setPreferences, onComplete, saving }) {
+  const [open, setOpen] = useState(false)
+  const [consent, setConsent] = useState(false)
+  const [chatStarted, setChatStarted] = useState(false)
+  const [conversationId, setConversationId] = useState('')
+  const [messages, setMessages] = useState([{ role: 'assistant', content: 'Tell me what you want to achieve, and I’ll help shape your training and meal preferences one step at a time.', local: true }])
+  const [input, setInput] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [profile, setProfile] = useState(null)
+  const [readyToConfirm, setReadyToConfirm] = useState(false)
+  const suggestedPrompts = ['Help me choose a goal', 'Build around my schedule', 'Plan around my food preferences']
+
+  async function sendMessage(event, suggestedText = '') {
+    event?.preventDefault?.()
+    const content = (suggestedText || input).trim()
+    if (!content || busy || !consent) return
+    const nextMessages = [...messages, { role: 'user', content }]
+    setMessages(nextMessages)
+    setInput('')
+    setBusy(true)
+    setError('')
+    try {
+      const result = await sendOnboardingAiMessage({
+        conversationId,
+        messages: nextMessages.filter((message) => !message.local).map(({ role, content: messageContent }) => ({ role, content: messageContent })),
+        aiDataConsent: true,
+      })
+      setConversationId(result.conversationId || conversationId)
+      setMessages((current) => [...current, { role: 'assistant', content: result.message }])
+      setProfile(result.profile || null)
+      setReadyToConfirm(Boolean(result.readyToConfirm))
+    } catch (nextError) {
+      setError(nextError.message || 'Steel Guide is unavailable. Continue with the guided questions for now.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function applyAnswers() {
+    const merged = mergeAiPreferences(preferences, profile)
+    setPreferences(merged)
+    setOpen(false)
+  }
+
+  async function finishWithAi() {
+    const merged = mergeAiPreferences(preferences, profile)
+    setPreferences(merged)
+    await onComplete(merged)
+  }
+
+  return <>
+    <button type="button" className={`ai-onboarding-launcher ${open ? 'is-open' : ''}`} onClick={() => setOpen((current) => !current)} aria-label={open ? 'Close Steel Guide' : 'Open Steel Guide'} aria-expanded={open}>
+      {open ? <X size={22}/> : <><Sparkles size={18}/><Bot size={23}/><span>Ask Steel Guide</span></>}
+    </button>
+    {open && <aside className="ai-onboarding-panel" role="dialog" aria-modal="false" aria-label="Steel Guide onboarding assistant">
+      <header><span className="ai-guide-mark"><Bot size={20}/></span><div><span className="eyebrow">OPTIONAL AI ONBOARDING</span><strong>Steel Guide</strong></div><button type="button" onClick={() => setOpen(false)} aria-label="Close Steel Guide"><X size={18}/></button></header>
+      {!chatStarted ? <div className="ai-consent-card">
+        <div className="ai-consent-heading"><ShieldCheck size={19}/><strong>Choose what you share</strong></div>
+        <p>Messages you send here are processed by Google Gemini to generate replies. Don’t include medical records or anything you don’t want sent to Google. You can use the normal questions instead.</p>
+        <label><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)}/><span>I understand and want to use the AI chat.</span></label>
+        <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noreferrer">Gemini data terms <ExternalLink size={13}/></a>
+        <button type="button" className="gold-button" disabled={!consent} onClick={() => setChatStarted(true)}><Sparkles size={16}/> Start AI chat</button>
+      </div> : <>
+        <div className="ai-chat-messages" aria-live="polite">
+          {messages.map((message, index) => <div className={`ai-chat-message ${message.role}`} key={`${message.role}-${index}`}><span>{message.content}</span></div>)}
+          {busy && <div className="ai-chat-message assistant is-thinking"><span>Steel Guide is thinking…</span></div>}
+        </div>
+        {messages.length === 1 && <div className="ai-prompt-chips">{suggestedPrompts.map((prompt) => <button type="button" key={prompt} onClick={(event) => sendMessage(event, prompt)}>{prompt}</button>)}</div>}
+        {error && <div className="ai-chat-error"><span>{error}</span><small>Your manual setup is still available.</small></div>}
+        {profile && <section className="ai-answer-review"><span className="eyebrow">ANSWERS CAPTURED</span><div><strong>{profile.goal || 'Goal pending'}</strong><span>{profile.experienceLevel || 'Level pending'} · {profile.trainingDays || '—'} days · {profile.availableEquipment?.join(', ') || 'Equipment pending'}</span></div><button type="button" onClick={applyAnswers}>Use these answers in the form</button>{readyToConfirm && <button type="button" className="gold-button" disabled={saving} onClick={finishWithAi}>{saving ? 'Building your plan…' : 'Confirm and build my plan'}</button>}</section>}
+        <form className="ai-chat-compose" onSubmit={sendMessage}><label className="sr-only" htmlFor="steel-guide-message">Message Steel Guide</label><textarea id="steel-guide-message" rows="2" maxLength="2000" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Tell Steel Guide about your goal…"/><button type="submit" disabled={!input.trim() || busy} aria-label="Send message"><Send size={18}/></button></form>
+        <small className="ai-chat-disclaimer">AI guidance can be wrong. Medical concerns need a qualified professional.</small>
+      </>}
+    </aside>}
+  </>
+}
+
+function OnboardingFlow({ preferences, setPreferences, toggleEquipment, onComplete, onAiComplete, onSkip, saving, onSignOut }) {
   const [step, setStep] = useState(0)
   const isLast = step === 3
   function advance(event) {
@@ -183,7 +276,7 @@ function OnboardingFlow({ preferences, setPreferences, toggleEquipment, onComple
     if (isLast) return onComplete(event)
     setStep((current) => current + 1)
   }
-  return <main className="onboarding-shell"><section className="onboarding-card"><div className="onboarding-brand"><div className="brand-emblem"><SteelMark /></div><div><span className="eyebrow">PROJECT STEEL</span><strong>BUILD YOUR BASE</strong></div></div><div className="onboarding-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow={step + 1}><span style={{ width: `${((step + 1) / 4) * 100}%` }}/></div><button type="button" className="onboarding-skip" onClick={onSkip}>Set up later</button><div className="onboarding-step-copy"><span className="eyebrow">STEP {step + 1} OF 4</span>{step === 0 && <><h1>What are you building toward?</h1><p>Steel uses this to shape the right training direction for you.</p></>}{step === 1 && <><h1>Make it fit your week.</h1><p>Tell us what you can train with and when you want your weekly check-in.</p></>}{step === 2 && <><h1>Train safely and consistently.</h1><p>Anything you share here helps Steel make more thoughtful recommendations.</p></>}{step === 3 && <><h1>Let’s make food work for you.</h1><p>These preferences will guide future meal ideas around your routine.</p></>}</div><form className="onboarding-form" onSubmit={advance}>{step === 0 && <><fieldset><legend>Primary goal</legend><div className="onboarding-option-list">{['Lose fat and gain muscle','Build muscle','Get stronger','Improve fitness','Train consistently'].map(option=><button type="button" key={option} className={preferences.goal===option?'selected':''} aria-pressed={preferences.goal===option} onClick={()=>setPreferences({...preferences,goal:option})}>{option}<ChevronRight size={17}/></button>)}</div></fieldset><fieldset><legend>Experience level</legend><div className="preference-choice-grid">{experienceOptions.map(option=><button type="button" key={option} className={preferences.experienceLevel===option?'selected':''} aria-pressed={preferences.experienceLevel===option} onClick={()=>setPreferences({...preferences,experienceLevel:option})}>{option}</button>)}</div></fieldset></>}{step === 1 && <><fieldset><legend>Available equipment</legend><div className="equipment-choice-grid">{equipmentOptions.map(option=><button type="button" key={option} className={preferences.availableEquipment.includes(option)?'selected':''} aria-pressed={preferences.availableEquipment.includes(option)} onClick={()=>toggleEquipment(option)}>{preferences.availableEquipment.includes(option)?'✓ ':''}{option}</button>)}</div><small className="field-hint">Select everything you can use. Keep at least one option selected.</small></fieldset><div className="preference-split"><label><span>Training days per week</span><select value={preferences.trainingDays} onChange={e=>setPreferences({...preferences,trainingDays:Number(e.target.value)})}>{[1,2,3,4,5,6,7].map(day=><option key={day} value={day}>{day} {day===1?'day':'days'}</option>)}</select></label><label><span>Weekly check-in day</span><select value={preferences.checkinDay} onChange={e=>setPreferences({...preferences,checkinDay:Number(e.target.value)})}>{checkinDays.map(([day,value])=><option key={day} value={value}>{day}</option>)}</select></label></div><label><span>Weight units</span><select value={preferences.units} onChange={e=>setPreferences({...preferences,units:e.target.value})}><option value="lb">Pounds (lb)</option><option value="kg">Kilograms (kg)</option></select></label></>}{step === 2 && <label><span>Injuries, limitations or anything Steel should know</span><textarea value={preferences.limitations} onChange={e=>setPreferences({...preferences,limitations:e.target.value})} placeholder="Optional — for example, shoulder discomfort or a movement to avoid." rows="5"/><small className="field-hint">You can leave this blank and update it later in Settings.</small></label>}{step === 3 && <><label><span>Dietary preference</span><select value={preferences.dietaryPreference} onChange={e=>setPreferences({...preferences,dietaryPreference:e.target.value})}>{dietaryOptions.map(option=><option key={option}>{option}</option>)}</select></label><label><span>Preferred meals per day</span><select value={preferences.mealsPerDay} onChange={e=>setPreferences({...preferences,mealsPerDay:Number(e.target.value)})}>{[2,3,4,5,6].map(meals=><option key={meals} value={meals}>{meals} meals</option>)}</select></label><label><span>Allergies or intolerances</span><textarea value={preferences.allergies} onChange={e=>setPreferences({...preferences,allergies:e.target.value})} placeholder="Optional — for example, nuts, lactose or gluten." rows="4"/><small className="field-hint">You can update this later in Settings.</small></label></>}<div className="onboarding-actions"><button type="button" className="text-button" onClick={step===0?onSignOut:()=>setStep((current)=>current-1)}>{step===0?'Sign out':'Back'}</button><button className="gold-button" disabled={saving}>{isLast?(saving?'Building your plan…':'Finish setup'):<><span>Continue</span><ArrowRight size={17}/></>}</button></div></form></section></main>
+  return <main className="onboarding-shell"><section className="onboarding-card"><div className="onboarding-brand"><div className="brand-emblem"><SteelMark /></div><div><span className="eyebrow">PROJECT STEEL</span><strong>BUILD YOUR BASE</strong></div></div><div className="onboarding-progress" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow={step + 1}><span style={{ width: `${((step + 1) / 4) * 100}%` }}/></div><button type="button" className="onboarding-skip" onClick={onSkip}>Set up later</button><div className="onboarding-step-copy"><span className="eyebrow">STEP {step + 1} OF 4</span>{step === 0 && <><h1>What are you building toward?</h1><p>Steel uses this to shape the right training direction for you.</p></>}{step === 1 && <><h1>Make it fit your week.</h1><p>Tell us what you can train with and when you want your weekly check-in.</p></>}{step === 2 && <><h1>Train safely and consistently.</h1><p>Anything you share here helps Steel make more thoughtful recommendations.</p></>}{step === 3 && <><h1>Let’s make food work for you.</h1><p>These preferences will guide future meal ideas around your routine.</p></>}</div><form className="onboarding-form" onSubmit={advance}>{step === 0 && <><fieldset><legend>Primary goal</legend><div className="onboarding-option-list">{['Lose fat and gain muscle','Build muscle','Get stronger','Improve fitness','Train consistently'].map(option=><button type="button" key={option} className={preferences.goal===option?'selected':''} aria-pressed={preferences.goal===option} onClick={()=>setPreferences({...preferences,goal:option})}>{option}<ChevronRight size={17}/></button>)}</div></fieldset><fieldset><legend>Experience level</legend><div className="preference-choice-grid">{experienceOptions.map(option=><button type="button" key={option} className={preferences.experienceLevel===option?'selected':''} aria-pressed={preferences.experienceLevel===option} onClick={()=>setPreferences({...preferences,experienceLevel:option})}>{option}</button>)}</div></fieldset></>}{step === 1 && <><fieldset><legend>Available equipment</legend><div className="equipment-choice-grid">{equipmentOptions.map(option=><button type="button" key={option} className={preferences.availableEquipment.includes(option)?'selected':''} aria-pressed={preferences.availableEquipment.includes(option)} onClick={()=>toggleEquipment(option)}>{preferences.availableEquipment.includes(option)?'✓ ':''}{option}</button>)}</div><small className="field-hint">Select everything you can use. Keep at least one option selected.</small></fieldset><div className="preference-split"><label><span>Training days per week</span><select value={preferences.trainingDays} onChange={e=>setPreferences({...preferences,trainingDays:Number(e.target.value)})}>{[1,2,3,4,5,6,7].map(day=><option key={day} value={day}>{day} {day===1?'day':'days'}</option>)}</select></label><label><span>Weekly check-in day</span><select value={preferences.checkinDay} onChange={e=>setPreferences({...preferences,checkinDay:Number(e.target.value)})}>{checkinDays.map(([day,value])=><option key={day} value={value}>{day}</option>)}</select></label></div><label><span>Weight units</span><select value={preferences.units} onChange={e=>setPreferences({...preferences,units:e.target.value})}><option value="lb">Pounds (lb)</option><option value="kg">Kilograms (kg)</option></select></label></>}{step === 2 && <label><span>Injuries, limitations or anything Steel should know</span><textarea value={preferences.limitations} onChange={e=>setPreferences({...preferences,limitations:e.target.value})} placeholder="Optional — for example, shoulder discomfort or a movement to avoid." rows="5"/><small className="field-hint">You can leave this blank and update it later in Settings.</small></label>}{step === 3 && <><label><span>Dietary preference</span><select value={preferences.dietaryPreference} onChange={e=>setPreferences({...preferences,dietaryPreference:e.target.value})}>{dietaryOptions.map(option=><option key={option}>{option}</option>)}</select></label><label><span>Preferred meals per day</span><select value={preferences.mealsPerDay} onChange={e=>setPreferences({...preferences,mealsPerDay:Number(e.target.value)})}>{[2,3,4,5,6].map(meals=><option key={meals} value={meals}>{meals} meals</option>)}</select></label><label><span>Allergies or intolerances</span><textarea value={preferences.allergies} onChange={e=>setPreferences({...preferences,allergies:e.target.value})} placeholder="Optional — for example, nuts, lactose or gluten." rows="4"/><small className="field-hint">You can update this later in Settings.</small></label></>}<div className="onboarding-actions"><button type="button" className="text-button" onClick={step===0?onSignOut:()=>setStep((current)=>current-1)}>{step===0?'Sign out':'Back'}</button><button className="gold-button" disabled={saving}>{isLast?(saving?'Building your plan…':'Finish setup'):<><span>Continue</span><ArrowRight size={17}/></>}</button></div></form></section><OnboardingAiAssistant preferences={preferences} setPreferences={setPreferences} onComplete={onAiComplete} saving={saving}/></main>
 }
 
 function NutritionPage({ preferences, navigateToTab, userId }) {
@@ -577,12 +670,17 @@ export default function AppV3({ user, onSignOut }) {
     catch (e) { setMessage(e.message) } finally { setSaving(false) }
   }
 
-  async function savePreferences(event) {
-    event.preventDefault(); setSaving(true); setMessage('')
+  async function persistPreferences(nextPreferences = preferences) {
+    setSaving(true); setMessage('')
     try {
-      const next = await saveProfile(user.id, { displayName: profileName.trim(), avatarUrl, ...preferences, experienceLevel: preferences.experienceLevel, availableEquipment: preferences.availableEquipment, trainingDays: Number(preferences.trainingDays), checkinDay: Number(preferences.checkinDay), mealsPerDay: Number(preferences.mealsPerDay), dietaryPreference: preferences.dietaryPreference, allergies: preferences.allergies, onboardingCompleted: true })
+      const next = await saveProfile(user.id, { displayName: profileName.trim(), avatarUrl, ...nextPreferences, experienceLevel: nextPreferences.experienceLevel, availableEquipment: nextPreferences.availableEquipment, trainingDays: Number(nextPreferences.trainingDays), checkinDay: Number(nextPreferences.checkinDay), mealsPerDay: Number(nextPreferences.mealsPerDay), dietaryPreference: nextPreferences.dietaryPreference, allergies: nextPreferences.allergies, onboardingCompleted: true })
       setProfile(next); setMessage('Training preferences saved. Steel can use these for your personalised plan.')
     } catch (e) { setMessage(e.message) } finally { setSaving(false) }
+  }
+
+  async function savePreferences(event) {
+    event?.preventDefault?.()
+    return persistPreferences(preferences)
   }
 
   async function handleResetOnboarding() {
@@ -613,7 +711,7 @@ export default function AppV3({ user, onSignOut }) {
 
   if (busy) return <div className="v2-loading"><div className="steel-emblem"><SteelMark /></div><span>Loading Steel…</span></div>
   if (loadError) return <div className="v2-loading app-load-error"><div className="steel-emblem"><SteelMark /></div><div><span className="eyebrow">STEEL IS TEMPORARILY OFFLINE</span><h2>We couldn’t load your data</h2><p>Check your connection, then try again. Your account data is still safe.</p><button type="button" className="gold-button" onClick={retryAppLoad}>Try again</button></div></div>
-  if (!profile?.onboarding_completed && !onboardingDismissed) return <OnboardingFlow preferences={preferences} setPreferences={setPreferences} toggleEquipment={toggleEquipment} onComplete={savePreferences} onSkip={() => { setOnboardingDismissed(true); setMessage('You can finish your setup any time in Settings.') }} saving={saving} onSignOut={onSignOut} />
+  if (!profile?.onboarding_completed && !onboardingDismissed) return <OnboardingFlow preferences={preferences} setPreferences={setPreferences} toggleEquipment={toggleEquipment} onComplete={savePreferences} onAiComplete={persistPreferences} onSkip={() => { setOnboardingDismissed(true); setMessage('You can finish your setup any time in Settings.') }} saving={saving} onSignOut={onSignOut} />
 
   return <div className="steel-app">
     <main className="steel-screen">

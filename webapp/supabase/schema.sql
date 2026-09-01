@@ -478,3 +478,47 @@ create policy "trainer read assigned checkin media files" on storage.objects for
 insert into user_roles (user_id, role)
 select id, 'admin' from auth.users where lower(email) = 'ramzan_amir@hotmail.com'
 on conflict (user_id) do update set role = excluded.role;
+
+-- Private AI onboarding history. Signed-in users may read only their own
+-- conversations. All writes are performed by the authenticated Edge Function.
+create table if not exists ai_conversations (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  context text not null default 'onboarding' check (context in ('onboarding', 'training', 'nutrition')),
+  status text not null default 'active' check (status in ('active', 'completed', 'archived')),
+  provider text not null default 'gemini',
+  model text not null default 'gemini-3.6-flash',
+  profile_snapshot jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists ai_messages (
+  id uuid primary key default gen_random_uuid(),
+  conversation_id uuid not null references ai_conversations(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  role text not null check (role in ('user', 'assistant')),
+  content text not null check (char_length(content) between 1 and 4000),
+  extracted_profile jsonb not null default '{}'::jsonb,
+  safety_flag boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists ai_conversations_user_created_idx on ai_conversations (user_id, created_at desc);
+create index if not exists ai_messages_conversation_created_idx on ai_messages (conversation_id, created_at);
+create index if not exists ai_messages_user_created_idx on ai_messages (user_id, created_at desc);
+
+alter table ai_conversations enable row level security;
+alter table ai_messages enable row level security;
+
+drop policy if exists "users read own ai conversations" on ai_conversations;
+create policy "users read own ai conversations" on ai_conversations
+for select to authenticated using ((select auth.uid()) = user_id);
+
+drop policy if exists "users read own ai messages" on ai_messages;
+create policy "users read own ai messages" on ai_messages
+for select to authenticated using ((select auth.uid()) = user_id);
+
+revoke all on ai_conversations, ai_messages from anon;
+revoke insert, update, delete on ai_conversations, ai_messages from authenticated;
+grant select on ai_conversations, ai_messages to authenticated;

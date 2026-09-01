@@ -59,6 +59,21 @@ export async function signOut() {
   if (error) throw error
 }
 
+export async function sendOnboardingAiMessage({ conversationId, messages, aiDataConsent }) {
+  const client = requireSupabase()
+  const { data, error } = await client.functions.invoke('steel-ai-onboarding', {
+    body: { conversationId: conversationId || null, messages, aiDataConsent: aiDataConsent === true },
+  })
+  if (error) {
+    let detail = null
+    try { detail = await error.context?.json?.() } catch { /* Use the SDK fallback message. */ }
+    const nextError = new Error(detail?.error || error.message || 'Steel Guide is unavailable right now.')
+    nextError.code = detail?.code || 'AI_UNAVAILABLE'
+    throw nextError
+  }
+  return data
+}
+
 export function onAuthChange(callback) {
   const client = requireSupabase()
   const { data } = client.auth.onAuthStateChange((event, session) => callback(session?.user ?? null, event))
