@@ -157,7 +157,7 @@
 .settings-disclosure-label { min-width: 0; display: flex; align-items: center; gap: 11px; }
 .settings-disclosure-label > span:last-child { min-width: 0; display: grid; gap: 4px; }
 .settings-disclosure-label strong { font-size: .88rem; }
-.settings-disclosure-content { display: grid; gap: 13px; padding: 0 13px 13px; }
+.settings-disclosure-content { display: grid; gap: 13px; padding: 15px 13px 13px; }
 .settings-disclosure-content > .steel-card { margin: 0; }
 .settings-disclosure-content .password-form { border-color: #293746; }
 .personal-profile-form { display: grid; gap: 15px; }
@@ -217,7 +217,7 @@
 @media (max-width: 520px) {
   .settings-page-v5 { min-height: calc(100vh - 126px); }
   .settings-disclosure-trigger { min-height: 66px; }
-  .settings-disclosure-content { padding-inline: 9px; }
+  .settings-disclosure-content { padding: 14px 9px 12px; }
   .nutrition-meal-card { grid-template-columns: 36px minmax(0,1fr) auto; gap: 8px; }
   .nutrition-view-switcher { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
   .nutrition-view-switcher button { width: 100%; }
