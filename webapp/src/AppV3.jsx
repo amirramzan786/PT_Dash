@@ -98,7 +98,7 @@ function StepsChart({ data }) {
 }
 
 function ProgressPage({ stats, sessions, weights, stepHistory, totalSteps }) {
-  const latestWeight = weights.length ? Number(weights.at(-1).weight_lb) : null
+  const latestWeight = weights.length ? Number(weights[weights.length - 1].weight_lb) : null
   const startingWeight = weights.length ? Number(weights[0].weight_lb) : null
   const weightChange = latestWeight !== null && startingWeight !== null && weights.length > 1 ? latestWeight - startingWeight : null
   const averageDuration = sessions.length ? Math.round(sessions.reduce((sum, session) => sum + (Number(session.duration_min) || 0), 0) / sessions.length) : 0
@@ -407,7 +407,7 @@ export default function AppV3({ user, onSignOut }) {
   const latestWeight = stats.latestWeightLb ? Number(stats.latestWeightLb) : null
   const totalSteps = stepHistory.reduce((total, item) => total + Number(item.steps || 0), 0)
   const todaySteps = Number(steps.steps || 0)
-  const previousWeight = weights.length > 1 ? Number(weights.at(-2).weight_lb) : null
+  const previousWeight = weights.length > 1 ? Number(weights[weights.length - 2].weight_lb) : null
   const weightDelta = latestWeight !== null && previousWeight !== null ? latestWeight - previousWeight : null
   const nextCheckin = nextCheckinDate(preferences.checkinDay, weeklyCheckin?.submitted_at)
 

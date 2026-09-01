@@ -231,7 +231,7 @@ export default function AppV2({ user, onSignOut }) {
   const firstName = user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0] || 'Account'
   const accountName = user.user_metadata?.full_name || firstName
   const latestWeight = stats.latestWeightLb ? Number(stats.latestWeightLb) : null
-  const previousWeight = weightHistory.length > 1 ? Number(weightHistory.at(-2).weight_lb) : null
+  const previousWeight = weightHistory.length > 1 ? Number(weightHistory[weightHistory.length - 2].weight_lb) : null
   const weightDelta = latestWeight !== null && previousWeight !== null ? latestWeight - previousWeight : null
 
   if (busy) {
