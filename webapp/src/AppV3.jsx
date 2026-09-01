@@ -379,7 +379,7 @@ export default function AppV3({ user, onSignOut }) {
     const [programme, dashboard, todaySteps, stepHistoryRows, history, recent, profileRow, latestCheckin, activitySummary, checkinHistory, role] = await Promise.all([
       loadWorkouts(user.id), getDashboardStats(user.id), getTodaySteps(user.id),
       getStepHistory(user.id, 31),
-      getWeightHistory(user.id, 30), getRecentSessions(user.id, 8), getProfile(user.id), getLatestWeeklyCheckin(user.id), getWeeklyActivitySummary(user.id, start, end), getWeeklyCheckinHistory(user.id), loadUserRole(user.id),
+      getWeightHistory(user.id, 30), getRecentSessions(user.id, 8), getProfile(user.id), getLatestWeeklyCheckin(user.id), getWeeklyActivitySummary(user.id, start, end), getWeeklyCheckinHistory(user.id), loadUserRole(user.id).catch(() => 'user'),
     ])
     setWorkouts(programme); setStats(dashboard); setSteps(todaySteps); setStepHistory(stepHistoryRows); setWeights(history); setSessions(recent); setWeeklyCheckin(latestCheckin); setWeeklyCheckinHistory(checkinHistory); setWeeklyActivity(activitySummary); setProfile(profileRow); setUserRole(role)
     setPreferences({ goal: profileRow?.goal || 'Lose fat and gain muscle', experienceLevel: profileRow?.experience_level || 'Intermediate', availableEquipment: profileRow?.available_equipment?.length ? profileRow.available_equipment : ['Machines'], trainingDays: Number(profileRow?.training_days || 3), checkinDay: Number(profileRow?.checkin_day ?? 0), units: profileRow?.units || 'lb', limitations: profileRow?.limitations || '', dietaryPreference: profileRow?.dietary_preference || 'No preference', allergies: profileRow?.allergies || '', mealsPerDay: Number(profileRow?.meals_per_day || 3) })

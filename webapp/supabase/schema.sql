@@ -190,6 +190,9 @@ create table if not exists trainer_client_assignments (
   check (trainer_id <> client_id)
 );
 
+grant select on table user_roles to authenticated;
+grant select on table trainer_client_assignments to authenticated;
+
 alter table profiles enable row level security;
 alter table workouts enable row level security;
 alter table exercises enable row level security;
