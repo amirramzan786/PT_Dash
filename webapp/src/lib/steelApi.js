@@ -370,6 +370,11 @@ export async function saveProfile(userId, { displayName, phone, goal, avatarUrl,
   return data
 }
 
+// Temporary self-service test control; replace with server-side role policies before wider admin access.
+export async function resetOnboarding(userId) {
+  return saveProfile(userId, { onboardingCompleted: false })
+}
+
 export async function updateAccount({ displayName, email }) {
   const client = requireSupabase()
   const changes = { data: { full_name: displayName } }

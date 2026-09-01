@@ -178,6 +178,13 @@
 .settings-footer-layout .settings-security-card h3 { margin: 2px 0 3px; font-size: .76rem; }
 .settings-footer-layout .settings-security-card p { font-size: .64rem; line-height: 1.35; }
 .settings-footer-layout .settings-security-card .eyebrow { font-size: .55rem; }
+.settings-admin-footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 14px; padding: 11px 12px; border: 1px dashed rgba(217,173,85,.34); border-radius: 13px; background: rgba(217,173,85,.045); }
+.settings-admin-footer > div { display: grid; gap: 3px; min-width: 0; }
+.settings-admin-footer strong { font-size: .75rem; }
+.settings-admin-footer small { color: var(--steel-muted); font-size: .65rem; line-height: 1.35; }
+.settings-admin-button { flex: 0 0 auto; min-height: 34px; padding: 0 10px; border: 1px solid #765c2a; border-radius: 9px; color: var(--steel-gold-2); background: rgba(217,173,85,.1); font-size: .66rem; font-weight: 850; }
+.settings-admin-button:hover { border-color: var(--steel-gold); background: rgba(217,173,85,.18); }
+@media (max-width: 520px) { .settings-admin-footer { align-items: flex-start; flex-direction: column; } }
 .nutrition-page { max-width: 760px; margin-inline: auto; }
 .nutrition-view-switcher { display: inline-flex; gap: 4px; padding: 4px; margin-top: 14px; border: 1px solid var(--steel-line); border-radius: 12px; background: rgba(10,16,24,.7); }
 .nutrition-view-switcher button { min-height: 34px; padding: 0 11px; border: 0; border-radius: 9px; color: var(--steel-muted); background: transparent; font: inherit; font-size: .7rem; font-weight: 800; }
