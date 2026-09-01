@@ -6,8 +6,9 @@ import {
 } from 'lucide-react'
 import {
   changePassword, deleteMealLog, getDashboardStats, getLatestWeeklyCheckin, getMealLogs, getProfile, getRecentSessions, getTodaySteps, getStepHistory, getWeightHistory, getWeeklyCheckinHistory,
-  getNutritionPlan, getProgrammeIntake, getWeeklyActivitySummary, loadExerciseCatalog, loadUserRole, loadWorkouts, resetOnboarding, saveCustomWorkout, saveMealLog, saveMealPlanItem, saveProgrammeIntake, saveProfile, saveWeight, saveWeeklyCheckin as saveWeeklyCheckinRecord, saveWorkoutSession, sendOnboardingAiMessage, updateAccount, updateCustomWorkout, uploadAvatar, uploadCheckinMedia,
+  getActiveGeneratedProgramme, getNutritionPlan, getProgrammeIntake, getWeeklyActivitySummary, loadExerciseCatalog, loadUserRole, loadWorkouts, replaceGeneratedProgramme, resetOnboarding, saveCustomWorkout, saveMealLog, saveMealPlanItem, saveProgrammeIntake, saveProfile, saveWeight, saveWeeklyCheckin as saveWeeklyCheckinRecord, saveWorkoutSession, sendOnboardingAiMessage, updateAccount, updateCustomWorkout, uploadAvatar, uploadCheckinMedia,
 } from './lib/steelApi'
+import { buildGeneratedProgramme } from './lib/programmeGenerator'
 import './app-v2.css'
 import './settings.css'
 import './v3.css'
@@ -48,7 +49,7 @@ function makeDraft(workout) {
     sets: Object.fromEntries(workout.exercises.map((exercise) => [exercise.id,
       Array.from({ length: exercise.sets }, (_, index) => ({ setNo: index + 1, weight: Number(exercise.startWeightKg) || 0, reps: Number.parseInt(exercise.reps, 10) || 10, complete: false, removed: false })),
     ])),
-    cardio: { complete: true, minutes: 7, incline: 6, rpe: 6 },
+    cardio: workout.cardio ? { complete: true, activity: workout.cardio.activity, minutes: workout.cardio.durationMin, incline: 0, rpe: Number.parseFloat(workout.cardio.rpe) || 6 } : { complete: true, activity: 'Incline treadmill walk', minutes: 7, incline: 6, rpe: 6 },
   }
 }
 
@@ -72,6 +73,8 @@ function normaliseEquipment(value) {
 }
 
 function buildPersonalisedJourney(workouts, preferences) {
+  const generated = workouts.filter((workout) => workout.source === 'programme')
+  if (generated.length) return { goal: preferences.goal || '', level: preferences.experienceLevel || 'Intermediate', days: generated.length, workouts: generated, hasEquipmentMatch: true, summary: generated[0]?.planSummary || null }
   const available = new Set((preferences.availableEquipment?.length ? preferences.availableEquipment : ['Machines']).map(normaliseEquipment))
   const goal = preferences.goal || ''
   const level = preferences.experienceLevel || 'Intermediate'
@@ -85,7 +88,7 @@ function buildPersonalisedJourney(workouts, preferences) {
   const compatible = ranked.filter((item) => item.equipmentFit)
   const source = compatible.length ? compatible : ranked
   const days = Math.max(1, Math.min(7, Number(preferences.trainingDays) || 3))
-  return { goal, level, days, workouts: source.slice(0, Math.min(days, source.length)).map((item) => item.workout), hasEquipmentMatch: compatible.length > 0 }
+  return { goal, level, days, workouts: source.slice(0, Math.min(days, source.length)).map((item) => item.workout), hasEquipmentMatch: compatible.length > 0, summary: null }
 }
 
 function PersonalisedJourneyCard({ workouts, preferences, navigateToTab, onStartWorkout }) {
@@ -97,7 +100,7 @@ function PersonalisedJourneyCard({ workouts, preferences, navigateToTab, onStart
     'Improve fitness': 'A balanced mix of strength and conditioning for better capacity.',
     'Train consistently': 'Simple sessions designed to make showing up easier.'
   }[journey.goal] || 'A flexible starting point built around your current preferences.'
-  return <section className="journey-card"><div className="journey-card-header"><div><span className="eyebrow">YOUR STEEL JOURNEY</span><h3>{journey.goal}</h3><p>{goalCopy}</p></div><button type="button" className="text-link" onClick={() => navigateToTab('Settings')}>Edit plan <ChevronRight size={14}/></button></div><div className="journey-summary"><span><strong>{journey.days}</strong> training day{journey.days === 1 ? '' : 's'}</span><span><strong>{journey.level}</strong> level</span><span><strong>{journey.workouts.length}</strong> sessions ready</span></div><div className="journey-plan-list">{journey.workouts.map((workout, index) => <button type="button" key={workout.id} onClick={() => onStartWorkout(workout)}><span className="journey-day">DAY {index + 1}</span><span><strong>{workout.name}</strong><small>{workout.focus || 'Full-body strength'} · {workout.duration}</small></span><ChevronRight size={16}/></button>)}</div>{!journey.hasEquipmentMatch && <small className="journey-note">No exact equipment match was found, so Steel is showing the closest available sessions.</small>}</section>
+  return <section className="journey-card"><div className="journey-card-header"><div><span className="eyebrow">YOUR STEEL JOURNEY</span><h3>{journey.goal}</h3><p>{journey.summary || goalCopy}</p></div><button type="button" className="text-link" onClick={() => navigateToTab('Settings')}>View preferences <ChevronRight size={14}/></button></div><div className="journey-summary"><span><strong>{journey.days}</strong> training day{journey.days === 1 ? '' : 's'}</span><span><strong>{journey.level}</strong> level</span><span><strong>{journey.workouts.length}</strong> sessions ready</span></div><div className="journey-plan-list">{journey.workouts.map((workout, index) => <button type="button" key={workout.id} onClick={() => onStartWorkout(workout)}><span className="journey-day">DAY {index + 1}</span><span><strong>{workout.name}</strong><small>{workout.focus || 'Full-body strength'} · {workout.duration}</small></span><ChevronRight size={16}/></button>)}</div>{!journey.hasEquipmentMatch && <small className="journey-note">No exact equipment match was found, so Steel is showing the closest available sessions.</small>}</section>
 }
 
 function nextCheckinDate(checkinDay = 0, submittedAt) {
@@ -593,18 +596,30 @@ export default function AppV3({ user, onSignOut }) {
 
   async function refresh() {
     const { start, end } = currentWeekBounds()
-    const [programme, dashboard, todaySteps, stepHistoryRows, history, recent, profileRow, intakeRow, latestCheckin, activitySummary, checkinHistory, role] = await Promise.all([
+    const [programme, dashboard, todaySteps, stepHistoryRows, history, recent, profileRow, intakeRow, latestCheckin, activitySummary, checkinHistory, role, activeGeneratedProgramme] = await Promise.all([
       loadWorkouts(user.id), getDashboardStats(user.id), getTodaySteps(user.id),
       getStepHistory(user.id, 31),
-      getWeightHistory(user.id, 30), getRecentSessions(user.id, 8), getProfile(user.id), getProgrammeIntake(user.id), getLatestWeeklyCheckin(user.id), getWeeklyActivitySummary(user.id, start, end), getWeeklyCheckinHistory(user.id), loadUserRole(user.id).catch(() => 'user'),
+      getWeightHistory(user.id, 30), getRecentSessions(user.id, 8), getProfile(user.id), getProgrammeIntake(user.id), getLatestWeeklyCheckin(user.id), getWeeklyActivitySummary(user.id, start, end), getWeeklyCheckinHistory(user.id), loadUserRole(user.id).catch(() => 'user'), getActiveGeneratedProgramme(user.id),
     ])
-    setWorkouts(programme); setStats(dashboard); setSteps(todaySteps); setStepHistory(stepHistoryRows); setWeights(history); setSessions(recent); setWeeklyCheckin(latestCheckin); setWeeklyCheckinHistory(checkinHistory); setWeeklyActivity(activitySummary); setProfile(profileRow); setUserRole(role)
-    setPreferences({ goal: profileRow?.goal || 'Lose fat and gain muscle', experienceLevel: profileRow?.experience_level || 'Intermediate', availableEquipment: profileRow?.available_equipment?.length ? profileRow.available_equipment : ['Machines'], trainingDays: Number(profileRow?.training_days || 3), checkinDay: Number(profileRow?.checkin_day ?? 0), units: profileRow?.units || 'lb', limitations: profileRow?.limitations || '', dietaryPreference: profileRow?.dietary_preference || 'No preference', allergies: profileRow?.allergies || '', mealsPerDay: Number(profileRow?.meals_per_day || 3), goalTimeframeWeeks: Number(intakeRow?.goal_timeframe_weeks || 12), sessionDurationMin: Number(intakeRow?.session_duration_min || 45), trainingLocation: intakeRow?.training_location || 'Gym', currentTrainingDays: intakeRow?.current_training_days ?? '', dailyActivityLevel: intakeRow?.daily_activity_level || '', sleepQuality: intakeRow?.sleep_quality ?? '', trainingStyles: intakeRow?.training_styles || [], exercisePreferences: intakeRow?.exercise_preferences || '', exerciseAvoidances: intakeRow?.exercise_avoidances || '', cardioPreference: intakeRow?.cardio_preference || 'No preference', cardioExperience: intakeRow?.cardio_experience || 'Beginner', cardioSessions: Number(intakeRow?.cardio_sessions || 0), cookingTime: intakeRow?.cooking_time || '', preferredFoods: intakeRow?.preferred_foods || '' })
+    const resolvedPreferences = { goal: profileRow?.goal || 'Lose fat and gain muscle', experienceLevel: profileRow?.experience_level || 'Intermediate', availableEquipment: profileRow?.available_equipment?.length ? profileRow.available_equipment : ['Machines'], trainingDays: Number(profileRow?.training_days || 3), checkinDay: Number(profileRow?.checkin_day ?? 0), units: profileRow?.units || 'lb', limitations: profileRow?.limitations || '', dietaryPreference: profileRow?.dietary_preference || 'No preference', allergies: profileRow?.allergies || '', mealsPerDay: Number(profileRow?.meals_per_day || 3), goalTimeframeWeeks: Number(intakeRow?.goal_timeframe_weeks || 12), sessionDurationMin: Number(intakeRow?.session_duration_min || 45), trainingLocation: intakeRow?.training_location || 'Gym', currentTrainingDays: intakeRow?.current_training_days ?? '', dailyActivityLevel: intakeRow?.daily_activity_level || '', sleepQuality: intakeRow?.sleep_quality ?? '', trainingStyles: intakeRow?.training_styles || [], exercisePreferences: intakeRow?.exercise_preferences || '', exerciseAvoidances: intakeRow?.exercise_avoidances || '', cardioPreference: intakeRow?.cardio_preference || 'No preference', cardioExperience: intakeRow?.cardio_experience || 'Beginner', cardioSessions: Number(intakeRow?.cardio_sessions || 0), cookingTime: intakeRow?.cooking_time || '', preferredFoods: intakeRow?.preferred_foods || '' }
+    let visibleProgramme = programme
+    if (profileRow?.onboarding_completed && intakeRow && !activeGeneratedProgramme) {
+      try {
+        const catalogue = await loadExerciseCatalog()
+        await replaceGeneratedProgramme(buildGeneratedProgramme({ catalogue, preferences: resolvedPreferences }))
+        visibleProgramme = await loadWorkouts(user.id)
+      } catch (error) {
+        // Keep the safe starter content available if a personal plan cannot yet be generated.
+        console.warn('Personalised programme was not generated', error)
+      }
+    }
+    setWorkouts(visibleProgramme); setStats(dashboard); setSteps(todaySteps); setStepHistory(stepHistoryRows); setWeights(history); setSessions(recent); setWeeklyCheckin(latestCheckin); setWeeklyCheckinHistory(checkinHistory); setWeeklyActivity(activitySummary); setProfile(profileRow); setUserRole(role)
+    setPreferences(resolvedPreferences)
     const fallbackName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Account'
     setProfileName(profileRow?.display_name || fallbackName)
     setProfilePhone(profileRow?.phone || '')
     setProfileEmail(user.email || '')
-    if (!selectedId && programme[0]) setSelectedId(programme[0].id)
+    if (!selectedId && visibleProgramme[0]) setSelectedId(visibleProgramme[0].id)
   }
 
   useEffect(() => { let active = true; setBusy(true); setLoadError(''); refresh().catch((e) => { if (active) { setLoadError(e.message || 'Steel could not load your data.'); setMessage(e.message) } }).finally(() => active && setBusy(false)); return () => { active = false } }, [user.id])
@@ -759,19 +774,30 @@ export default function AppV3({ user, onSignOut }) {
     catch (e) { setMessage(e.message) } finally { setSaving(false) }
   }
 
-  async function persistPreferences(nextPreferences = preferences) {
+  async function persistPreferences(nextPreferences = preferences, { generatePlan = false } = {}) {
     setSaving(true); setMessage('')
     try {
       const resolvedPreferences = { ...preferences, ...nextPreferences }
       const next = await saveProfile(user.id, { displayName: profileName.trim(), avatarUrl, ...resolvedPreferences, experienceLevel: resolvedPreferences.experienceLevel, availableEquipment: resolvedPreferences.availableEquipment, trainingDays: Number(resolvedPreferences.trainingDays), checkinDay: Number(resolvedPreferences.checkinDay), mealsPerDay: Number(resolvedPreferences.mealsPerDay), dietaryPreference: resolvedPreferences.dietaryPreference, allergies: resolvedPreferences.allergies, onboardingCompleted: true })
       await saveProgrammeIntake(user.id, resolvedPreferences)
-      setProfile(next); setMessage('Training preferences saved. Steel can use these for your personalised plan.')
+      if (generatePlan) {
+        const catalogue = await loadExerciseCatalog()
+        await replaceGeneratedProgramme(buildGeneratedProgramme({ catalogue, preferences: resolvedPreferences }))
+        const updatedWorkouts = await loadWorkouts(user.id)
+        setWorkouts(updatedWorkouts)
+        if (updatedWorkouts[0]) setSelectedId(updatedWorkouts[0].id)
+      }
+      setProfile(next); setMessage(generatePlan ? 'Your personalised training plan is ready.' : 'Training preferences saved. Your existing plan stays in place until a planned review.')
     } catch (e) { setMessage(e.message) } finally { setSaving(false) }
   }
 
   async function savePreferences(event) {
     event?.preventDefault?.()
     return persistPreferences(preferences)
+  }
+
+  function completeOnboarding(nextPreferences = preferences) {
+    return persistPreferences(nextPreferences, { generatePlan: true })
   }
 
   async function handleResetOnboarding() {
@@ -802,7 +828,7 @@ export default function AppV3({ user, onSignOut }) {
 
   if (busy) return <div className="v2-loading"><div className="steel-emblem"><SteelMark /></div><span>Loading Steel…</span></div>
   if (loadError) return <div className="v2-loading app-load-error"><div className="steel-emblem"><SteelMark /></div><div><span className="eyebrow">STEEL IS TEMPORARILY OFFLINE</span><h2>We couldn’t load your data</h2><p>Check your connection, then try again. Your account data is still safe.</p><button type="button" className="gold-button" onClick={retryAppLoad}>Try again</button></div></div>
-  if (!profile?.onboarding_completed && !onboardingDismissed) return <OnboardingFlow preferences={preferences} setPreferences={setPreferences} toggleEquipment={toggleEquipment} onComplete={savePreferences} onAiComplete={persistPreferences} onSkip={() => { setOnboardingDismissed(true); setMessage('You can finish your setup any time in Settings.') }} saving={saving} onSignOut={onSignOut} />
+  if (!profile?.onboarding_completed && !onboardingDismissed) return <OnboardingFlow preferences={preferences} setPreferences={setPreferences} toggleEquipment={toggleEquipment} onComplete={completeOnboarding} onAiComplete={completeOnboarding} onSkip={() => { setOnboardingDismissed(true); setMessage('You can finish your setup any time in Settings.') }} saving={saving} onSignOut={onSignOut} />
 
   return <div className="steel-app">
     <main className="steel-screen">

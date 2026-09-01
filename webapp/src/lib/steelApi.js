@@ -80,17 +80,79 @@ export function onAuthChange(callback) {
   return () => data.subscription.unsubscribe()
 }
 
+export async function getActiveGeneratedProgramme(userId) {
+  const client = requireSupabase()
+  const { data, error } = await client.from('training_programmes').select('id,name,summary,template_key,generation_version,created_at').eq('user_id', userId).eq('status', 'active').order('created_at', { ascending: false }).limit(1).maybeSingle()
+  if (error) throw error
+  return data ?? null
+}
+
+export async function loadGeneratedProgramme(userId) {
+  const client = requireSupabase()
+  const plan = await getActiveGeneratedProgramme(userId)
+  if (!plan) return []
+  const { data: workoutRows, error: workoutError } = await client.from('programme_workouts').select('id,name,focus,description,duration_min,sort_order,cardio').eq('programme_id', plan.id).order('sort_order')
+  if (workoutError) throw workoutError
+  const workoutIds = (workoutRows ?? []).map((row) => row.id)
+  if (!workoutIds.length) return []
+  const { data: links, error: linkError } = await client.from('programme_workout_exercises').select('id,programme_workout_id,sort_order,sets,rep_target,rpe_target,rest_seconds,load_guidance,exercise_catalog(id,slug,name,primary_muscle_group,secondary_muscle_groups,equipment,movement_pattern,difficulty,instructions,video_url,thumbnail_url,coaching_cues,safety_notes,video_source,active)').in('programme_workout_id', workoutIds).order('sort_order')
+  if (linkError) throw linkError
+  return (workoutRows ?? []).map((workout) => ({
+    id: workout.id,
+    source: 'programme',
+    programmeId: plan.id,
+    planSummary: plan.summary,
+    templateKey: plan.template_key,
+    name: workout.name,
+    focus: workout.focus,
+    description: workout.description,
+    duration: workout.duration_min ? `~${workout.duration_min} min` : '~45 min',
+    finisher: workout.cardio ? `${workout.cardio.activity} · ${workout.cardio.durationMin} min · RPE ${workout.cardio.rpe}` : 'Optional easy cardio finisher',
+    cardio: workout.cardio || null,
+    exercises: (links ?? []).filter((link) => link.programme_workout_id === workout.id && link.exercise_catalog?.active !== false).map((link) => ({
+      id: link.exercise_catalog?.id,
+      programmeId: link.id,
+      source: 'catalog',
+      name: link.exercise_catalog?.name ?? 'Exercise',
+      equipment: (link.exercise_catalog?.equipment ?? []).join(' / ') || 'Gym',
+      muscleGroup: link.exercise_catalog?.primary_muscle_group ?? null,
+      secondaryMuscleGroups: link.exercise_catalog?.secondary_muscle_groups ?? [],
+      movementPattern: link.exercise_catalog?.movement_pattern ?? null,
+      difficulty: link.exercise_catalog?.difficulty ?? null,
+      instructions: link.exercise_catalog?.instructions ?? null,
+      coachingCues: link.exercise_catalog?.coaching_cues ?? [],
+      safetyNotes: link.exercise_catalog?.safety_notes ?? null,
+      youtubeUrl: link.exercise_catalog?.video_url ?? null,
+      thumbnailUrl: link.exercise_catalog?.thumbnail_url ?? null,
+      sets: link.sets,
+      reps: link.rep_target,
+      rpe: link.rpe_target,
+      restSeconds: link.rest_seconds,
+      loadGuidance: link.load_guidance,
+      startWeightKg: 0,
+    })),
+  }))
+}
+
+export async function replaceGeneratedProgramme(plan) {
+  const client = requireSupabase()
+  const { data, error } = await client.rpc('replace_generated_programme', { p_plan: plan })
+  if (error) throw error
+  return data
+}
+
 export async function loadWorkouts(userId) {
   const client = requireSupabase()
+  const generatedProgramme = await loadGeneratedProgramme(userId)
   const { data: workoutRows, error: workoutError } = await client.from('workouts').select('id,name,sort_order,active').eq('user_id', userId).eq('active', true).order('sort_order')
   if (workoutError) throw workoutError
-  if (!workoutRows?.length) return loadWorkoutCatalog(client)
+  if (!workoutRows?.length) return generatedProgramme.length ? generatedProgramme : loadWorkoutCatalog(client)
   const workoutIds = workoutRows.map((row) => row.id)
   const { data: links, error: linkError } = await client.from('workout_exercises').select('id,workout_id,exercise_id,sort_order,sets,rep_target,start_weight_kg,exercises(id,name,equipment,youtube_url,active)').in('workout_id', workoutIds).order('sort_order')
   if (linkError) throw linkError
     const { data: catalogueRows } = await client.from('exercise_catalog').select('name,primary_muscle_group,secondary_muscle_groups,movement_pattern,difficulty,instructions,video_url,thumbnail_url,coaching_cues,safety_notes,video_source,active').eq('active', true).eq('is_free', true)
   const catalogueByName = new Map((catalogueRows ?? []).map((row) => [row.name.trim().toLowerCase(), row]))
-  return workoutRows.map((workout) => ({
+  const userWorkouts = workoutRows.map((workout) => ({
     id: workout.id,
     name: workout.name,
     duration: '~45 min',
@@ -114,6 +176,7 @@ export async function loadWorkouts(userId) {
       startWeightKg: link.start_weight_kg ?? 0,
     })),
   }))
+  return generatedProgramme.length ? [...generatedProgramme, ...userWorkouts] : userWorkouts
 }
 
 async function loadWorkoutCatalog(client) {
@@ -490,19 +553,19 @@ export async function getStepHistory(userId, limit = 31) {
 
 export async function saveWorkoutSession({ userId, workout, draft, durationMin = 45, notes = '' }) {
   const client = requireSupabase()
-  const isCatalogWorkout = workout.source === 'catalog'
-  const { data: session, error: sessionError } = await client.from('sessions').insert({ user_id: userId, workout_id: isCatalogWorkout ? null : workout.id, workout_name: workout.name, session_date: new Date().toISOString().slice(0, 10), duration_min: durationMin, notes }).select().single()
+  const isUserOwnedWorkout = !workout.source || workout.source === 'custom'
+  const { data: session, error: sessionError } = await client.from('sessions').insert({ user_id: userId, workout_id: isUserOwnedWorkout ? workout.id : null, workout_name: workout.name, session_date: new Date().toISOString().slice(0, 10), duration_min: durationMin, notes }).select().single()
   if (sessionError) throw sessionError
   const setRows = workout.exercises.flatMap((exercise) => {
     if (draft.removedExercises.includes(exercise.id)) return []
-    return (draft.sets[exercise.id] ?? []).filter((set) => set.complete && !set.removed).map((set) => ({ session_id: session.id, exercise_id: isCatalogWorkout || exercise.source === 'catalog' ? null : exercise.id, exercise_name: exercise.name, set_no: set.setNo, reps: set.reps, weight_kg: set.weight, completed: true }))
+    return (draft.sets[exercise.id] ?? []).filter((set) => set.complete && !set.removed).map((set) => ({ session_id: session.id, exercise_id: !isUserOwnedWorkout || exercise.source === 'catalog' ? null : exercise.id, exercise_name: exercise.name, set_no: set.setNo, reps: set.reps, weight_kg: set.weight, completed: true }))
   })
   if (setRows.length) {
     const { error } = await client.from('set_logs').insert(setRows)
     if (error) throw error
   }
   if (draft.cardio.complete) {
-    const { error } = await client.from('cardio_logs').insert({ session_id: session.id, activity: 'Incline treadmill walk', duration_min: draft.cardio.minutes, incline_percent: draft.cardio.incline, rpe: draft.cardio.rpe, intensity: 'Medium' })
+    const { error } = await client.from('cardio_logs').insert({ session_id: session.id, activity: draft.cardio.activity || 'Incline treadmill walk', duration_min: draft.cardio.minutes, incline_percent: draft.cardio.incline || null, rpe: draft.cardio.rpe, intensity: 'Medium' })
     if (error) throw error
   }
   return session

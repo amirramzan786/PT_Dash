@@ -549,3 +549,166 @@ for select to authenticated using ((select auth.uid()) = user_id);
 revoke all on ai_conversations, ai_messages from anon;
 revoke insert, update, delete on ai_conversations, ai_messages from authenticated;
 grant select on ai_conversations, ai_messages to authenticated;
+
+-- Versioned personalised training plans. The plan itself is immutable once generated;
+-- replacing it creates a new version so future AI and PT reviews have an audit trail.
+create table if not exists training_programmes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null check (char_length(name) between 1 and 120),
+  summary text,
+  status text not null default 'active' check (status in ('active', 'superseded', 'archived')),
+  source text not null default 'rules' check (source in ('rules', 'ai', 'trainer')),
+  template_key text not null,
+  generation_version text not null default 'rules-v1',
+  intake_snapshot jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists programme_workouts (
+  id uuid primary key default gen_random_uuid(),
+  programme_id uuid not null references training_programmes(id) on delete cascade,
+  name text not null check (char_length(name) between 1 and 120),
+  focus text,
+  description text,
+  duration_min smallint not null default 45 check (duration_min between 10 and 180),
+  cardio jsonb,
+  sort_order smallint not null check (sort_order between 1 and 7),
+  unique (programme_id, sort_order)
+);
+
+create table if not exists programme_workout_exercises (
+  id uuid primary key default gen_random_uuid(),
+  programme_workout_id uuid not null references programme_workouts(id) on delete cascade,
+  exercise_id uuid not null references exercise_catalog(id) on delete restrict,
+  sort_order smallint not null check (sort_order between 1 and 12),
+  sets smallint not null check (sets between 1 and 8),
+  rep_target text not null check (char_length(rep_target) between 1 and 20),
+  rpe_target text,
+  rest_seconds smallint check (rest_seconds between 30 and 300),
+  load_guidance text,
+  unique (programme_workout_id, exercise_id),
+  unique (programme_workout_id, sort_order)
+);
+
+create unique index if not exists training_programmes_one_active_per_user_idx on training_programmes (user_id) where status = 'active';
+create index if not exists training_programmes_user_created_idx on training_programmes (user_id, created_at desc);
+create index if not exists programme_workouts_programme_sort_idx on programme_workouts (programme_id, sort_order);
+create index if not exists programme_workout_exercises_workout_sort_idx on programme_workout_exercises (programme_workout_id, sort_order);
+create index if not exists programme_workout_exercises_exercise_idx on programme_workout_exercises (exercise_id);
+
+alter table training_programmes enable row level security;
+alter table programme_workouts enable row level security;
+alter table programme_workout_exercises enable row level security;
+
+drop policy if exists "own training programmes" on training_programmes;
+create policy "own training programmes" on training_programmes for all to authenticated
+using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+drop policy if exists "own programme workouts" on programme_workouts;
+create policy "own programme workouts" on programme_workouts for all to authenticated
+using (exists (select 1 from training_programmes p where p.id = programme_id and p.user_id = (select auth.uid())))
+with check (exists (select 1 from training_programmes p where p.id = programme_id and p.user_id = (select auth.uid())));
+drop policy if exists "own programme workout exercises" on programme_workout_exercises;
+create policy "own programme workout exercises" on programme_workout_exercises for all to authenticated
+using (exists (select 1 from programme_workouts w join training_programmes p on p.id = w.programme_id where w.id = programme_workout_id and p.user_id = (select auth.uid())))
+with check (exists (select 1 from programme_workouts w join training_programmes p on p.id = w.programme_id where w.id = programme_workout_id and p.user_id = (select auth.uid())));
+
+grant select, insert, update on training_programmes to authenticated;
+grant select, insert on programme_workouts to authenticated;
+grant select, insert on programme_workout_exercises to authenticated;
+
+create or replace function public.replace_generated_programme(p_plan jsonb)
+returns uuid
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_programme_id uuid;
+  v_programme_workout_id uuid;
+  v_exercise_id uuid;
+  v_workout jsonb;
+  v_exercise jsonb;
+  v_workout_count integer := 0;
+begin
+  if v_user_id is null then
+    raise exception 'You must be signed in to build a plan.' using errcode = '42501';
+  end if;
+  if p_plan is null or jsonb_typeof(p_plan) <> 'object' or jsonb_typeof(p_plan -> 'workouts') <> 'array' then
+    raise exception 'The generated plan is not valid.' using errcode = '22023';
+  end if;
+
+  update training_programmes set status = 'superseded'
+  where user_id = v_user_id and status = 'active';
+
+  insert into training_programmes (user_id, name, summary, source, template_key, generation_version, intake_snapshot)
+  values (
+    v_user_id,
+    left(coalesce(nullif(trim(p_plan ->> 'name'), ''), 'Your personalised Steel plan'), 120),
+    nullif(left(coalesce(p_plan ->> 'summary', ''), 1000), ''),
+    'rules',
+    left(coalesce(nullif(trim(p_plan ->> 'templateKey'), ''), 'custom'), 80),
+    left(coalesce(nullif(trim(p_plan ->> 'generationVersion'), ''), 'rules-v1'), 80),
+    coalesce(p_plan -> 'intakeSnapshot', '{}'::jsonb)
+  ) returning id into v_programme_id;
+
+  for v_workout in select value from jsonb_array_elements(p_plan -> 'workouts') loop
+    if nullif(trim(v_workout ->> 'name'), '') is null then
+      raise exception 'Each plan session needs a name.' using errcode = '22023';
+    end if;
+    v_workout_count := v_workout_count + 1;
+    insert into programme_workouts (programme_id, name, focus, description, duration_min, cardio, sort_order)
+    values (
+      v_programme_id,
+      left(v_workout ->> 'name', 120),
+      nullif(left(coalesce(v_workout ->> 'focus', ''), 160), ''),
+      nullif(left(coalesce(v_workout ->> 'description', ''), 1000), ''),
+      greatest(10, least(180, coalesce((v_workout ->> 'durationMin')::smallint, 45))),
+      case when jsonb_typeof(v_workout -> 'cardio') = 'object' then v_workout -> 'cardio' else null end,
+      greatest(1, least(7, coalesce((v_workout ->> 'sortOrder')::smallint, v_workout_count)))
+    ) returning id into v_programme_workout_id;
+
+    if jsonb_typeof(v_workout -> 'exercises') <> 'array' then
+      raise exception 'Each plan session needs exercises.' using errcode = '22023';
+    end if;
+    for v_exercise in select value from jsonb_array_elements(v_workout -> 'exercises') loop
+      select id into v_exercise_id from exercise_catalog
+      where slug = v_exercise ->> 'slug' and active = true;
+      if v_exercise_id is null then
+        raise exception 'A generated exercise is not available in the catalogue.' using errcode = '22023';
+      end if;
+      insert into programme_workout_exercises (programme_workout_id, exercise_id, sort_order, sets, rep_target, rpe_target, rest_seconds, load_guidance)
+      values (
+        v_programme_workout_id,
+        v_exercise_id,
+        greatest(1, least(12, coalesce((v_exercise ->> 'sortOrder')::smallint, (select count(*) + 1 from programme_workout_exercises where programme_workout_id = v_programme_workout_id)))),
+        greatest(1, least(8, coalesce((v_exercise ->> 'sets')::smallint, 3))),
+        left(coalesce(nullif(trim(v_exercise ->> 'reps'), ''), '8–12'), 20),
+        nullif(left(coalesce(v_exercise ->> 'rpe', ''), 20), ''),
+        greatest(30, least(300, coalesce((v_exercise ->> 'restSeconds')::smallint, 75))),
+        nullif(left(coalesce(v_exercise ->> 'loadGuidance', ''), 500), '')
+      );
+    end loop;
+  end loop;
+  if v_workout_count = 0 then
+    raise exception 'A plan needs at least one session.' using errcode = '22023';
+  end if;
+  return v_programme_id;
+end;
+$$;
+
+revoke all on function public.replace_generated_programme(jsonb) from public;
+grant execute on function public.replace_generated_programme(jsonb) to authenticated;
+
+-- Home/hybrid coverage for the rule-based generator.
+insert into exercise_catalog (slug, name, primary_muscle_group, secondary_muscle_groups, equipment, movement_pattern, difficulty, instructions, video_url, video_source, coaching_cues, safety_notes, is_free, active)
+values
+  ('bodyweight-squat','Bodyweight Squat','Quads',array['Glutes','Core']::text[],array['Bodyweight']::text[],'Squat','Beginner','Sit between your hips, keep the feet planted and stand with control.','https://www.youtube.com/results?search_query=bodyweight+squat+proper+form','youtube',array['Brace before lowering','Keep feet grounded','Use a chair target if needed']::text[],'Use a comfortable depth and stop for knee or back pain.',true,true),
+  ('glute-bridge','Glute Bridge','Glutes',array['Hamstrings','Core']::text[],array['Bodyweight']::text[],'Hip extension','Beginner','Press through the feet and lift the hips without arching the lower back.','https://www.youtube.com/results?search_query=glute+bridge+proper+form','youtube',array['Ribs down','Squeeze glutes at the top','Control the return']::text[],'Shorten the range if the lower back is uncomfortable.',true,true),
+  ('dumbbell-row','Dumbbell Row','Back',array['Biceps','Rear delts']::text[],array['Dumbbells']::text[],'Horizontal pull','Beginner','Support your body, pull the dumbbell toward the hip and lower with control.','https://www.youtube.com/results?search_query=dumbbell+row+proper+form','youtube',array['Keep shoulders square','Pull toward the hip','Avoid twisting']::text[],'Use a bench or stable support and keep the load manageable.',true,true),
+  ('dumbbell-shoulder-press','Dumbbell Shoulder Press','Shoulders',array['Triceps']::text[],array['Dumbbells']::text[],'Vertical push','Beginner','Press the dumbbells overhead from a stable seated or standing position.','https://www.youtube.com/results?search_query=dumbbell+shoulder+press+proper+form','youtube',array['Keep ribs controlled','Stack wrists over elbows','Use a pain-free range']::text[],'Avoid this movement for shoulder pain unless cleared by a qualified clinician.',true,true),
+  ('lateral-raise','Dumbbell Lateral Raise','Shoulders',array['Side delts']::text[],array['Dumbbells']::text[],'Shoulder abduction','Beginner','Raise light dumbbells to shoulder height with control.','https://www.youtube.com/results?search_query=dumbbell+lateral+raise+proper+form','youtube',array['Keep elbows soft','Lead with the elbows','Avoid shrugging']::text[],'Use light loads and stop for shoulder pain.',true,true),
+  ('prone-y-raise','Prone Y Raise','Upper back',array['Rear delts','Rotator cuff']::text[],array['Bodyweight']::text[],'Scapular control','Beginner','Lie face down and lift the arms into a Y without shrugging.','https://www.youtube.com/results?search_query=prone+y+raise+proper+form','youtube',array['Move slowly','Keep neck relaxed','Use a short range']::text[],'Avoid if lying face down or shoulder movement is uncomfortable.',true,true),
+  ('bodyweight-calf-raise','Bodyweight Calf Raise','Calves',array[]::text[],array['Bodyweight']::text[],'Plantar flexion','Beginner','Rise onto the balls of the feet, pause, then lower slowly.','https://www.youtube.com/results?search_query=bodyweight+calf+raise+proper+form','youtube',array['Use support for balance','Pause at the top','Control the lowering']::text[],'Hold a stable surface if balance is limited.',true,true)
+on conflict (slug) do update set name = excluded.name, primary_muscle_group = excluded.primary_muscle_group, secondary_muscle_groups = excluded.secondary_muscle_groups, equipment = excluded.equipment, movement_pattern = excluded.movement_pattern, difficulty = excluded.difficulty, instructions = excluded.instructions, video_url = excluded.video_url, video_source = excluded.video_source, coaching_cues = excluded.coaching_cues, safety_notes = excluded.safety_notes, is_free = excluded.is_free, active = excluded.active, updated_at = now();
