@@ -174,6 +174,22 @@ create table if not exists weekly_checkin_media (
   created_at timestamptz not null default now()
 );
 
+-- Role and trainer assignment foundation. Role/assignment writes are intentionally server-side only.
+create table if not exists user_roles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  role text not null check (role in ('user', 'trainer', 'admin')),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists trainer_client_assignments (
+  trainer_id uuid not null references auth.users(id) on delete cascade,
+  client_id uuid not null references auth.users(id) on delete cascade,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  primary key (trainer_id, client_id),
+  check (trainer_id <> client_id)
+);
+
 alter table profiles enable row level security;
 alter table workouts enable row level security;
 alter table exercises enable row level security;
@@ -187,6 +203,16 @@ alter table meal_plan_items enable row level security;
 alter table weekly_checkins enable row level security;
 alter table meal_logs enable row level security;
 alter table weekly_checkin_media enable row level security;
+alter table user_roles enable row level security;
+alter table trainer_client_assignments enable row level security;
+
+drop policy if exists "own role read" on user_roles;
+create policy "own role read" on user_roles for select to authenticated
+using ((select auth.uid()) = user_id);
+
+drop policy if exists "participant assignment read" on trainer_client_assignments;
+create policy "participant assignment read" on trainer_client_assignments for select to authenticated
+using ((select auth.uid()) = trainer_id or (select auth.uid()) = client_id);
 
 create policy "own profile" on profiles for all using (auth.uid() = id) with check (auth.uid() = id);
 create policy "own workouts" on workouts for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
@@ -281,6 +307,8 @@ to anon, authenticated using (exists (select 1 from workout_catalog w where w.id
 create index if not exists exercise_catalog_muscle_group_idx on exercise_catalog (primary_muscle_group);
 create index if not exists workout_catalog_active_idx on workout_catalog (active, is_free);
 create index if not exists workout_catalog_exercises_workout_idx on workout_catalog_exercises (workout_id, sort_order);
+create index if not exists trainer_client_assignments_trainer_idx on trainer_client_assignments (trainer_id, active);
+create index if not exists trainer_client_assignments_client_idx on trainer_client_assignments (client_id, active);
 
 -- Starter catalogue content. All of these entries are free and safe to expose through the read-only policies above.
 insert into exercise_catalog (slug, name, primary_muscle_group, secondary_muscle_groups, equipment, movement_pattern, difficulty, instructions, is_free)

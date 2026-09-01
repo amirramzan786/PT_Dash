@@ -26,7 +26,14 @@ export async function signUp(email, password) {
   return data
 }
 
-export async function sendPasswordReset(email, redirectTo = window.location.origin) {
+function getAuthRedirectUrl() {
+  const configuredUrl = import.meta.env.VITE_APP_URL
+  if (configuredUrl) return configuredUrl
+  if (typeof window !== 'undefined' && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)) return window.location.origin
+  return 'https://pt-dash.pages.dev'
+}
+
+export async function sendPasswordReset(email, redirectTo = getAuthRedirectUrl()) {
   const client = requireSupabase()
   const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo })
   if (error) throw error
