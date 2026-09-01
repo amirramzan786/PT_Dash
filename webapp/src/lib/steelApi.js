@@ -102,7 +102,7 @@ export async function loadWorkouts(userId) {
 }
 
 async function loadWorkoutCatalog(client) {
-  const { data: workoutRows, error: workoutError } = await client.from('workout_catalog').select('id,slug,name,description,focus,difficulty,duration_min,is_free,active').eq('active', true).eq('is_free', true).order('name')
+  const { data: workoutRows, error: workoutError } = await client.from('workout_catalog').select('id,slug,name,description,focus,goal_tags,equipment,difficulty,duration_min,is_free,active').eq('active', true).eq('is_free', true).order('name')
   if (workoutError) throw workoutError
   if (!workoutRows?.length) return []
   const workoutIds = workoutRows.map((row) => row.id)
@@ -113,6 +113,9 @@ async function loadWorkoutCatalog(client) {
     source: 'catalog',
     name: workout.name,
     focus: workout.focus,
+    goalTags: workout.goal_tags ?? [],
+    equipment: workout.equipment ?? [],
+    difficulty: workout.difficulty,
     duration: workout.duration_min ? `~${workout.duration_min} min` : '~45 min',
     finisher: '5–10 min incline walk',
     exercises: (links ?? []).filter((link) => link.workout_id === workout.id && link.exercise_catalog?.active !== false).map((link) => ({

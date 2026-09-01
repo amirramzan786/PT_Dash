@@ -67,6 +67,39 @@ function currentWeekBounds() {
   return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) }
 }
 
+function normaliseEquipment(value) {
+  return String(value || '').toLowerCase().replace(/s$/, '')
+}
+
+function buildPersonalisedJourney(workouts, preferences) {
+  const available = new Set((preferences.availableEquipment?.length ? preferences.availableEquipment : ['Machines']).map(normaliseEquipment))
+  const goal = preferences.goal || ''
+  const level = preferences.experienceLevel || 'Intermediate'
+  const ranked = workouts.map((workout) => {
+    const required = workout.equipment ?? []
+    const equipmentFit = !required.length || required.every((item) => available.has(normaliseEquipment(item)))
+    const goalFit = (workout.goalTags ?? []).some((tag) => tag.toLowerCase() === goal.toLowerCase())
+    const levelFit = workout.difficulty === level
+    return { workout, score: (equipmentFit ? 5 : -8) + (goalFit ? 4 : 0) + (levelFit ? 2 : 0), equipmentFit }
+  }).sort((a, b) => b.score - a.score || a.workout.name.localeCompare(b.workout.name))
+  const compatible = ranked.filter((item) => item.equipmentFit)
+  const source = compatible.length ? compatible : ranked
+  const days = Math.max(1, Math.min(7, Number(preferences.trainingDays) || 3))
+  return { goal, level, days, workouts: source.slice(0, Math.min(days, source.length)).map((item) => item.workout), hasEquipmentMatch: compatible.length > 0 }
+}
+
+function PersonalisedJourneyCard({ workouts, preferences, navigateToTab, onStartWorkout }) {
+  const journey = buildPersonalisedJourney(workouts, preferences)
+  const goalCopy = {
+    'Lose fat and gain muscle': 'Build strength while keeping your weekly routine moving.',
+    'Build muscle': 'Progressive strength work with enough volume to grow.',
+    'Get stronger': 'Focused strength sessions with steady, repeatable progress.',
+    'Improve fitness': 'A balanced mix of strength and conditioning for better capacity.',
+    'Train consistently': 'Simple sessions designed to make showing up easier.'
+  }[journey.goal] || 'A flexible starting point built around your current preferences.'
+  return <section className="journey-card"><div className="journey-card-header"><div><span className="eyebrow">YOUR STEEL JOURNEY</span><h3>{journey.goal}</h3><p>{goalCopy}</p></div><button type="button" className="text-link" onClick={() => navigateToTab('Settings')}>Edit plan <ChevronRight size={14}/></button></div><div className="journey-summary"><span><strong>{journey.days}</strong> training day{journey.days === 1 ? '' : 's'}</span><span><strong>{journey.level}</strong> level</span><span><strong>{journey.workouts.length}</strong> sessions ready</span></div><div className="journey-plan-list">{journey.workouts.map((workout, index) => <button type="button" key={workout.id} onClick={() => onStartWorkout(workout)}><span className="journey-day">DAY {index + 1}</span><span><strong>{workout.name}</strong><small>{workout.focus || 'Full-body strength'} · {workout.duration}</small></span><ChevronRight size={16}/></button>)}</div>{!journey.hasEquipmentMatch && <small className="journey-note">No exact equipment match was found, so Steel is showing the closest available sessions.</small>}</section>
+}
+
 function nextCheckinDate(checkinDay = 0, submittedAt) {
   const date = new Date()
   date.setHours(0, 0, 0, 0)
@@ -594,6 +627,7 @@ export default function AppV3({ user, onSignOut }) {
 
       {tab === 'Home' && <div className="page-stack home-page-stack">
         <section className="v4-welcome-card"><div className="v4-hero-art"><div className="v4-hero-figure" aria-hidden="true" /></div><div className="v4-hero-copy"><span className="eyebrow">WELCOME BACK,</span><h2>{firstName}</h2><p>You’ve got this. Let’s build something strong today.</p><button type="button" className="hero-checkin-reminder" onClick={() => navigateToTab('Checkin')}><ClipboardCheck size={14}/> Your next check-in is {formatDate(localDateKey(nextCheckin))}</button></div><div className="v4-metric-grid"><article><Dumbbell size={17}/><span>WORKOUTS</span><strong>{stats.sessionCount}</strong><small>Logged</small></article><article><Flame size={17}/><span>STREAK</span><strong>{stats.streakDays || 0}</strong><small>Days</small></article><article><Footprints size={17}/><span>STEPS</span><strong>{todaySteps.toLocaleString('en-GB')}</strong><small>Today</small></article><button type="button" className="v4-metric-link" onClick={() => navigateToTab('Weight')}><Scale size={17}/><span>WEIGHT</span><strong>{latestWeight ? latestWeight.toFixed(1) : '—'}</strong><small>lb</small></button></div></section>
+        <PersonalisedJourneyCard workouts={workouts} preferences={preferences} navigateToTab={navigateToTab} onStartWorkout={openWorkout}/>
         <section className="v4-quick-actions"><div className="section-heading"><div><span className="eyebrow">MAKE IT EASY</span><h3>Quick actions</h3></div></div><div className="v4-action-grid">{workouts[0]&&<button onClick={()=>openWorkout(workouts[0])}><Play/><span>Start workout</span></button>}<button onClick={()=>navigateToTab('MealPlan')}><Salad/><span>Meal plan</span></button><button onClick={()=>navigateToTab('Weight')}><Scale/><span>Log weight</span></button><button onClick={()=>setProgressOpen(true)}><ListChecks/><span>View progress</span></button></div></section>
         <section className={`steel-card movement-card ${stepHistory.length ? '' : 'is-empty'}`}><div className="movement-card-heading"><div><span className="eyebrow">MOVEMENT HISTORY</span><h3>Steps total</h3><span className="metric-label">Last 30 days</span></div><div className="step-total"><strong>{totalSteps.toLocaleString('en-GB')}</strong><small>steps logged</small></div></div><div className="movement-card-meta"><span>Today <strong>{Number(steps.steps || 0).toLocaleString('en-GB')}</strong>{steps.source ? ` · synced from ${steps.source}` : ''}</span><button className="text-link" onClick={() => navigateToTab('Progress')}>View progress <ChevronRight size={14}/></button></div><StepsChart data={stepHistory}/>{!stepHistory.length&&<button className="movement-empty-link" onClick={openSettings}><Settings size={14}/> Connect health data in Settings</button>}</section>
         <section className="home-workout-section"><div className="section-heading"><div><span className="eyebrow">YOUR PROGRAMME</span><h3>Choose a workout</h3></div><button className="text-link" onClick={() => navigateToTab('Plan')}>View all</button></div><div className="workout-tile-stack">{workouts.map((w, i) => <button className="workout-tile" key={w.id} onClick={() => openWorkout(w)}><div className={`tile-art tile-art-${i+1}`}><Dumbbell size={30}/></div><div className="tile-copy"><span className="eyebrow">WORKOUT {i+1}</span><strong>{w.name}</strong><small>{w.exercises.length} exercises · {w.duration}</small></div><span className="tile-arrow"><ChevronRight size={19}/></span></button>)}</div></section>
