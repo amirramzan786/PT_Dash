@@ -67,7 +67,7 @@ export async function sendOnboardingAiMessage({ conversationId, messages, aiData
   if (error) {
     let detail = null
     try { detail = await error.context?.json?.() } catch { /* Use the SDK fallback message. */ }
-    const nextError = new Error(detail?.error || error.message || 'Steel Guide is unavailable right now.')
+    const nextError = new Error(detail?.error || error.message || 'Atlas is unavailable right now.')
     nextError.code = detail?.code || 'AI_UNAVAILABLE'
     throw nextError
   }

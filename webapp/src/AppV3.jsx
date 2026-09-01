@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Activity, ArrowLeft, ArrowRight, Bot, Camera, Check, ChevronDown, ChevronRight, Dumbbell, ExternalLink, Flame,
+  Activity, ArrowLeft, ArrowRight, Camera, Check, ChevronDown, ChevronRight, Dumbbell, ExternalLink, Flame,
   Footprints, HelpCircle, Home, Info, LineChart, LogOut, MessageSquare, MoreHorizontal, Play, RotateCcw, Salad, Save, Scale, Search, Settings,
   Send, ShieldCheck, Sparkles, Target, Trash2, UserRound, Watch, ListChecks, ClipboardCheck, X,
 } from 'lucide-react'
@@ -195,7 +195,7 @@ function OnboardingAiAssistant({ preferences, setPreferences, onComplete, saving
   const [consent, setConsent] = useState(false)
   const [chatStarted, setChatStarted] = useState(false)
   const [conversationId, setConversationId] = useState('')
-  const [messages, setMessages] = useState([{ role: 'assistant', content: 'Tell me what you want to achieve, and I’ll help shape your training and meal preferences one step at a time.', local: true }])
+  const [messages, setMessages] = useState([{ role: 'assistant', content: 'I’m Atlas. Tell me what you want to achieve, and I’ll help shape your training and meal preferences one step at a time.', local: true }])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -223,7 +223,7 @@ function OnboardingAiAssistant({ preferences, setPreferences, onComplete, saving
       setProfile(result.profile || null)
       setReadyToConfirm(Boolean(result.readyToConfirm))
     } catch (nextError) {
-      setError(nextError.message || 'Steel Guide is unavailable. Continue with the guided questions for now.')
+      setError(nextError.message || 'Atlas is unavailable. Continue with the guided questions for now.')
     } finally {
       setBusy(false)
     }
@@ -242,11 +242,11 @@ function OnboardingAiAssistant({ preferences, setPreferences, onComplete, saving
   }
 
   return <>
-    <button type="button" className={`ai-onboarding-launcher ${open ? 'is-open' : ''}`} onClick={() => setOpen((current) => !current)} aria-label={open ? 'Close Steel Guide' : 'Open Steel Guide'} aria-expanded={open}>
-      {open ? <X size={22}/> : <><Sparkles size={18}/><Bot size={23}/><span>Ask Steel Guide</span></>}
+    <button type="button" className={`ai-onboarding-launcher ${open ? 'is-open' : ''}`} onClick={() => setOpen((current) => !current)} aria-label={open ? 'Close Atlas' : 'Open Atlas'} aria-expanded={open}>
+      {open ? <X size={22}/> : <><span className="ai-launcher-mark"><SteelMark size={22} title="Atlas"/></span><span>Ask Atlas</span></>}
     </button>
-    {open && <aside className="ai-onboarding-panel" role="dialog" aria-modal="false" aria-label="Steel Guide onboarding assistant">
-      <header><span className="ai-guide-mark"><Bot size={20}/></span><div><span className="eyebrow">OPTIONAL AI ONBOARDING</span><strong>Steel Guide</strong></div><button type="button" onClick={() => setOpen(false)} aria-label="Close Steel Guide"><X size={18}/></button></header>
+    {open && <aside className="ai-onboarding-panel" role="dialog" aria-modal="false" aria-label="Atlas onboarding assistant">
+      <header><span className="ai-guide-mark"><SteelMark size={23} title="Atlas"/></span><div><span className="eyebrow">AI TRAINING &amp; NUTRITION COACH</span><strong>Atlas</strong></div><button type="button" onClick={() => setOpen(false)} aria-label="Close Atlas"><X size={18}/></button></header>
       {!chatStarted ? <div className="ai-consent-card">
         <div className="ai-consent-heading"><ShieldCheck size={19}/><strong>Choose what you share</strong></div>
         <p>Messages you send here are processed by Google Gemini to generate replies. Don’t include medical records or anything you don’t want sent to Google. You can use the normal questions instead.</p>
@@ -256,12 +256,12 @@ function OnboardingAiAssistant({ preferences, setPreferences, onComplete, saving
       </div> : <>
         <div className="ai-chat-messages" aria-live="polite">
           {messages.map((message, index) => <div className={`ai-chat-message ${message.role}`} key={`${message.role}-${index}`}><span>{message.content}</span></div>)}
-          {busy && <div className="ai-chat-message assistant is-thinking"><span>Steel Guide is thinking…</span></div>}
+          {busy && <div className="ai-chat-message assistant is-thinking"><span>Atlas is thinking…</span></div>}
         </div>
         {messages.length === 1 && <div className="ai-prompt-chips">{suggestedPrompts.map((prompt) => <button type="button" key={prompt} onClick={(event) => sendMessage(event, prompt)}>{prompt}</button>)}</div>}
         {error && <div className="ai-chat-error"><span>{error}</span><small>Your manual setup is still available.</small></div>}
         {profile && <section className="ai-answer-review"><span className="eyebrow">ANSWERS CAPTURED</span><div><strong>{profile.goal || 'Goal pending'}</strong><span>{profile.experienceLevel || 'Level pending'} · {profile.trainingDays || '—'} days · {profile.availableEquipment?.join(', ') || 'Equipment pending'}</span></div><button type="button" onClick={applyAnswers}>Use these answers in the form</button>{readyToConfirm && <button type="button" className="gold-button" disabled={saving} onClick={finishWithAi}>{saving ? 'Building your plan…' : 'Confirm and build my plan'}</button>}</section>}
-        <form className="ai-chat-compose" onSubmit={sendMessage}><label className="sr-only" htmlFor="steel-guide-message">Message Steel Guide</label><textarea id="steel-guide-message" rows="2" maxLength="2000" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Tell Steel Guide about your goal…"/><button type="submit" disabled={!input.trim() || busy} aria-label="Send message"><Send size={18}/></button></form>
+        <form className="ai-chat-compose" onSubmit={sendMessage}><label className="sr-only" htmlFor="atlas-message">Message Atlas</label><textarea id="atlas-message" rows="2" maxLength="2000" value={input} onChange={(event) => setInput(event.target.value)} placeholder="Tell Atlas about your goal…"/><button type="submit" disabled={!input.trim() || busy} aria-label="Send message"><Send size={18}/></button></form>
         <small className="ai-chat-disclaimer">AI guidance can be wrong. Medical concerns need a qualified professional.</small>
       </>}
     </aside>}
@@ -725,8 +725,8 @@ export default function AppV3({ user, onSignOut }) {
 
       {tab === 'Home' && <div className="page-stack home-page-stack">
         <section className="v4-welcome-card"><div className="v4-hero-art"><div className="v4-hero-figure" aria-hidden="true" /></div><div className="v4-hero-copy"><span className="eyebrow">WELCOME BACK,</span><h2>{firstName}</h2><p>You’ve got this. Let’s build something strong today.</p><button type="button" className="hero-checkin-reminder" onClick={() => navigateToTab('Checkin')}><ClipboardCheck size={14}/> Your next check-in is {formatDate(localDateKey(nextCheckin))}</button></div><div className="v4-metric-grid"><article><Dumbbell size={17}/><span>WORKOUTS</span><strong>{stats.sessionCount}</strong><small>Logged</small></article><article><Flame size={17}/><span>STREAK</span><strong>{stats.streakDays || 0}</strong><small>Days</small></article><article><Footprints size={17}/><span>STEPS</span><strong>{todaySteps.toLocaleString('en-GB')}</strong><small>Today</small></article><button type="button" className="v4-metric-link" onClick={() => navigateToTab('Weight')}><Scale size={17}/><span>WEIGHT</span><strong>{latestWeight ? latestWeight.toFixed(1) : '—'}</strong><small>lb</small></button></div></section>
-        <PersonalisedJourneyCard workouts={workouts} preferences={preferences} navigateToTab={navigateToTab} onStartWorkout={openWorkout}/>
         <section className="v4-quick-actions"><div className="section-heading"><div><span className="eyebrow">MAKE IT EASY</span><h3>Quick actions</h3></div></div><div className="v4-action-grid">{workouts[0]&&<button onClick={()=>openWorkout(workouts[0])}><Play/><span>Start workout</span></button>}<button onClick={()=>navigateToTab('MealPlan')}><Salad/><span>Meal plan</span></button><button onClick={()=>navigateToTab('Weight')}><Scale/><span>Log weight</span></button><button onClick={()=>setProgressOpen(true)}><ListChecks/><span>View progress</span></button></div></section>
+        <PersonalisedJourneyCard workouts={workouts} preferences={preferences} navigateToTab={navigateToTab} onStartWorkout={openWorkout}/>
         <section className={`steel-card movement-card ${stepHistory.length ? '' : 'is-empty'}`}><div className="movement-card-heading"><div><span className="eyebrow">MOVEMENT HISTORY</span><h3>Steps total</h3><span className="metric-label">Last 30 days</span></div><div className="step-total"><strong>{totalSteps.toLocaleString('en-GB')}</strong><small>steps logged</small></div></div><div className="movement-card-meta"><span>Today <strong>{Number(steps.steps || 0).toLocaleString('en-GB')}</strong>{steps.source ? ` · synced from ${steps.source}` : ''}</span><button className="text-link" onClick={() => navigateToTab('Progress')}>View progress <ChevronRight size={14}/></button></div><StepsChart data={stepHistory}/>{!stepHistory.length&&<button className="movement-empty-link" onClick={openSettings}><Settings size={14}/> Connect health data in Settings</button>}</section>
         <section className="home-workout-section"><div className="section-heading"><div><span className="eyebrow">YOUR PROGRAMME</span><h3>Choose a workout</h3></div><button className="text-link" onClick={() => navigateToTab('Plan')}>View all</button></div><div className="workout-tile-stack">{workouts.map((w, i) => <button className="workout-tile" key={w.id} onClick={() => openWorkout(w)}><div className={`tile-art tile-art-${i+1}`}><Dumbbell size={30}/></div><div className="tile-copy"><span className="eyebrow">WORKOUT {i+1}</span><strong>{w.name}</strong><small>{w.exercises.length} exercises · {w.duration}</small></div><span className="tile-arrow"><ChevronRight size={19}/></span></button>)}</div></section>
       </div>}

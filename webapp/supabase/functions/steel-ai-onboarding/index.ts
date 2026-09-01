@@ -129,7 +129,7 @@ Deno.serve(async (request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   })
   const { data: userData, error: userError } = await userClient.auth.getUser(accessToken)
-  if (userError || !userData.user) return jsonResponse(origin, { error: 'Please sign in again to use Steel Guide.', code: 'UNAUTHENTICATED' }, 401)
+  if (userError || !userData.user) return jsonResponse(origin, { error: 'Please sign in again to use Atlas.', code: 'UNAUTHENTICATED' }, 401)
 
   let payload: Record<string, unknown>
   try {
@@ -146,7 +146,7 @@ Deno.serve(async (request) => {
     const row = item && typeof item === 'object' ? item as Record<string, unknown> : {}
     return { role: row.role === 'assistant' ? 'assistant' : 'user', content: cleanText(row.content) }
   }).filter((item) => item.content)
-  if (!messages.length || messages.at(-1)?.role !== 'user') return jsonResponse(origin, { error: 'Write a message for Steel Guide first.' }, 400)
+  if (!messages.length || messages.at(-1)?.role !== 'user') return jsonResponse(origin, { error: 'Write a message for Atlas first.' }, 400)
   if (messages.reduce((total, item) => total + item.content.length, 0) > 12000) return jsonResponse(origin, { error: 'This conversation is too long. Start a fresh chat and continue.' }, 413)
 
   const admin = createClient(supabaseUrl, secretKey, { auth: { persistSession: false, autoRefreshToken: false } })
@@ -157,7 +157,7 @@ Deno.serve(async (request) => {
   if ((count || 0) >= DAILY_MESSAGE_LIMIT) return jsonResponse(origin, { error: 'You have reached today’s AI onboarding limit. Your guided setup is still available.', code: 'RATE_LIMITED' }, 429)
 
   const geminiKey = Deno.env.get('GEMINI_API_KEY') || ''
-  if (!geminiKey) return jsonResponse(origin, { error: 'Steel Guide is nearly ready. Continue with the guided questions for now.', code: 'AI_NOT_CONFIGURED' }, 503)
+  if (!geminiKey) return jsonResponse(origin, { error: 'Atlas is nearly ready. Continue with the guided questions for now.', code: 'AI_NOT_CONFIGURED' }, 503)
 
   let conversationId = cleanText(payload.conversationId, 80)
   let conversation: Record<string, unknown> | null = null
@@ -167,7 +167,7 @@ Deno.serve(async (request) => {
     if (!conversation) return jsonResponse(origin, { error: 'This onboarding conversation is no longer available.' }, 404)
   } else {
     const { data, error } = await admin.from('ai_conversations').insert({ user_id: userData.user.id, context: 'onboarding', provider: 'gemini', model: MODEL }).select('id,user_id,context,profile_snapshot').single()
-    if (error || !data) return jsonResponse(origin, { error: 'Steel Guide could not start a private conversation.' }, 500)
+    if (error || !data) return jsonResponse(origin, { error: 'Atlas could not start a private conversation.' }, 500)
     conversation = data
     conversationId = String(data.id)
   }
@@ -181,7 +181,7 @@ Deno.serve(async (request) => {
     admin.from('workout_catalog').select('name,focus,goal_tags,equipment,difficulty,duration_min').eq('active', true).eq('is_free', true).limit(12),
   ])
   const catalogue = JSON.stringify({ exercises: exerciseRows || [], workouts: workoutRows || [] }).slice(0, 12000)
-  const systemPrompt = `You are Steel Guide, Project Steel's concise onboarding assistant. Gather training and meal-plan preferences and explain choices. Ask one focused question at a time. Do not create the final programme or calculate calories or macros; Project Steel code does that after confirmation.
+  const systemPrompt = `You are Atlas, Project Steel's concise AI training and nutrition coach. Gather training and meal-plan preferences and explain choices. Ask one focused question at a time. Do not create the final programme or calculate calories or macros; Project Steel code does that after confirmation.
 
 Only extract details the user clearly states. Allowed goals: ${JSON.stringify(allowedGoals)}. Experience: ${JSON.stringify(allowedExperience)}. Equipment: ${JSON.stringify(allowedEquipment)}. Dietary preferences: ${JSON.stringify(allowedDiets)}. checkinDay uses Monday=0 through Sunday=6. Unknown values must be empty strings, empty arrays, 0, or -1. limitations and allergies may be empty only when the user explicitly says none.
 
@@ -200,7 +200,7 @@ Set readyToConfirm only when goal, experience, equipment, training days, weekly 
   })
   if (!geminiResponse.ok) {
     console.error('Gemini request failed', geminiResponse.status, cleanText(await geminiResponse.text(), 500))
-    return jsonResponse(origin, { error: 'Steel Guide is taking a breather. Continue with the guided questions or try again shortly.', code: 'AI_UNAVAILABLE', conversationId }, 502)
+    return jsonResponse(origin, { error: 'Atlas is taking a breather. Continue with the guided questions or try again shortly.', code: 'AI_UNAVAILABLE', conversationId }, 502)
   }
 
   const geminiData = await geminiResponse.json()
@@ -209,10 +209,10 @@ Set readyToConfirm only when goal, experience, equipment, training days, weekly 
   try {
     output = JSON.parse(outputText)
   } catch {
-    return jsonResponse(origin, { error: 'Steel Guide could not interpret that safely. Please rephrase your answer.', code: 'INVALID_AI_RESPONSE', conversationId }, 502)
+    return jsonResponse(origin, { error: 'Atlas could not interpret that safely. Please rephrase your answer.', code: 'INVALID_AI_RESPONSE', conversationId }, 502)
   }
   const assistantMessage = cleanText(output.message, 4000)
-  if (!assistantMessage) return jsonResponse(origin, { error: 'Steel Guide did not return a usable answer. Please try again.', code: 'INVALID_AI_RESPONSE', conversationId }, 502)
+  if (!assistantMessage) return jsonResponse(origin, { error: 'Atlas did not return a usable answer. Please try again.', code: 'INVALID_AI_RESPONSE', conversationId }, 502)
   const extracted = cleanProfile(output.profile)
   const mergedProfile = mergeProfile((conversation?.profile_snapshot as Record<string, unknown>) || {}, extracted)
   const readyToConfirm = Boolean(output.readyToConfirm) && hasRequiredProfile(mergedProfile)
@@ -226,7 +226,7 @@ Set readyToConfirm only when goal, experience, equipment, training days, weekly 
     extracted_profile: mergedProfile,
     safety_flag: safetyFlag,
   })
-  if (assistantMessageError) return jsonResponse(origin, { error: 'Steel Guide could not save its response securely.' }, 500)
+  if (assistantMessageError) return jsonResponse(origin, { error: 'Atlas could not save its response securely.' }, 500)
   await admin.from('ai_conversations').update({ profile_snapshot: mergedProfile, status: readyToConfirm ? 'completed' : 'active', updated_at: new Date().toISOString() }).eq('id', conversationId).eq('user_id', userData.user.id)
 
   return jsonResponse(origin, { conversationId, message: assistantMessage, profile: mergedProfile, readyToConfirm, safetyFlag, model: MODEL })

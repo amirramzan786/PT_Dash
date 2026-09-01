@@ -584,8 +584,8 @@ button { cursor: pointer; }
   .home-page-stack > .v4-quick-actions,
   .home-page-stack > .v4-progress-section { grid-column: 1 / -1; }
   .home-page-stack > .v4-welcome-card { grid-row: 1; }
-  .home-page-stack > .journey-card { grid-row: 2; }
-  .home-page-stack > .v4-quick-actions { grid-row: 3; }
+  .home-page-stack > .v4-quick-actions { grid-row: 2; }
+  .home-page-stack > .journey-card { grid-row: 3; }
   .home-page-stack > .movement-card { grid-column: 2; grid-row: 4; min-height: 100%; }
   .home-page-stack > .home-workout-section { grid-column: 1; grid-row: 4; }
   .home-page-stack .workout-tile { grid-template-columns: 76px minmax(0,1fr) 34px; }
