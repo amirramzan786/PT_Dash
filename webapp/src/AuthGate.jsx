@@ -39,7 +39,12 @@ export default function AuthGate() {
       } else if (mode === 'signup') {
         const result = await signUp(email.trim(), password)
         if (!result.session) setMessage('Account created. Check your email to confirm, then sign in.')
-      } else await signIn(email.trim(), password)
+      } else {
+        await signIn(email.trim(), password)
+        // A fresh sign-in should always begin at the Home dashboard. Existing
+        // authenticated sessions still keep their current route on refresh.
+        window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#Home`)
+      }
     } catch (error) { setMessage(error.message || 'Unable to continue.') } finally { setBusy(false) }
   }
 
