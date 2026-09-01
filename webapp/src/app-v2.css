@@ -408,6 +408,8 @@ button { cursor: pointer; }
 .journey-plan-list strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .75rem; }
 .journey-plan-list small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--steel-muted); font-size: .65rem; }
 .journey-plan-list svg { color: var(--steel-gold-2); }
+.journey-protection-note { display: flex; align-items: flex-start; gap: 7px; padding: 9px 10px; border: 1px solid rgba(100,204,143,.32); border-radius: 11px; color: #b7d9c4; background: rgba(38,122,75,.11); font-size: .66rem; line-height: 1.4; }
+.journey-protection-note svg { flex: 0 0 auto; margin-top: 1px; color: #75d69d; }
 .journey-note { color: var(--steel-muted); font-size: .65rem; line-height: 1.4; }
 .movement-card { display: grid; gap: 12px; }
 .movement-card-heading { display: flex; justify-content: space-between; align-items: center; gap: 14px; }

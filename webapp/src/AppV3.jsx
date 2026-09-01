@@ -93,6 +93,7 @@ function buildPersonalisedJourney(workouts, preferences) {
 
 function PersonalisedJourneyCard({ workouts, preferences, navigateToTab, onStartWorkout }) {
   const journey = buildPersonalisedJourney(workouts, preferences)
+  const isGeneratedPlan = workouts.some((workout) => workout.source === 'programme')
   const goalCopy = {
     'Lose fat and gain muscle': 'Build strength while keeping your weekly routine moving.',
     'Build muscle': 'Progressive strength work with enough volume to grow.',
@@ -100,7 +101,7 @@ function PersonalisedJourneyCard({ workouts, preferences, navigateToTab, onStart
     'Improve fitness': 'A balanced mix of strength and conditioning for better capacity.',
     'Train consistently': 'Simple sessions designed to make showing up easier.'
   }[journey.goal] || 'A flexible starting point built around your current preferences.'
-  return <section className="journey-card"><div className="journey-card-header"><div><span className="eyebrow">YOUR STEEL JOURNEY</span><h3>{journey.goal}</h3><p>{journey.summary || goalCopy}</p></div><button type="button" className="text-link" onClick={() => navigateToTab('Settings')}>View preferences <ChevronRight size={14}/></button></div><div className="journey-summary"><span><strong>{journey.days}</strong> training day{journey.days === 1 ? '' : 's'}</span><span><strong>{journey.level}</strong> level</span><span><strong>{journey.workouts.length}</strong> sessions ready</span></div><div className="journey-plan-list">{journey.workouts.map((workout, index) => <button type="button" key={workout.id} onClick={() => onStartWorkout(workout)}><span className="journey-day">DAY {index + 1}</span><span><strong>{workout.name}</strong><small>{workout.focus || 'Full-body strength'} · {workout.duration}</small></span><ChevronRight size={16}/></button>)}</div>{!journey.hasEquipmentMatch && <small className="journey-note">No exact equipment match was found, so Steel is showing the closest available sessions.</small>}</section>
+  return <section className="journey-card"><div className="journey-card-header"><div><span className="eyebrow">YOUR STEEL JOURNEY</span><h3>{journey.goal}</h3><p>{journey.summary || goalCopy}</p></div><button type="button" className="text-link" onClick={() => navigateToTab('Settings')}>Review preferences <ChevronRight size={14}/></button></div><div className="journey-summary"><span><strong>{journey.days}</strong> training day{journey.days === 1 ? '' : 's'}</span><span><strong>{journey.level}</strong> level</span><span><strong>{journey.workouts.length}</strong> sessions ready</span></div><div className="journey-plan-list">{journey.workouts.map((workout, index) => <button type="button" key={workout.id} onClick={() => onStartWorkout(workout)}><span className="journey-day">DAY {index + 1}</span><span><strong>{workout.name}</strong><small>{workout.focus || 'Full-body strength'} · {workout.duration}</small></span><ChevronRight size={16}/></button>)}</div>{isGeneratedPlan && <small className="journey-protection-note"><ShieldCheck size={14}/> Your active plan stays stable while you train. Preference changes are saved for your next planned review.</small>}{!journey.hasEquipmentMatch && <small className="journey-note">No exact equipment match was found, so Steel is showing the closest available sessions.</small>}</section>
 }
 
 function nextCheckinDate(checkinDay = 0, submittedAt) {
@@ -655,6 +656,20 @@ export default function AppV3({ user, onSignOut }) {
   const activeExercises = selectedWorkout && draft ? selectedWorkout.exercises.filter((e) => !draft.removedExercises.includes(e.id)) : []
   const atFinisher = Boolean(draft && draft.step >= activeExercises.length)
   const currentExercise = draft && !atFinisher ? activeExercises[draft.step] : null
+  useEffect(() => {
+    if (!atFinisher || !draft) return
+    const panel = document.querySelector('.finisher-panel')
+    if (!panel) return
+    const title = panel.querySelector('h2')
+    const detail = panel.querySelector('p')
+    if (draft.cardio) {
+      if (title) title.textContent = draft.cardio.activity
+      if (detail) detail.textContent = `${draft.cardio.minutes} min · RPE ${draft.cardio.rpe}`
+    } else {
+      if (title) title.textContent = 'No cardio prescribed'
+      if (detail) detail.textContent = 'Your personalised strength work is complete. Save the session when you are ready.'
+    }
+  }, [atFinisher, draft])
   const currentExerciseName = currentExercise?.name?.trim().toLowerCase()
   const firstName = (profile?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'there').split(' ')[0]
   const accountName = profile?.display_name || user.user_metadata?.full_name || firstName
