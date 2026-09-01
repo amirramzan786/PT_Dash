@@ -305,6 +305,61 @@ button { cursor: pointer; }
 .nutrition-placeholder-grid .steel-card { display: grid; gap: 7px; }
 .nutrition-placeholder-grid svg { color: var(--steel-gold); }
 .nutrition-placeholder-grid span { color: var(--steel-muted); font-size: .7rem; line-height: 1.4; }
+.nutrition-macro-board { border: 1px solid var(--steel-line); border-radius: 18px; background: #101720; padding: 15px; display: grid; gap: 15px; }
+.nutrition-board-heading { display: flex; justify-content: space-between; gap: 12px; align-items: end; }
+.nutrition-board-heading > div { display: grid; gap: 4px; }
+.nutrition-board-heading strong { color: var(--steel-gold-2); font-size: 1.45rem; }
+.nutrition-board-heading strong small, .nutrition-board-heading > span { color: var(--steel-muted); font-size: .7rem; font-weight: 700; }
+.nutrition-board-heading > span { text-align: right; }
+.nutrition-macro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.nutrition-macro-grid > div { min-width: 0; display: grid; gap: 5px; }
+.nutrition-macro-grid span { color: var(--steel-muted); font-size: .63rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.nutrition-macro-grid strong { font-size: .88rem; color: #eef0f2; white-space: nowrap; }
+.nutrition-macro-grid strong small { color: var(--steel-muted); font-size: .65rem; }
+.nutrition-macro-grid i { display: block; height: 6px; overflow: hidden; border-radius: 999px; background: #27313b; }
+.nutrition-macro-grid b { display: block; height: 100%; min-width: 6px; border-radius: inherit; background: linear-gradient(90deg,#d29d35,#f2c660); }
+.nutrition-custom-form { display: grid; gap: 13px; padding: 16px; }
+.nutrition-custom-form h3 { margin: 3px 0; }
+.nutrition-custom-form p { color: var(--steel-muted); font-size: .76rem; margin: 0; }
+.nutrition-custom-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.nutrition-custom-grid label, .nutrition-portion-row label { display: grid; gap: 5px; }
+.nutrition-custom-grid label span, .nutrition-portion-row label span { font-size: .66rem; font-weight: 900; color: var(--steel-muted); letter-spacing: .07em; text-transform: uppercase; }
+.nutrition-custom-grid input, .nutrition-custom-grid select, .nutrition-portion-row select { width: 100%; min-height: 43px; color: #f6f7f8; background: #0a1017; border: 1px solid #35404c; border-radius: 11px; padding: 0 10px; font: inherit; font-size: .8rem; }
+.nutrition-custom-grid label:nth-child(2) { grid-column: span 1; }
+.nutrition-custom-form .gold-button { justify-self: start; }
+.nutrition-meal-card { position: relative; display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 11px; align-items: center; padding: 14px; }
+.nutrition-meal-card.is-expanded { grid-template-columns: 38px minmax(0, 1fr) auto; }
+.nutrition-meal-card.is-logged { border-color: #5e704f; }
+.nutrition-meal-icon { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--steel-gold-dark); border-radius: 11px; color: var(--steel-gold); background: #211b11; }
+.nutrition-recipe-copy { min-width: 0; display: grid; gap: 3px; }
+.nutrition-recipe-copy h3 { margin: 0; font-size: .93rem; }
+.nutrition-recipe-copy p { color: var(--steel-muted); margin: 0; font-size: .72rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.nutrition-recipe-copy small { color: #c8ced5; font-size: .67rem; line-height: 1.35; }
+.nutrition-meal-actions { display: grid; gap: 6px; }
+.nutrition-details-button, .nutrition-log-button { min-height: 33px; border-radius: 9px; padding: 0 9px; white-space: nowrap; font-weight: 850; font-size: .68rem; }
+.nutrition-details-button { color: #c4ccd4; border: 1px solid #36414c; background: #111923; }
+.nutrition-log-button { color: #17130a; border: 1px solid var(--steel-gold); background: var(--steel-gold); }
+.nutrition-log-button:disabled { opacity: .55; }
+.nutrition-choice-panel { grid-column: 1 / -1; border-top: 1px solid #2b3540; margin-top: 2px; padding-top: 12px; display: grid; gap: 12px; }
+.nutrition-choice-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.nutrition-choice-list button { min-height: 72px; padding: 9px; text-align: left; display: grid; gap: 4px; align-content: center; border: 1px solid #34404b; border-radius: 12px; background: #0c131c; color: #f0f2f4; }
+.nutrition-choice-list button.active { border-color: var(--steel-gold-dark); background: linear-gradient(145deg,#2a2417,#141b23); }
+.nutrition-choice-list strong { font-size: .69rem; line-height: 1.25; }
+.nutrition-choice-list span { color: var(--steel-muted); font-size: .61rem; line-height: 1.25; }
+.nutrition-portion-row { display: grid; grid-template-columns: minmax(130px, .45fr) 1fr; gap: 12px; align-items: start; }
+.recipe-detail { display: grid; gap: 4px; color: var(--steel-muted); font-size: .7rem; line-height: 1.45; }
+.recipe-detail strong { color: #d9dee2; font-size: .69rem; margin-top: 2px; }
+.nutrition-custom-log-list { display: grid; gap: 9px; }
+.nutrition-custom-log { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 14px; }
+.nutrition-custom-log > div { display: grid; gap: 4px; min-width: 0; }
+.nutrition-custom-log strong { color: #f2f3f4; font-size: .84rem; }
+.nutrition-custom-log small { color: var(--steel-muted); font-size: .66rem; }
+.nutrition-custom-log button { border: 1px solid #55404a; color: #efadb4; background: #27191e; border-radius: 9px; min-height: 34px; padding: 0 9px; display: inline-flex; align-items: center; gap: 5px; font-size: .67rem; font-weight: 800; }
+@media (max-width: 620px) {
+  .nutrition-choice-list { grid-template-columns: 1fr; }
+  .nutrition-choice-list button { min-height: 52px; grid-template-columns: 1fr auto; align-items: center; }
+  .nutrition-portion-row { grid-template-columns: 1fr; }
+}
 
 .progress-hero-card { border: 1px solid var(--steel-gold-dark); border-radius: 21px; padding: 17px; background: linear-gradient(145deg,#1a170f,#101720); }
 .progress-metric strong { display: block; font-size: 2rem; margin: 6px 0 2px; }

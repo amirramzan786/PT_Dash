@@ -365,7 +365,7 @@ export async function getNutritionPlan(userId) {
   const client = requireSupabase()
   const [targetResult, mealsResult] = await Promise.all([
     client.from('nutrition_targets').select('calories,protein_g').eq('user_id', userId).eq('active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-    client.from('meal_plan_items').select('id,meal_type,title,description,calories,protein_g,carbs_g,fat_g,serving_g,sort_order').eq('user_id', userId).eq('active', true).order('sort_order').order('created_at'),
+    client.from('meal_plan_items').select('id,meal_type,title,description,ingredients,instructions,option_key,option_number,calories,protein_g,carbs_g,fat_g,serving_g,sort_order').eq('user_id', userId).eq('active', true).order('sort_order').order('option_number').order('created_at'),
   ])
   if (targetResult.error) throw targetResult.error
   if (mealsResult.error) throw mealsResult.error
@@ -374,9 +374,9 @@ export async function getNutritionPlan(userId) {
 
 export async function saveMealPlanItem({ userId, item }) {
   const client = requireSupabase()
-  const payload = { user_id: userId, meal_type: item.meal, title: item.name, description: item.detail || null, calories: Number(item.calories) || 0, protein_g: Number(item.protein) || 0, carbs_g: Number(item.carbs) || 0, fat_g: Number(item.fat) || 0, serving_g: Number(item.servingG) || 0, sort_order: Number(item.sortOrder) || 0, active: true }
+  const payload = { user_id: userId, meal_type: item.meal, title: item.name, description: item.detail || null, ingredients: item.ingredients || [], instructions: item.instructions || null, option_key: item.optionKey || 'primary', option_number: Number(item.optionNumber) || 1, calories: Number(item.calories) || 0, protein_g: Number(item.protein) || 0, carbs_g: Number(item.carbs) || 0, fat_g: Number(item.fat) || 0, serving_g: Number(item.servingG) || 0, sort_order: Number(item.sortOrder) || 0, active: true }
   const query = item.id ? client.from('meal_plan_items').update(payload).eq('id', item.id).eq('user_id', userId) : client.from('meal_plan_items').insert(payload)
-  const { data, error } = await query.select('id,meal_type,title,description,calories,protein_g,carbs_g,fat_g,serving_g,sort_order').single()
+  const { data, error } = await query.select('id,meal_type,title,description,ingredients,instructions,option_key,option_number,calories,protein_g,carbs_g,fat_g,serving_g,sort_order').single()
   if (error) throw error
   return data
 }
@@ -410,21 +410,25 @@ export async function saveWeeklyCheckin({ userId, weekStart, energy, sleep, stre
 
 export async function getMealLogs(userId, startDate, endDate) {
   const client = requireSupabase()
-  const { data, error } = await client.from('meal_logs').select('id,meal_date,meal_type,recipe_name,calories,protein_g,carbs_g,fat_g,serving_g').eq('user_id', userId).gte('meal_date', startDate).lte('meal_date', endDate).order('meal_date', { ascending: false })
+  const { data, error } = await client.from('meal_logs').select('id,meal_date,meal_type,meal_plan_item_id,entry_type,recipe_name,calories,protein_g,carbs_g,fat_g,serving_g,portion_multiplier,notes,created_at').eq('user_id', userId).gte('meal_date', startDate).lte('meal_date', endDate).order('meal_date', { ascending: false }).order('created_at')
   if (error) throw error
   return data ?? []
 }
 
-export async function saveMealLog({ userId, mealDate, mealType, recipeName, calories, protein, carbs, fat, servingG }) {
+export async function saveMealLog({ id, userId, mealDate, mealType, mealPlanItemId, entryType = 'planned', recipeName, calories, protein, carbs, fat, servingG, portionMultiplier = 1, notes }) {
   const client = requireSupabase()
-  const { data, error } = await client.from('meal_logs').upsert({ user_id: userId, meal_date: mealDate, meal_type: mealType, recipe_name: recipeName || null, calories: Number(calories) || 0, protein_g: Number(protein) || 0, carbs_g: Number(carbs) || 0, fat_g: Number(fat) || 0, serving_g: Number(servingG) || null }, { onConflict: 'user_id,meal_date,meal_type' }).select().single()
+  const payload = { user_id: userId, meal_date: mealDate, meal_type: mealType, meal_plan_item_id: mealPlanItemId || null, entry_type: entryType, recipe_name: recipeName || null, calories: Number(calories) || 0, protein_g: Number(protein) || 0, carbs_g: Number(carbs) || 0, fat_g: Number(fat) || 0, serving_g: Number(servingG) || null, portion_multiplier: Number(portionMultiplier) || 1, notes: notes || null }
+  const query = id ? client.from('meal_logs').update(payload).eq('id', id).eq('user_id', userId) : client.from('meal_logs').insert(payload)
+  const { data, error } = await query.select('id,meal_date,meal_type,meal_plan_item_id,entry_type,recipe_name,calories,protein_g,carbs_g,fat_g,serving_g,portion_multiplier,notes,created_at').single()
   if (error) throw error
   return data
 }
 
-export async function deleteMealLog({ userId, mealDate, mealType }) {
+export async function deleteMealLog({ userId, id, mealDate, mealType }) {
   const client = requireSupabase()
-  const { error } = await client.from('meal_logs').delete().eq('user_id', userId).eq('meal_date', mealDate).eq('meal_type', mealType)
+  let query = client.from('meal_logs').delete().eq('user_id', userId)
+  query = id ? query.eq('id', id) : query.eq('meal_date', mealDate).eq('meal_type', mealType)
+  const { error } = await query
   if (error) throw error
 }
 

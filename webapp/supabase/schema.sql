@@ -135,6 +135,10 @@ create table if not exists meal_plan_items (
   meal_type text not null,
   title text not null,
   description text,
+  ingredients jsonb not null default '[]'::jsonb,
+  instructions text,
+  option_key text not null default 'primary',
+  option_number smallint not null default 1 check (option_number between 1 and 8),
   calories integer,
   protein_g integer,
   carbs_g integer,
@@ -175,14 +179,17 @@ create table if not exists meal_logs (
   user_id uuid not null references auth.users(id) on delete cascade,
   meal_date date not null,
   meal_type text not null,
+  meal_plan_item_id uuid references meal_plan_items(id) on delete set null,
+  entry_type text not null default 'planned' check (entry_type in ('planned','custom')),
   recipe_name text,
   calories integer,
   protein_g integer,
   carbs_g integer,
   fat_g integer,
   serving_g numeric(7,1),
-  created_at timestamptz not null default now(),
-  unique (user_id, meal_date, meal_type)
+  portion_multiplier numeric(4,2) not null default 1 check (portion_multiplier > 0 and portion_multiplier <= 10),
+  notes text,
+  created_at timestamptz not null default now()
 );
 
 create table if not exists weekly_checkin_media (
