@@ -12,6 +12,13 @@ export async function getCurrentUser() {
   return data?.user ?? null
 }
 
+export async function loadUserRole(userId) {
+  const client = requireSupabase()
+  const { data, error } = await client.from('user_roles').select('role').eq('user_id', userId).maybeSingle()
+  if (error) throw error
+  return data?.role || 'user'
+}
+
 export async function signIn(email, password) {
   const client = requireSupabase()
   const { data, error } = await client.auth.signInWithPassword({ email, password })
@@ -377,7 +384,7 @@ export async function saveProfile(userId, { displayName, phone, goal, avatarUrl,
   return data
 }
 
-// Temporary self-service test control; replace with server-side role policies before wider admin access.
+// The UI visibility is role-backed; the profile update remains owner-scoped by RLS.
 export async function resetOnboarding(userId) {
   return saveProfile(userId, { onboardingCompleted: false })
 }

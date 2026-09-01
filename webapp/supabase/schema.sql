@@ -372,3 +372,60 @@ with links(workout_slug, exercise_slug, sort_order, sets, rep_target, rest_secon
 insert into workout_catalog_exercises (workout_id, exercise_id, sort_order, sets, rep_target, rest_seconds)
 select w.id, e.id, l.sort_order, l.sets, l.rep_target, l.rest_seconds from links l join workout_catalog w on w.slug = l.workout_slug join exercise_catalog e on e.slug = l.exercise_slug
 on conflict (workout_id, exercise_id) do update set sort_order = excluded.sort_order, sets = excluded.sets, rep_target = excluded.rep_target, rest_seconds = excluded.rest_seconds;
+
+-- Role-backed access for the future trainer dashboard. Helper functions remain
+-- in the non-exposed private schema and are executable only by signed-in users.
+create schema if not exists private;
+
+create or replace function private.is_admin()
+returns boolean language sql stable security definer
+set search_path = public, pg_catalog
+as $$ select exists (select 1 from public.user_roles where user_id = (select auth.uid()) and role = 'admin'); $$;
+
+create or replace function private.is_trainer_for(target_user_id uuid)
+returns boolean language sql stable security definer
+set search_path = public, pg_catalog
+as $$ select exists (select 1 from public.trainer_client_assignments where trainer_id = (select auth.uid()) and client_id = target_user_id and active = true); $$;
+
+revoke all on function private.is_admin() from public;
+revoke all on function private.is_trainer_for(uuid) from public;
+grant execute on function private.is_admin() to authenticated;
+grant execute on function private.is_trainer_for(uuid) to authenticated;
+
+drop policy if exists "admin read roles" on user_roles;
+create policy "admin read roles" on user_roles for select to authenticated using (private.is_admin());
+drop policy if exists "admin read assignments" on trainer_client_assignments;
+create policy "admin read assignments" on trainer_client_assignments for select to authenticated using (private.is_admin());
+
+drop policy if exists "trainer read assigned profiles" on profiles;
+create policy "trainer read assigned profiles" on profiles for select to authenticated using (private.is_admin() or private.is_trainer_for(id));
+drop policy if exists "trainer read assigned workouts" on workouts;
+create policy "trainer read assigned workouts" on workouts for select to authenticated using (private.is_admin() or private.is_trainer_for(user_id));
+drop policy if exists "trainer read assigned exercises" on exercises;
+create policy "trainer read assigned exercises" on exercises for select to authenticated using (private.is_admin() or private.is_trainer_for(user_id));
+drop policy if exists "trainer read assigned sessions" on sessions;
+create policy "trainer read assigned sessions" on sessions for select to authenticated using (private.is_admin() or private.is_trainer_for(user_id));
+drop policy if exists "trainer read assigned weights" on weight_checkins;
+create policy "trainer read assigned weights" on weight_checkins for select to authenticated using (private.is_admin() or private.is_trainer_for(user_id));
+drop policy if exists "trainer read assigned nutrition targets" on nutrition_targets;
+create policy "trainer read assigned nutrition targets" on nutrition_targets for select to authenticated using (private.is_admin() or private.is_trainer_for(user_id));
+drop policy if exists "trainer read assigned meal plans" on meal_plan_items;
+create policy "trainer read assigned meal plans" on meal_plan_items for select to authenticated using (private.is_admin() or private.is_trainer_for(user_id));
+drop policy if exists "trainer read assigned checkins" on weekly_checkins;
+create policy "trainer read assigned checkins" on weekly_checkins for select to authenticated using (private.is_admin() or private.is_trainer_for(user_id));
+drop policy if exists "trainer read assigned meal logs" on meal_logs;
+create policy "trainer read assigned meal logs" on meal_logs for select to authenticated using (private.is_admin() or private.is_trainer_for(user_id));
+drop policy if exists "trainer read assigned checkin media" on weekly_checkin_media;
+create policy "trainer read assigned checkin media" on weekly_checkin_media for select to authenticated using (private.is_admin() or private.is_trainer_for(user_id));
+drop policy if exists "trainer read assigned workout exercises" on workout_exercises;
+create policy "trainer read assigned workout exercises" on workout_exercises for select to authenticated using (private.is_admin() or exists (select 1 from workouts w where w.id = workout_id and private.is_trainer_for(w.user_id)));
+drop policy if exists "trainer read assigned set logs" on set_logs;
+create policy "trainer read assigned set logs" on set_logs for select to authenticated using (private.is_admin() or exists (select 1 from sessions s where s.id = session_id and private.is_trainer_for(s.user_id)));
+drop policy if exists "trainer read assigned cardio logs" on cardio_logs;
+create policy "trainer read assigned cardio logs" on cardio_logs for select to authenticated using (private.is_admin() or exists (select 1 from sessions s where s.id = session_id and private.is_trainer_for(s.user_id)));
+drop policy if exists "trainer read assigned checkin media files" on storage.objects;
+create policy "trainer read assigned checkin media files" on storage.objects for select to authenticated using (bucket_id = 'checkin-media' and (private.is_admin() or private.is_trainer_for(((storage.foldername(name))[1])::uuid)));
+
+insert into user_roles (user_id, role)
+select id, 'admin' from auth.users where lower(email) = 'ramzan_amir@hotmail.com'
+on conflict (user_id) do update set role = excluded.role;
