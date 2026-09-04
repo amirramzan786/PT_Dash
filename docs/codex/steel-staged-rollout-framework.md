@@ -108,6 +108,27 @@ Purpose:
 
 This stage may be smaller or larger depending on data. User count is a ceiling/working target, not a reason to advance automatically.
 
+**Release Candidate 500 is the final formal user-count cohort.** Steel should not continue indefinitely with artificial 1,000 → 2,000 → 5,000 user gates.
+
+If Release Candidate evidence is strong enough, the next step is Public Launch.
+
+## End of staggered user-count rollout
+The staged rollout ends after the Release Candidate stage.
+
+Working path:
+
+**20 Alpha → 50 Beta → 100 Extended Beta → 250 Controlled Early Access → 500 Release Candidate → Public Launch**
+
+After Public Launch:
+- there is no fixed overall user cap;
+- new customers can join normally;
+- Steel continues measuring activation, retention, conversion, churn, support burden and reliability;
+- risky new features may still use feature flags, internal testing, canary releases or limited percentage rollouts;
+- individual features may be rolled out gradually, but the whole product should not return to permanent user-count cohorts;
+- critical incidents may justify temporarily pausing new signups, but this is an operational safeguard rather than a new testing stage.
+
+This separates **product launch maturity** from **safe software release practices**. Public launch does not mean every future feature is released to 100% of users immediately.
+
 ## Stage 6 — Public Launch
 No fixed user cap.
 
@@ -124,7 +145,7 @@ Minimum strategic requirements before unrestricted launch:
 8. analytics are capable of measuring activation, retention and conversion
 
 ## Advancement rule
-Every stage ends with one of three decisions:
+Every pre-launch stage ends with one of three decisions:
 
 ### GO
 Expand to the next cohort because product stability, user value and usage evidence are strong enough.
@@ -136,11 +157,9 @@ Hold the current cohort size while specific problems are fixed or tested again.
 Do not keep scaling a weak proposition. Reassess the target customer, product proposition or commercial model before spending more build effort.
 
 ## Important interpretation
-The cohort numbers are deliberate working gates:
+The cohort numbers are deliberate working gates, not permanent operating limits.
 
-**20 Alpha → 50 Beta → 100 Extended Beta → 250 Controlled Early Access → 500 Release Candidate → Public Launch**
-
-They are not rigid vanity milestones. Steel advances when the evidence supports it, not simply because the previous cohort filled up.
+They are not rigid vanity milestones. Steel advances when the evidence supports it, not simply because the previous cohort filled up. Once the Release Candidate gate is passed, staggered user-count testing is complete and Steel enters normal public operation.
 
 ## Relationship to Founding 20
 The first 20 users remain a distinct founding cohort and should retain visible Founder recognition and their promised lifetime core Premium entitlement.
