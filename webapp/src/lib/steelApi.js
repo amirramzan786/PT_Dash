@@ -1,8 +1,15 @@
 import { supabase, supabaseConfigured } from './supabase'
+import { localDay, validateSteps, preferredSteps, dailyStepHistory } from './steps'
+import { normalizeReminders } from './reminders'
 
 function requireSupabase() {
   if (!supabaseConfigured || !supabase) throw new Error('Supabase is not configured')
   return supabase
+}
+
+function hasPendingSnackPreferenceMigration(error) {
+  const detail = `${error?.message || ''} ${error?.details || ''}`.toLowerCase()
+  return error?.code === '42703' || (detail.includes('snacks_enabled') || detail.includes('snack_preferences'))
 }
 
 export async function getCurrentUser() {
@@ -349,7 +356,13 @@ export async function saveWeight(userId, checkinDate, weightLb) {
 
 export async function getProfile(userId) {
   const client = requireSupabase()
-  const { data, error } = await client.from('profiles').select('id,display_name,phone,goal,avatar_url,experience_level,available_equipment,training_days,checkin_day,units,limitations,onboarding_completed,dietary_preference,allergies,meals_per_day,created_at,updated_at').eq('id', userId).maybeSingle()
+  const profileColumns = 'id,display_name,phone,goal,avatar_url,experience_level,available_equipment,training_days,checkin_day,units,limitations,onboarding_completed,dietary_preference,allergies,meals_per_day,notification_preferences,created_at,updated_at'
+  let { data, error } = await client.from('profiles').select(`${profileColumns},snacks_enabled,snack_preferences`).eq('id', userId).maybeSingle()
+  if (error && hasPendingSnackPreferenceMigration(error)) {
+    const legacy = await client.from('profiles').select(profileColumns).eq('id', userId).maybeSingle()
+    data = legacy.data ? { ...legacy.data, snacks_enabled: true, snack_preferences: [] } : null
+    error = legacy.error
+  }
   if (error) throw error
   return data
 }
@@ -432,6 +445,128 @@ export async function deleteMealLog({ userId, id, mealDate, mealType }) {
   if (error) throw error
 }
 
+const nutritionFoodFields = 'id,user_id,source,provider_food_id,barcode,name,brand,image_url,default_serving_label,default_serving_g,calories_per_100g,protein_g_per_100g,carbs_g_per_100g,fat_g_per_100g,fibre_g_per_100g,sugar_g_per_100g,salt_g_per_100g,verified_at'
+
+function nutritionFoodFilter(value) {
+  return String(value || '').replace(/[,%()]/g, ' ').trim().slice(0, 80)
+}
+
+export async function searchNutritionFoods(query) {
+  const client = requireSupabase()
+  const term = nutritionFoodFilter(query)
+  let request = client.from('nutrition_foods').select(nutritionFoodFields).order('name').limit(24)
+  if (term) request = request.or(`name.ilike.%${term}%,brand.ilike.%${term}%`)
+  const { data, error } = await request
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getNutritionFoodByBarcode(barcode) {
+  const client = requireSupabase()
+  const code = String(barcode || '').replace(/[^0-9]/g, '')
+  if (code.length < 8) throw new Error('Enter a valid product barcode.')
+  const { data, error } = await client.from('nutrition_foods').select(nutritionFoodFields).eq('barcode', code).limit(1).maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error('That barcode is not in Steel’s catalogue yet. Add it from the nutrition label instead.')
+  return data
+}
+
+export async function getNutritionFoodServings(foodId) {
+  const client = requireSupabase()
+  const { data, error } = await client.from('nutrition_food_servings').select('id,label,grams,sort_order,is_default').eq('food_id', foodId).order('sort_order').order('created_at')
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getNutritionFavouriteFoods(userId) {
+  const client = requireSupabase()
+  const { data: preferences, error: preferenceError } = await client.from('nutrition_food_preferences').select('food_id,last_used_at,use_count,created_at').eq('user_id', userId).eq('is_favourite', true).order('last_used_at', { ascending: false })
+  if (preferenceError) throw preferenceError
+  const foodIds = (preferences ?? []).map((row) => row.food_id)
+  if (!foodIds.length) return []
+  const { data: foods, error } = await client.from('nutrition_foods').select(nutritionFoodFields).in('id', foodIds)
+  if (error) throw error
+  const byId = new Map((foods ?? []).map((food) => [food.id, food]))
+  return foodIds.map((id) => byId.get(id)).filter(Boolean)
+}
+
+export async function getNutritionRecentFoods() {
+  const client = requireSupabase()
+  const { data: items, error: itemsError } = await client
+    .from('nutrition_meal_log_items')
+    .select('food_id,created_at')
+    .order('created_at', { ascending: false })
+    .limit(48)
+  if (itemsError) throw itemsError
+
+  const foodIds = [...new Set((items ?? []).map((item) => item.food_id).filter(Boolean))].slice(0, 16)
+  if (!foodIds.length) return []
+  const { data: foods, error } = await client.from('nutrition_foods').select(nutritionFoodFields).in('id', foodIds)
+  if (error) throw error
+  const byId = new Map((foods ?? []).map((food) => [food.id, food]))
+  return foodIds.map((id) => byId.get(id)).filter(Boolean)
+}
+
+export async function setNutritionFoodFavourite({ userId, foodId, favourite }) {
+  const client = requireSupabase()
+  if (!favourite) {
+    const { error } = await client.from('nutrition_food_preferences').delete().eq('user_id', userId).eq('food_id', foodId)
+    if (error) throw error
+    return
+  }
+  const { error } = await client.from('nutrition_food_preferences').upsert({ user_id: userId, food_id: foodId, is_favourite: true }, { onConflict: 'user_id,food_id' })
+  if (error) throw error
+}
+
+export async function saveNutritionFoodEntry({ mealDate, mealType, food, grams, servingLabel }) {
+  const client = requireSupabase()
+  const multiplier = Math.max(0, Number(grams) || 0) / 100
+  const item = {
+    foodId: food.id,
+    name: food.name,
+    brand: food.brand || '',
+    servingLabel: servingLabel || `${grams}g`,
+    grams: Number(grams) || 0,
+    calories: Number(food.calories_per_100g || 0) * multiplier,
+    protein: Number(food.protein_g_per_100g || 0) * multiplier,
+    carbs: Number(food.carbs_g_per_100g || 0) * multiplier,
+    fat: Number(food.fat_g_per_100g || 0) * multiplier,
+    fibre: Number(food.fibre_g_per_100g || 0) * multiplier,
+    sugar: Number(food.sugar_g_per_100g || 0) * multiplier,
+    salt: Number(food.salt_g_per_100g || 0) * multiplier,
+  }
+  const { data, error } = await client.rpc('save_nutrition_meal_entry', { p_entry: { mealDate, mealType, entryType: 'food', recipeName: food.name, notes: food.source }, p_items: [item] })
+  if (error) throw error
+  return data
+}
+
+// Planned meals use the same server-side writer as the diary so every component
+// remains a real, catalogue-backed food entry rather than a client-side macro total.
+export async function saveNutritionMealComponents({ mealDate, mealType, recipeName, notes, items }) {
+  const client = requireSupabase()
+  const components = (items ?? []).filter((item) => item.foodId && Number(item.grams) > 0).map((item) => {
+    const multiplier = Number(item.grams) / 100
+    return {
+      foodId: item.foodId,
+      name: item.name,
+      brand: item.brand || '',
+      servingLabel: item.servingLabel || `${item.grams}g`,
+      grams: Number(item.grams),
+      calories: Number(item.caloriesPer100 || 0) * multiplier,
+      protein: Number(item.proteinPer100 || 0) * multiplier,
+      carbs: Number(item.carbsPer100 || 0) * multiplier,
+      fat: Number(item.fatPer100 || 0) * multiplier,
+      fibre: Number(item.fibrePer100 || 0) * multiplier,
+      sugar: Number(item.sugarPer100 || 0) * multiplier,
+      salt: Number(item.saltPer100 || 0) * multiplier,
+    }
+  })
+  if (!components.length) throw new Error('Add at least one catalogue food before logging this meal.')
+  const { data, error } = await client.rpc('save_nutrition_meal_entry', { p_entry: { mealDate, mealType, entryType: 'planned', recipeName, notes: notes || 'Steel meal plan' }, p_items: components })
+  if (error) throw error
+  return data
+}
+
 export async function getWeeklyActivitySummary(userId, weekStart, weekEnd) {
   const client = requireSupabase()
   const [sessionsResult, mealsResult] = await Promise.all([
@@ -465,7 +600,7 @@ export async function uploadCheckinMedia({ userId, weekStart, file, mediaType = 
   return data
 }
 
-export async function saveProfile(userId, { displayName, phone, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, checkinDay, units, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay }) {
+export async function saveProfile(userId, { displayName, phone, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, checkinDay, units, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay, snacksEnabled, snackPreferences }) {
   const client = requireSupabase()
   const payload = { id: userId, display_name: displayName || null, goal: goal || 'Lose fat and gain muscle', updated_at: new Date().toISOString() }
   if (avatarUrl !== undefined) payload.avatar_url = avatarUrl || null
@@ -480,7 +615,14 @@ export async function saveProfile(userId, { displayName, phone, goal, avatarUrl,
   if (dietaryPreference !== undefined) payload.dietary_preference = dietaryPreference
   if (allergies !== undefined) payload.allergies = allergies || null
   if (mealsPerDay !== undefined) payload.meals_per_day = mealsPerDay
-  const { data, error } = await client.from('profiles').upsert(payload, { onConflict: 'id' }).select().single()
+  if (snacksEnabled !== undefined) payload.snacks_enabled = snacksEnabled === true
+  if (snackPreferences !== undefined) payload.snack_preferences = Array.isArray(snackPreferences) ? snackPreferences : []
+  let { data, error } = await client.from('profiles').upsert(payload, { onConflict: 'id' }).select().single()
+  if (error && hasPendingSnackPreferenceMigration(error)) {
+    delete payload.snacks_enabled
+    delete payload.snack_preferences
+    ;({ data, error } = await client.from('profiles').upsert(payload, { onConflict: 'id' }).select().single())
+  }
   if (error) throw error
   return data
 }
@@ -547,17 +689,34 @@ export async function uploadAvatar(userId, file) {
 
 export async function getTodaySteps(userId) {
   const client = requireSupabase()
-  const today = new Date().toISOString().slice(0, 10)
-  const { data, error } = await client.from('daily_steps').select('steps,source,synced_at').eq('user_id', userId).eq('step_date', today).order('synced_at', { ascending: false }).limit(1)
+  const today = localDay()
+  const { data, error } = await client.from('daily_steps').select('steps,source,synced_at').eq('user_id', userId).eq('step_date', today)
   if (error) throw error
-  return data?.[0] ?? { steps: 0, source: null, synced_at: null }
+  return preferredSteps(data) ?? { steps: 0, source: null, synced_at: null }
 }
 
-export async function getStepHistory(userId, limit = 31) {
+export async function getStepHistory(userId, limit = 30) {
   const client = requireSupabase()
-  const { data, error } = await client.from('daily_steps').select('step_date,steps').eq('user_id', userId).order('step_date', { ascending: false }).limit(limit)
+  const start = new Date()
+  start.setDate(start.getDate() - (limit - 1))
+  const { data, error } = await client.from('daily_steps').select('step_date,steps,source,synced_at').eq('user_id', userId).gte('step_date', localDay(start)).lte('step_date', localDay()).order('step_date', { ascending: false })
   if (error) throw error
-  return (data ?? []).reverse()
+  return dailyStepHistory(data ?? [])
+}
+
+export async function saveManualSteps(userId, value) {
+  const client = requireSupabase()
+  const steps = validateSteps(value)
+  const now = new Date()
+  const { data, error } = await client.from('daily_steps').upsert({ user_id: userId, step_date: localDay(now), steps, source: 'manual', synced_at: now.toISOString(), updated_at: now.toISOString() }, { onConflict: 'user_id,step_date,source' }).select('steps,source,synced_at').single()
+  if (error) throw error
+  return data
+}
+
+export async function saveNotificationPreferences(userId, preferences) {
+  const { data, error } = await requireSupabase().from('profiles').update({ notification_preferences: normalizeReminders(preferences), updated_at: new Date().toISOString() }).eq('id', userId).select().single()
+  if (error) throw error
+  return data
 }
 
 export async function saveWorkoutSession({ userId, workout, draft, durationMin = 45, notes = '' }) {
