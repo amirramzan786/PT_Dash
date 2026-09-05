@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.95.0'
 
 function keyFromEnv(jsonName: string, legacyNames: string[]) {
   const raw = Deno.env.get(jsonName)
