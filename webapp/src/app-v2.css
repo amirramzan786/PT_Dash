@@ -295,22 +295,19 @@ button { cursor: pointer; }
 .empty-state h2 { color: white; margin: 0; }
 .empty-state p { margin: 0 0 8px; }
 
-.nutrition-hero { border: 1px solid var(--steel-gold-dark); border-radius: 20px; padding: 17px; display: grid; grid-template-columns: 86px 1fr; align-items: center; gap: 14px; background: linear-gradient(145deg,#1b170f,#101720); }
-.macro-orb { width: 78px; height: 78px; border-radius: 50%; border: 8px solid #313640; border-top-color: var(--steel-gold); border-right-color: var(--steel-gold); display: grid; place-items: center; align-content: center; }
+.nutrition-intake-dashboard { display: grid; gap: 16px; padding: 17px; border: 1px solid var(--steel-gold-dark); border-radius: 20px; background: linear-gradient(145deg,#1b170f,#101720); }
+.nutrition-dashboard-top { display: grid; grid-template-columns: 86px minmax(0,1fr) auto; align-items: center; gap: 14px; }
+.macro-orb { position: relative; isolation: isolate; width: 78px; height: 78px; display: grid; place-items: center; align-content: center; border-radius: 50%; background: conic-gradient(var(--steel-gold) var(--progress, 0%), #313640 0); }
+.macro-orb::before { content: ''; position: absolute; z-index: -1; inset: 8px; border-radius: inherit; background: #141619; }
 .macro-orb span { font-size: 1.25rem; font-weight: 900; }
-.macro-orb small { color: var(--steel-muted); }
-.nutrition-hero h3 { margin: 4px 0; }
-.nutrition-hero p { color: var(--steel-muted); margin: 0; font-size: .78rem; line-height: 1.45; }
+.macro-orb small { color: var(--steel-muted); font-size: .66rem; line-height: 1.1; text-align: center; }
+.nutrition-dashboard-copy h3 { margin: 4px 0; }
+.nutrition-dashboard-copy p { color: var(--steel-muted); margin: 0; font-size: .78rem; line-height: 1.45; }
+.nutrition-kcal-remaining { color: var(--steel-muted); font-size: .72rem; font-weight: 750; text-align: right; }
 .nutrition-placeholder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .nutrition-placeholder-grid .steel-card { display: grid; gap: 7px; }
 .nutrition-placeholder-grid svg { color: var(--steel-gold); }
 .nutrition-placeholder-grid span { color: var(--steel-muted); font-size: .7rem; line-height: 1.4; }
-.nutrition-macro-board { border: 1px solid var(--steel-line); border-radius: 18px; background: #101720; padding: 15px; display: grid; gap: 15px; }
-.nutrition-board-heading { display: flex; justify-content: space-between; gap: 12px; align-items: end; }
-.nutrition-board-heading > div { display: grid; gap: 4px; }
-.nutrition-board-heading strong { color: var(--steel-gold-2); font-size: 1.45rem; }
-.nutrition-board-heading strong small, .nutrition-board-heading > span { color: var(--steel-muted); font-size: .7rem; font-weight: 700; }
-.nutrition-board-heading > span { text-align: right; }
 .nutrition-macro-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .nutrition-macro-grid > div { min-width: 0; display: grid; gap: 5px; }
 .nutrition-macro-grid span { color: var(--steel-muted); font-size: .63rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
@@ -322,10 +319,9 @@ button { cursor: pointer; }
 .meal-plan-edit-strip { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border: 1px solid rgba(217,170,72,.32); border-radius: 14px; background: linear-gradient(120deg, rgba(217,170,72,.08), rgba(13,20,29,.5)); color: var(--steel-muted); font-size: .76rem; }
 .nutrition-page-plan .meal-plan-edit-strip, .nutrition-page-plan .nutrition-plan-list, .nutrition-page-plan .nutrition-plan-summary { display: none; }
 .nutrition-page-plan > .meal-component-editor { display: none; }
-.nutrition-page-plan .nutrition-hero { order: 1; }
-.nutrition-page-plan .nutrition-macro-board { order: 2; }
-.nutrition-page-plan .diet-plan-overview { order: 3; }
-.nutrition-page-plan .nutrition-next-card { order: 4; }
+.nutrition-page-plan .nutrition-intake-dashboard { order: 1; }
+.nutrition-page-plan .diet-plan-overview { order: 2; }
+.nutrition-page-plan .nutrition-next-card { order: 3; }
 .nutrition-page-diary .nutrition-next-card, .nutrition-page-library .nutrition-next-card { display: none; }
 .nutrition-page-plan .nutrition-next-card { padding: 11px 14px; border-color: rgba(94,111,129,.45); background: transparent; }
 .nutrition-page-plan .nutrition-next-card h3 { font-size: .8rem; }
@@ -785,6 +781,8 @@ button { cursor: pointer; }
 }
 
 @media (max-width: 520px) {
+  .nutrition-dashboard-top { grid-template-columns: 78px minmax(0,1fr); gap: 11px; }
+  .nutrition-kcal-remaining { grid-column: 1 / -1; text-align: left; }
   .diet-plan-target { align-items: flex-start; flex-direction: column; }
   .diet-plan-target .text-link { min-height: 30px; }
   .hero-checkin-reminder { max-width: 100%; font-size: .62rem; }
