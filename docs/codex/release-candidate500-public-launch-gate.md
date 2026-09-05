@@ -1,7 +1,7 @@
 # Project Steel — Release Candidate 500 → Public Launch Gate
 
-**Branch:** `codex/founding20-beta-signups`  
-**Status:** Authoritative rollout / commercial-readiness plan  
+**Branch:** `codex/founding20-beta-signups`
+**Status:** Authoritative rollout / commercial-readiness plan
 **Rollout position:** Final controlled cohort before unrestricted public launch
 
 ## Core decision

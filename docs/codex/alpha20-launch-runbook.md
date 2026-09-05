@@ -1,8 +1,8 @@
 # Project Steel — Alpha 20 Launch Runbook
 
-**Branch:** `codex/founding20-beta-signups`  
-**Status:** Authoritative operational playbook for the first live Alpha cohort  
-**Cohort:** 20 users total, including the Founding 20 offer  
+**Branch:** `codex/founding20-beta-signups`
+**Status:** Authoritative operational playbook for the first live Alpha cohort
+**Cohort:** 20 users total, including the Founding 20 offer
 
 ## Purpose
 
@@ -366,7 +366,7 @@ Use the in-app update channel to visibly close the loop on meaningful Alpha impr
 
 Good entry format:
 
-**You asked:** Workout substitutions were hard to find during a live session.  
+**You asked:** Workout substitutions were hard to find during a live session.
 **We listened:** Exercise replacement is now available directly inside the active workout flow.
 
 Keep entries short, dated and user-facing.

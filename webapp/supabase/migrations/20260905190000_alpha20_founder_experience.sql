@@ -61,7 +61,8 @@ create table if not exists public.analytics_events (
   id uuid primary key default gen_random_uuid(),
   event_name text not null check (event_name in (
     'beta_signup_accepted', 'beta_email_verified', 'beta_founder_allocated', 'beta_waitlist_allocated',
-    'beta_account_linked', 'verification_email_sent', 'onboarding_completed', 'activation_milestone', 'meaningful_return', 'feedback_submitted'
+    'beta_signup_attempted', 'beta_signup_rejected', 'beta_account_linked', 'verification_email_sent',
+    'onboarding_completed', 'activation_milestone', 'meaningful_return', 'feedback_submitted'
   )),
   user_id uuid references auth.users(id) on delete set null,
   signup_id uuid references public.beta_signups(id) on delete set null,
@@ -118,13 +119,21 @@ declare
   v_source text;
   v_activation_at timestamptz;
   v_return_bucket text;
+  v_safe_properties jsonb := '{}'::jsonb;
 begin
   if v_user_id is null then raise exception 'Authentication required.' using errcode = '42501'; end if;
   if p_event_name not in ('onboarding_completed', 'activation_milestone', 'meaningful_return', 'feedback_submitted') then
     raise exception 'Invalid analytics event.' using errcode = '22023';
   end if;
-  if octet_length(coalesce(p_properties, '{}'::jsonb)::text) > 2048 then
+  if jsonb_typeof(coalesce(p_properties, '{}'::jsonb)) <> 'object' or octet_length(coalesce(p_properties, '{}'::jsonb)::text) > 2048 then
     raise exception 'Analytics properties are too large.' using errcode = '22023';
+  end if;
+  if p_event_name = 'feedback_submitted' and p_properties ->> 'category' in ('bug', 'friction', 'feature_request', 'training', 'nutrition', 'progress_recovery', 'other') then
+    v_safe_properties := jsonb_build_object('category', p_properties ->> 'category');
+  elsif p_event_name in ('activation_milestone', 'meaningful_return') and p_properties ->> 'action' in ('workout_saved', 'food_logged') then
+    v_safe_properties := jsonb_build_object('action', p_properties ->> 'action');
+  elsif p_event_name = 'onboarding_completed' and p_properties ->> 'entry' = 'onboarding' then
+    v_safe_properties := jsonb_build_object('entry', 'onboarding');
   end if;
   select id, case when source in ('hero', 'beta-section', 'marketing-site') then source else 'other' end into v_signup_id, v_source
   from public.beta_signups where user_id = v_user_id order by verified_at nulls last limit 1;
@@ -144,10 +153,10 @@ begin
       where user_id = v_user_id and event_name = 'meaningful_return'
         and properties ->> 'day_bucket' = v_return_bucket
     ) then return; end if;
-    p_properties := coalesce(p_properties, '{}'::jsonb) || jsonb_build_object('day_bucket', v_return_bucket);
+    v_safe_properties := v_safe_properties || jsonb_build_object('day_bucket', v_return_bucket);
   end if;
   insert into public.analytics_events (event_name, user_id, signup_id, source, properties)
-  values (p_event_name, v_user_id, v_signup_id, v_source, coalesce(p_properties, '{}'::jsonb));
+  values (p_event_name, v_user_id, v_signup_id, v_source, v_safe_properties);
 end;
 $$;
 revoke all on function public.record_alpha_event(text, jsonb) from public, anon;
@@ -199,6 +208,9 @@ begin
   elsif tg_op = 'UPDATE' and old.user_id is null and new.user_id is not null and new.status in ('verified', 'waitlist', 'approved') then
     insert into public.analytics_events (event_name, user_id, signup_id, source, properties)
     values ('beta_account_linked', new.user_id, new.id, case when new.source in ('hero', 'beta-section', 'marketing-site') then new.source else 'other' end, '{}'::jsonb);
+  elsif tg_op = 'UPDATE' and old.status = 'waitlist' and new.status = 'approved' and new.founding_number is not null then
+    insert into public.analytics_events (event_name, user_id, signup_id, source, properties)
+    values ('beta_founder_allocated', new.user_id, new.id, case when new.source in ('hero', 'beta-section', 'marketing-site') then new.source else 'other' end, jsonb_build_object('founding_number', new.founding_number, 'promotion', true));
   end if;
   return new;
 end;

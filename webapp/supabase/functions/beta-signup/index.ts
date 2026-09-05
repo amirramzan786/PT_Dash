@@ -9,6 +9,15 @@ const IP_LIMIT = 20
 const IP_WINDOW_SECONDS = 60 * 60
 const EMAIL_WINDOW_SECONDS = 24 * 60 * 60
 
+async function recordServerAnalytics(admin: ReturnType<typeof createAdminClient>, eventName: string, source: string, signupId?: string, properties: Record<string, string> = {}) {
+  try {
+    await admin.from('analytics_events').insert({ event_name: eventName, signup_id: signupId || null, source, properties })
+  } catch {
+    // Analytics must never change the access or verification outcome.
+    console.warn('beta analytics unavailable')
+  }
+}
+
 async function verifyTurnstile(request: Request, token: string, secret: string) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 5000)
@@ -27,8 +36,11 @@ async function verifyTurnstile(request: Request, token: string, secret: string) 
     if (result.success !== true) return false
     const allowedHostnames = (Deno.env.get('TURNSTILE_ALLOWED_HOSTNAMES') || '')
       .split(',').map((hostname) => hostname.trim().toLowerCase()).filter(Boolean)
-    return !allowedHostnames.length
-      || (typeof result.hostname === 'string' && allowedHostnames.includes(result.hostname.toLowerCase()))
+    // A configured secret without a hostname allow-list is too permissive:
+    // a valid token minted for another host must never satisfy Steel's flow.
+    return allowedHostnames.length > 0
+      && typeof result.hostname === 'string'
+      && allowedHostnames.includes(result.hostname.toLowerCase())
   } catch {
     return false
   } finally {
@@ -71,15 +83,25 @@ Deno.serve(async (request) => {
     const contentLength = Number(request.headers.get('content-length') || 0)
     if (contentLength > 8192) return jsonResponse(origin, 413, { error: 'That request is too large.', code: 'INVALID_REQUEST' })
     const body = await request.json() as { email?: unknown; turnstileToken?: unknown; turnstile_token?: unknown; source?: unknown }
+    const requestedSource = safeSource(body.source)
+    const source = requestedSource === 'hero' ? 'hero' : requestedSource === 'beta' ? 'beta-section' : 'marketing-site'
+    const admin = createAdminClient()
+    await recordServerAnalytics(admin, 'beta_signup_attempted', source)
     const email = normalizeEmail(body.email)
-    if (!email) return jsonResponse(origin, 400, { error: 'Enter a valid email address.', code: 'INVALID_EMAIL' })
-    if (isDisposableEmail(email)) return jsonResponse(origin, 400, { error: 'Please use a regular email address for beta access.', code: 'DISPOSABLE_EMAIL' })
+    if (!email) {
+      await recordServerAnalytics(admin, 'beta_signup_rejected', source, undefined, { reason: 'invalid_email' })
+      return jsonResponse(origin, 400, { error: 'Enter a valid email address.', code: 'INVALID_EMAIL' })
+    }
+    if (isDisposableEmail(email)) {
+      await recordServerAnalytics(admin, 'beta_signup_rejected', source, undefined, { reason: 'disposable_email' })
+      return jsonResponse(origin, 400, { error: 'Please use a regular email address for beta access.', code: 'DISPOSABLE_EMAIL' })
+    }
     const turnstileToken = String(body.turnstileToken ?? body.turnstile_token ?? '').trim()
     if (!turnstileToken || turnstileToken.length > 2048 || !(await verifyTurnstile(request, turnstileToken, turnstileSecret))) {
+      await recordServerAnalytics(admin, 'beta_signup_rejected', source, undefined, { reason: 'turnstile_failed' })
       return jsonResponse(origin, 400, { error: 'Please complete the human check and try again.', code: 'TURNSTILE_FAILED' })
     }
 
-    const admin = createAdminClient()
     const hashSalt = Deno.env.get('RATE_LIMIT_HASH_SALT') || turnstileSecret
     const [emailHash, ipHash] = await Promise.all([
       keyedHash(email, hashSalt),
@@ -97,6 +119,7 @@ Deno.serve(async (request) => {
       })
       if (limitError) throw limitError
       if (!limitResult?.allowed) {
+        await recordServerAnalytics(admin, 'beta_signup_rejected', source, undefined, { reason: 'rate_limited' })
         return jsonResponse(origin, 429, {
           error: 'Please wait a little before requesting another email.',
           code: 'RATE_LIMITED',
@@ -107,7 +130,7 @@ Deno.serve(async (request) => {
 
     const { data: reservation, error: reservationError } = await admin.rpc('reserve_beta_signup_request', {
       p_email_normalized: email,
-      p_source: safeSource(body.source),
+      p_source: source,
       p_cooldown_seconds: RESEND_COOLDOWN_SECONDS,
     })
     if (reservationError) throw reservationError
@@ -147,12 +170,7 @@ Deno.serve(async (request) => {
     }).eq('id', reservation.signup_id)
     // Operational measurement only: no email, IP address or other raw PII is
     // copied into analytics_events.
-    await admin.from('analytics_events').insert({
-      event_name: 'verification_email_sent',
-      signup_id: reservation.signup_id,
-      source: safeSource(body.source),
-      properties: {},
-    })
+    await recordServerAnalytics(admin, 'verification_email_sent', source, reservation.signup_id)
     const status = await publicStatus(admin)
     return jsonResponse(origin, 200, {
       ok: true,

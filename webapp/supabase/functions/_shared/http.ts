@@ -14,8 +14,9 @@ export function allowedOrigins() {
 
 export function requestOrigin(request: Request) {
   const origin = request.headers.get('origin')?.trim() || ''
-  if (!origin) return ''
-  return allowedOrigins().has(origin) ? origin : null
+  // These browser-facing functions do not need to accept origin-less traffic.
+  // Rejecting it closes a direct-call bypass of the configured origin boundary.
+  return origin && allowedOrigins().has(origin) ? origin : null
 }
 
 export function corsHeaders(origin: string) {

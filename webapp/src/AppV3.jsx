@@ -759,7 +759,8 @@ function SessionNotesField({ value, onChange, completedSets }) {
 }
 
 function FounderStatusCard({ founderStatus }) {
-  if (!founderStatus?.founder_number || !founderStatus.has_lifetime_entitlement) return null
+  if (!founderStatus?.founder_number) return null
+  if (!founderStatus.has_lifetime_entitlement) return <article className="settings-security-card steel-founder-card steel-founder-recovery"><span className="settings-security-icon"><ShieldCheck size={22}/></span><div><span className="eyebrow">FOUNDING MEMBER</span><h3>Your Founding access needs a check</h3><p>Your Founder allocation is retained. Please contact Support so Steel can restore the lifetime access attached to your account.</p></div></article>
   return <article className="settings-security-card steel-founder-card"><span className="settings-security-icon"><ShieldCheck size={22}/></span><div><span className="eyebrow">FOUNDING MEMBER</span><h3>Founder #{String(founderStatus.founder_number).padStart(2, '0')}</h3><p><strong>PREMIUM FREE FOR LIFE</strong> · Steel Premium</p><small>£0 — Lifetime Founding Access · No payment method required · No renewal charge</small></div></article>
 }
 

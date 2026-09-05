@@ -1,7 +1,7 @@
 # Project Steel — Alpha 20 Codex Master Execution Brief
 
-**Branch:** `codex/founding20-beta-signups`  
-**Purpose:** One authoritative execution brief for implementing the complete Alpha 20 foundation in one coordinated Codex run.  
+**Branch:** `codex/founding20-beta-signups`
+**Purpose:** One authoritative execution brief for implementing the complete Alpha 20 foundation in one coordinated Codex run.
 **Delivery rule:** Prepare a PR to `main`. **Do not merge. Do not deploy production. Do not apply production migrations without explicit human approval.**
 
 ---

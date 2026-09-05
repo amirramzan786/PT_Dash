@@ -1,6 +1,6 @@
 # Project Steel — Founding 20 analytics & conversion funnel
 
-**Status:** Authoritative product analytics specification for the Founding 20 beta flow.  
+**Status:** Authoritative product analytics specification for the Founding 20 beta flow.
 **Scope:** Marketing site → beta signup → verification → founder/waitlist allocation → Steel account activation → early product engagement.
 
 This document is intended to guide Codex implementation and later launch measurement. It does **not** authorise invasive tracking, advertising pixels, fingerprinting, or unnecessary personal-data collection.

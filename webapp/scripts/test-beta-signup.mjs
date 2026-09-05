@@ -48,6 +48,9 @@ test('Alpha 20 migration keeps founder, feedback, updates and analytics private'
   assert.match(sql, /protect_founder_entitlement/i)
   assert.match(sql, /verification_email_sent/i)
   assert.match(sql, /day_bucket/i)
+  assert.match(sql, /v_safe_properties jsonb/i)
+  assert.match(sql, /beta_signup_attempted/i)
+  assert.match(sql, /old\.status = 'waitlist' and new\.status = 'approved'/i)
 })
 
 test('public client only calls constrained Alpha RPCs and never queries private founder tables', async () => {
@@ -65,6 +68,22 @@ test('admin function keeps privileged promotion and publishing behind an authent
   assert.match(admin, /admin_revoke_founder_signup/)
   assert.match(admin, /publish_update/)
   assert.match(admin, /triage_feedback/)
+})
+
+test('browser-facing endpoints require an exact allowed Origin and analytics cannot block signup', async () => {
+  const http = await readFile(new URL('../supabase/functions/_shared/http.ts', import.meta.url), 'utf8')
+  const signup = await readFile(new URL('../supabase/functions/beta-signup/index.ts', import.meta.url), 'utf8')
+  assert.match(http, /return origin && allowedOrigins\(\)\.has\(origin\) \? origin : null/)
+  assert.match(signup, /async function recordServerAnalytics/)
+  assert.match(signup, /try \{[\s\S]*analytics_events[\s\S]*\} catch \{/)
+  assert.match(signup, /beta_signup_attempted/)
+  assert.match(signup, /allowedHostnames\.length > 0/)
+})
+
+test('Founder entitlement mismatches fail visibly rather than silently downgrading the member', async () => {
+  const app = await readFile(new URL('../src/AppV3.jsx', import.meta.url), 'utf8')
+  assert.match(app, /Your Founding access needs a check/)
+  assert.match(app, /Your Founder allocation is retained/)
 })
 
 test('current-main Home, recovery and food-diary integration contracts remain present', async () => {
