@@ -34,9 +34,9 @@ const tabs = [
 
 const mobileTabs = [
   { id: 'Home', label: 'Home', icon: Home },
-  { id: 'Train', label: 'Start', icon: Activity },
+  { id: 'Plan', label: 'Train', icon: Dumbbell },
+  { id: 'MealPlan', label: 'Fuel', icon: Salad },
   { id: 'Progress', label: 'Progress', icon: LineChart },
-  { id: 'MealPlan', label: 'Meal plan', icon: Salad },
 ]
 
 const experienceOptions = ['Beginner', 'Intermediate', 'Advanced']
