@@ -1,0 +1,13 @@
+project_id = "devpjwpirhhctrwizzab"
+
+[functions.beta-signup]
+verify_jwt = false
+
+[functions.beta-status]
+verify_jwt = false
+
+[functions.beta-verify]
+verify_jwt = true
+
+[functions.beta-admin]
+verify_jwt = true

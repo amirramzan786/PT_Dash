@@ -327,6 +327,19 @@
 .food-camera span { color: var(--steel-muted); font-size: .75rem; }
 .food-camera button { justify-self: start; min-height: 34px; padding: 0 10px; border: 1px solid #4b5865; border-radius: 9px; color: #e8edf0; background: #17212c; font: inherit; font-size: .7rem; font-weight: 850; }
 
+.steel-founder-card,.alpha-support-panel { width: min(100% - 32px, 1120px); margin: 14px auto 0; }
+.steel-founder-card { border-color: rgba(218,174,74,.45); background: linear-gradient(115deg, rgba(218,174,74,.12), rgba(16,24,33,.96) 42%); }
+.steel-founder-card small { display: block; margin-top: 5px; color: var(--steel-muted); }
+.alpha-support-panel { display: grid; gap: 18px; }
+.alpha-support-panel .section-heading p,.alpha-whats-new > p { margin: 5px 0 0; color: var(--steel-muted); }
+.alpha-support-panel .support-feedback-form { max-width: 720px; }
+.alpha-support-panel select { min-height: 42px; padding: 0 11px; border: 1px solid #3b4753; border-radius: 10px; color: #eff1f2; background: #0a1017; font: inherit; }
+.alpha-whats-new { padding-top: 16px; border-top: 1px solid #2c3845; }
+.alpha-update-list { display: grid; gap: 9px; margin-top: 10px; }
+.alpha-update-list article { display: grid; gap: 3px; padding: 12px; border: 1px solid #2e3b48; border-radius: 12px; background: rgba(12,19,27,.52); }
+.alpha-update-list span,.alpha-update-list small { color: var(--steel-gold-2); font-size: .64rem; font-weight: 800; letter-spacing: .07em; }
+.alpha-update-list p { margin: 0; color: var(--steel-muted); font-size: .82rem; }
+
 @media (max-width: 520px) {
   .settings-page-v5 { min-height: calc(100vh - 126px); }
   .settings-disclosure-trigger { min-height: 66px; }

@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test scripts/test-home-guidance.mjs scripts/test-programme-generator.mjs scripts/test-recovery.mjs scripts/test-snack-choices.mjs"
+    "test": "node --test scripts/test-beta-signup.mjs scripts/test-home-guidance.mjs scripts/test-programme-generator.mjs scripts/test-recovery.mjs scripts/test-snack-choices.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "latest",
