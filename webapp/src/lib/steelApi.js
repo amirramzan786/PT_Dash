@@ -434,6 +434,101 @@ export async function deleteMealLog({ userId, id, mealDate, mealType }) {
   if (error) throw error
 }
 
+const nutritionFoodFields = 'id,user_id,source,provider_food_id,barcode,name,brand,image_url,default_serving_label,default_serving_g,calories_per_100g,protein_g_per_100g,carbs_g_per_100g,fat_g_per_100g,fibre_g_per_100g,sugar_g_per_100g,salt_g_per_100g,verified_at'
+
+function nutritionFoodFilter(value) {
+  return String(value || '').replace(/[,%()]/g, ' ').trim().slice(0, 80)
+}
+
+export async function searchNutritionFoods(query) {
+  const client = requireSupabase()
+  const term = nutritionFoodFilter(query)
+  let request = client.from('nutrition_foods').select(nutritionFoodFields).order('name').limit(24)
+  if (term) request = request.or(`name.ilike.%${term}%,brand.ilike.%${term}%`)
+  const { data, error } = await request
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getNutritionFoodByBarcode(barcode) {
+  const client = requireSupabase()
+  const code = String(barcode || '').replace(/[^0-9]/g, '')
+  if (code.length < 8) throw new Error('Enter a valid product barcode.')
+  const { data, error } = await client.from('nutrition_foods').select(nutritionFoodFields).eq('barcode', code).limit(1).maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error('That barcode is not in Steel’s catalogue yet. Add it from the nutrition label instead.')
+  return data
+}
+
+export async function getNutritionFoodServings(foodId) {
+  const client = requireSupabase()
+  const { data, error } = await client.from('nutrition_food_servings').select('id,label,grams,sort_order,is_default').eq('food_id', foodId).order('sort_order').order('created_at')
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getNutritionFavouriteFoods(userId) {
+  const client = requireSupabase()
+  const { data: preferences, error: preferenceError } = await client.from('nutrition_food_preferences').select('food_id,last_used_at,use_count,created_at').eq('user_id', userId).eq('is_favourite', true).order('last_used_at', { ascending: false })
+  if (preferenceError) throw preferenceError
+  const foodIds = (preferences ?? []).map((row) => row.food_id)
+  if (!foodIds.length) return []
+  const { data: foods, error } = await client.from('nutrition_foods').select(nutritionFoodFields).in('id', foodIds)
+  if (error) throw error
+  const byId = new Map((foods ?? []).map((food) => [food.id, food]))
+  return foodIds.map((id) => byId.get(id)).filter(Boolean)
+}
+
+export async function getNutritionRecentFoods() {
+  const client = requireSupabase()
+  const { data: items, error: itemsError } = await client
+    .from('nutrition_meal_log_items')
+    .select('food_id,created_at')
+    .order('created_at', { ascending: false })
+    .limit(48)
+  if (itemsError) throw itemsError
+
+  const foodIds = [...new Set((items ?? []).map((item) => item.food_id).filter(Boolean))].slice(0, 16)
+  if (!foodIds.length) return []
+  const { data: foods, error } = await client.from('nutrition_foods').select(nutritionFoodFields).in('id', foodIds)
+  if (error) throw error
+  const byId = new Map((foods ?? []).map((food) => [food.id, food]))
+  return foodIds.map((id) => byId.get(id)).filter(Boolean)
+}
+
+export async function setNutritionFoodFavourite({ userId, foodId, favourite }) {
+  const client = requireSupabase()
+  if (!favourite) {
+    const { error } = await client.from('nutrition_food_preferences').delete().eq('user_id', userId).eq('food_id', foodId)
+    if (error) throw error
+    return
+  }
+  const { error } = await client.from('nutrition_food_preferences').upsert({ user_id: userId, food_id: foodId, is_favourite: true }, { onConflict: 'user_id,food_id' })
+  if (error) throw error
+}
+
+export async function saveNutritionFoodEntry({ mealDate, mealType, food, grams, servingLabel }) {
+  const client = requireSupabase()
+  const multiplier = Math.max(0, Number(grams) || 0) / 100
+  const item = {
+    foodId: food.id,
+    name: food.name,
+    brand: food.brand || '',
+    servingLabel: servingLabel || `${grams}g`,
+    grams: Number(grams) || 0,
+    calories: Number(food.calories_per_100g || 0) * multiplier,
+    protein: Number(food.protein_g_per_100g || 0) * multiplier,
+    carbs: Number(food.carbs_g_per_100g || 0) * multiplier,
+    fat: Number(food.fat_g_per_100g || 0) * multiplier,
+    fibre: Number(food.fibre_g_per_100g || 0) * multiplier,
+    sugar: Number(food.sugar_g_per_100g || 0) * multiplier,
+    salt: Number(food.salt_g_per_100g || 0) * multiplier,
+  }
+  const { data, error } = await client.rpc('save_nutrition_meal_entry', { p_entry: { mealDate, mealType, entryType: 'food', recipeName: food.name, notes: food.source }, p_items: [item] })
+  if (error) throw error
+  return data
+}
+
 export async function getWeeklyActivitySummary(userId, weekStart, weekEnd) {
   const client = requireSupabase()
   const [sessionsResult, mealsResult] = await Promise.all([
