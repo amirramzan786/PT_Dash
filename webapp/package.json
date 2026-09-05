@@ -4,19 +4,24 @@
   "version": "0.2.0",
   "type": "module",
   "scripts": {
+    "lint": "eslint src/AppV3.jsx src/lib/steelApi.js src/lib/steps.js src/lib/reminders.js src/components/ManualSteps.jsx src/components/ReminderSettings.jsx src/components/HealthIntegrations.jsx scripts/test-recovery.mjs vite.config.js",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test scripts/test-home-guidance.mjs scripts/test-programme-generator.mjs"
+    "test": "node --test scripts/test-home-guidance.mjs scripts/test-programme-generator.mjs scripts/test-recovery.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "latest",
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "typescript": "latest",
+    "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "lucide-react": "latest"
+    "typescript": "latest",
+    "vite": "latest"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.10.0",
+    "globals": "17.12.0"
+  }
 }

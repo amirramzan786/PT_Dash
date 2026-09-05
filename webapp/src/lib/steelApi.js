@@ -1,4 +1,6 @@
 import { supabase, supabaseConfigured } from './supabase'
+import { localDay, validateSteps, preferredSteps, dailyStepHistory } from './steps'
+import { normalizeReminders } from './reminders'
 
 function requireSupabase() {
   if (!supabaseConfigured || !supabase) throw new Error('Supabase is not configured')
@@ -349,7 +351,7 @@ export async function saveWeight(userId, checkinDate, weightLb) {
 
 export async function getProfile(userId) {
   const client = requireSupabase()
-  const { data, error } = await client.from('profiles').select('id,display_name,phone,goal,avatar_url,experience_level,available_equipment,training_days,checkin_day,units,limitations,onboarding_completed,dietary_preference,allergies,meals_per_day,created_at,updated_at').eq('id', userId).maybeSingle()
+  const { data, error } = await client.from('profiles').select('id,display_name,phone,goal,avatar_url,experience_level,available_equipment,training_days,checkin_day,units,limitations,onboarding_completed,dietary_preference,allergies,meals_per_day,notification_preferences,created_at,updated_at').eq('id', userId).maybeSingle()
   if (error) throw error
   return data
 }
@@ -547,17 +549,34 @@ export async function uploadAvatar(userId, file) {
 
 export async function getTodaySteps(userId) {
   const client = requireSupabase()
-  const today = new Date().toISOString().slice(0, 10)
-  const { data, error } = await client.from('daily_steps').select('steps,source,synced_at').eq('user_id', userId).eq('step_date', today).order('synced_at', { ascending: false }).limit(1)
+  const today = localDay()
+  const { data, error } = await client.from('daily_steps').select('steps,source,synced_at').eq('user_id', userId).eq('step_date', today)
   if (error) throw error
-  return data?.[0] ?? { steps: 0, source: null, synced_at: null }
+  return preferredSteps(data) ?? { steps: 0, source: null, synced_at: null }
 }
 
-export async function getStepHistory(userId, limit = 31) {
+export async function getStepHistory(userId, limit = 30) {
   const client = requireSupabase()
-  const { data, error } = await client.from('daily_steps').select('step_date,steps').eq('user_id', userId).order('step_date', { ascending: false }).limit(limit)
+  const start = new Date()
+  start.setDate(start.getDate() - (limit - 1))
+  const { data, error } = await client.from('daily_steps').select('step_date,steps,source,synced_at').eq('user_id', userId).gte('step_date', localDay(start)).lte('step_date', localDay()).order('step_date', { ascending: false })
   if (error) throw error
-  return (data ?? []).reverse()
+  return dailyStepHistory(data ?? [])
+}
+
+export async function saveManualSteps(userId, value) {
+  const client = requireSupabase()
+  const steps = validateSteps(value)
+  const now = new Date()
+  const { data, error } = await client.from('daily_steps').upsert({ user_id: userId, step_date: localDay(now), steps, source: 'manual', synced_at: now.toISOString(), updated_at: now.toISOString() }, { onConflict: 'user_id,step_date,source' }).select('steps,source,synced_at').single()
+  if (error) throw error
+  return data
+}
+
+export async function saveNotificationPreferences(userId, preferences) {
+  const { data, error } = await requireSupabase().from('profiles').update({ notification_preferences: normalizeReminders(preferences), updated_at: new Date().toISOString() }).eq('id', userId).select().single()
+  if (error) throw error
+  return data
 }
 
 export async function saveWorkoutSession({ userId, workout, draft, durationMin = 45, notes = '' }) {
