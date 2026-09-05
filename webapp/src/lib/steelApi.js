@@ -26,6 +26,53 @@ export async function loadUserRole(userId) {
   return data?.role || 'user'
 }
 
+// Alpha 20 data crosses narrow database boundaries: users never receive raw
+// signup, entitlement, feedback-triage or analytics tables.
+export async function getFounderStatus() {
+  const { data, error } = await requireSupabase().rpc('get_my_founder_status')
+  if (error) throw error
+  return data || { status: 'none', founder_number: null, has_lifetime_entitlement: false }
+}
+
+export async function submitBetaFeedback({ userId, category, message, appArea = null }) {
+  const client = requireSupabase()
+  const { data, error } = await client.from('beta_feedback')
+    .insert({ user_id: userId, category, message: message.trim(), app_area: appArea })
+    .select('id,category,message,created_at')
+    .single()
+  if (error) throw error
+  try { await recordAlphaEvent('feedback_submitted', { category }) } catch { /* Feedback is already safely saved. */ }
+  return data
+}
+
+export async function getProductUpdates(userId) {
+  const client = requireSupabase()
+  const { data: updates, error } = await client.from('product_updates')
+    .select('id,title,description,category,from_feedback,published_at')
+    .order('published_at', { ascending: false })
+    .limit(20)
+  if (error) throw error
+  const ids = (updates || []).map((update) => update.id)
+  if (!ids.length) return []
+  const { data: reads, error: readsError } = await client.from('product_update_reads')
+    .select('update_id').eq('user_id', userId).in('update_id', ids)
+  if (readsError) throw readsError
+  const readIds = new Set((reads || []).map((read) => read.update_id))
+  return updates.map((update) => ({ ...update, read: readIds.has(update.id) }))
+}
+
+export async function markProductUpdatesRead(userId, updateIds) {
+  if (!updateIds?.length) return
+  const { error } = await requireSupabase().from('product_update_reads')
+    .upsert(updateIds.map((updateId) => ({ user_id: userId, update_id: updateId })), { onConflict: 'user_id,update_id' })
+  if (error) throw error
+}
+
+export async function recordAlphaEvent(eventName, properties = {}) {
+  const { error } = await requireSupabase().rpc('record_alpha_event', { p_event_name: eventName, p_properties: properties })
+  if (error) throw error
+}
+
 export async function signIn(email, password) {
   const client = requireSupabase()
   const { data, error } = await client.auth.signInWithPassword({ email, password })

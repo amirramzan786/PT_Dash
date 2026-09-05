@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import {
   changePassword, deleteMealLog, getDashboardStats, getLatestWeeklyCheckin, getMealLogs, getProfile, getRecentSessions, getTodaySteps, getStepHistory, getWeightHistory, getWeeklyCheckinHistory,
-  getActiveGeneratedProgramme, getNutritionPlan, getProgrammeIntake, getWeeklyActivitySummary, loadExerciseCatalog, loadUserRole, loadWorkouts, replaceGeneratedProgramme, resetOnboarding, saveCustomWorkout, saveMealLog, saveMealPlanItem, saveNutritionFoodEntry, saveNutritionMealComponents, saveProgrammeIntake, saveProfile, saveWeight, saveWeeklyCheckin as saveWeeklyCheckinRecord, saveWorkoutSession, sendOnboardingAiMessage, updateAccount, updateCustomWorkout, uploadAvatar, uploadCheckinMedia,
+  getActiveGeneratedProgramme, getFounderStatus, getNutritionPlan, getProgrammeIntake, getProductUpdates, getWeeklyActivitySummary, loadExerciseCatalog, loadUserRole, loadWorkouts, markProductUpdatesRead, recordAlphaEvent, replaceGeneratedProgramme, resetOnboarding, saveCustomWorkout, saveMealLog, saveMealPlanItem, saveNutritionFoodEntry, saveNutritionMealComponents, saveProgrammeIntake, saveProfile, saveWeight, saveWeeklyCheckin as saveWeeklyCheckinRecord, saveWorkoutSession, sendOnboardingAiMessage, submitBetaFeedback, updateAccount, updateCustomWorkout, uploadAvatar, uploadCheckinMedia,
 } from './lib/steelApi'
 import { buildGeneratedProgramme } from './lib/programmeGenerator'
 import { buildDailySummary, buildTrainingRecommendation } from './lib/homeGuidance'
@@ -758,7 +758,16 @@ function SessionNotesField({ value, onChange, completedSets }) {
   return <section className="steel-card session-notes-panel"><div><span className="eyebrow">OPTIONAL</span><h3>Session notes</h3><p>Add anything worth remembering about today’s workout.</p></div><textarea value={value} onChange={(event) => onChange(event.target.value)} placeholder="Energy, substitutions, how it felt…" rows="3" maxLength="500" aria-label="Session notes"/><small className="session-save-hint">{completedSets ? `${completedSets} set${completedSets === 1 ? '' : 's'} ready to save.` : 'Complete at least one set to save this session.'}</small></section>
 }
 
-function SettingsPage({ user, userRole, onSignOut, closeSettings, accountName, avatarUrl, profileName, setProfileName, profileEmail, setProfileEmail, profilePhone, setProfilePhone, saveAccount, handleAvatar, avatarBusy, currentPassword, setCurrentPassword, newPassword, setNewPassword, confirmPassword, setConfirmPassword, savePassword, saving, preferences, setPreferences, toggleEquipment, savePreferences, openSupportPanel, onResetOnboarding, notificationPreferences, onRemindersSaved }) {
+function FounderStatusCard({ founderStatus }) {
+  if (!founderStatus?.founder_number || !founderStatus.has_lifetime_entitlement) return null
+  return <article className="settings-security-card steel-founder-card"><span className="settings-security-icon"><ShieldCheck size={22}/></span><div><span className="eyebrow">FOUNDING MEMBER</span><h3>Founder #{String(founderStatus.founder_number).padStart(2, '0')}</h3><p><strong>PREMIUM FREE FOR LIFE</strong> · Steel Premium</p><small>£0 — Lifetime Founding Access · No payment method required · No renewal charge</small></div></article>
+}
+
+function AlphaSupportPanel({ category, setCategory, feedbackText, setFeedbackText, feedbackSaved, feedbackSaving, onSubmit, productUpdates, updatesLoading }) {
+  return <section className="settings-support-card alpha-support-panel"><div className="section-heading"><div><span className="eyebrow">SUPPORT & FEEDBACK</span><h3>Help shape Steel</h3><p>Tell us what happened, what felt difficult, or what would make the product more useful.</p></div></div><form className="support-feedback-form" onSubmit={onSubmit}><label htmlFor="alpha-feedback-category">Feedback type</label><select id="alpha-feedback-category" value={category} onChange={(event) => setCategory(event.target.value)}><option value="bug">Bug / something broke</option><option value="friction">Confusing / hard to use</option><option value="feature_request">Feature request</option><option value="training">Training</option><option value="nutrition">Nutrition</option><option value="progress_recovery">Progress / recovery</option><option value="other">Other</option></select><label htmlFor="alpha-feedback-message">What happened — or what would you change?</label><textarea id="alpha-feedback-message" value={feedbackText} onChange={(event) => setFeedbackText(event.target.value)} rows="4" maxLength="4000" required/>{feedbackSaved && <p className="support-feedback-success">Feedback received. Thank you for helping build Steel.</p>}<button className="gold-button" type="submit" disabled={feedbackSaving || !feedbackText.trim()}>{feedbackSaving ? 'Sending…' : 'Send feedback'}</button></form><div className="alpha-whats-new"><span className="eyebrow">YOU ASKED. WE LISTENED.</span><h3>What’s New</h3>{updatesLoading ? <p>Loading updates…</p> : productUpdates.length ? <div className="alpha-update-list">{productUpdates.map((update) => <article key={update.id}><span>{update.category || 'UX'}{update.from_feedback ? ' · FROM TESTERS' : ''}</span><strong>{update.title}</strong><p>{update.description}</p><small>{!update.read ? 'NEW · ' : ''}{formatDate(update.published_at)}</small></article>)}</div> : <p>Improvements informed by testers will appear here.</p>}</div></section>
+}
+
+function SettingsPage({ user, userRole, onSignOut, closeSettings, accountName, avatarUrl, profileName, setProfileName, profileEmail, setProfileEmail, profilePhone, setProfilePhone, saveAccount, handleAvatar, avatarBusy, currentPassword, setCurrentPassword, newPassword, setNewPassword, confirmPassword, setConfirmPassword, savePassword, saving, preferences, setPreferences, toggleEquipment, savePreferences, openSupportPanel, onResetOnboarding, notificationPreferences, onRemindersSaved, founderStatus }) {
   const [profileOpen, setProfileOpen] = useState(false)
 
 
@@ -815,6 +824,11 @@ export default function AppV3({ user, onSignOut }) {
   const [supportPanel, setSupportPanel] = useState(null)
   const [feedbackText, setFeedbackText] = useState('')
   const [feedbackSaved, setFeedbackSaved] = useState(false)
+  const [feedbackCategory, setFeedbackCategory] = useState('bug')
+  const [feedbackSaving, setFeedbackSaving] = useState(false)
+  const [founderStatus, setFounderStatus] = useState(null)
+  const [productUpdates, setProductUpdates] = useState([])
+  const [updatesLoading, setUpdatesLoading] = useState(false)
 
   useEffect(() => {
     function syncTabFromUrl() {
@@ -829,6 +843,20 @@ export default function AppV3({ user, onSignOut }) {
     window.addEventListener('hashchange', syncTabFromUrl)
     return () => { window.removeEventListener('popstate', syncTabFromUrl); window.removeEventListener('hashchange', syncTabFromUrl) }
   }, [])
+
+  useEffect(() => {
+    getFounderStatus().then(setFounderStatus).catch(() => setFounderStatus(null))
+  }, [user.id])
+
+  useEffect(() => {
+    if (tab !== 'Settings') return
+    setUpdatesLoading(true)
+    getProductUpdates(user.id).then(async (updates) => {
+      setProductUpdates(updates)
+      const unreadIds = updates.filter((update) => !update.read).map((update) => update.id)
+      if (unreadIds.length) await markProductUpdatesRead(user.id, unreadIds)
+    }).catch(() => setProductUpdates([])).finally(() => setUpdatesLoading(false))
+  }, [tab, user.id])
 
   function navigateToTab(next, { replace = false } = {}) {
     const resolved = typeof next === 'function' ? next(tab) : next
@@ -920,13 +948,26 @@ export default function AppV3({ user, onSignOut }) {
 
   function openSettings() { if (tab !== 'Settings') setSettingsReturnTab(tab); navigateToTab('Settings'); setMessage('') }
   function closeSettings() { navigateToTab(settingsReturnTab || 'Home'); setMessage('') }
-  function openSupportPanel(panel) { setSupportPanel(panel); setFeedbackSaved(false); setMessage('') }
+  function openSupportPanel(panel) {
+    setSupportPanel(panel); setFeedbackSaved(false); setMessage('')
+    if (panel === 'updates') {
+      setUpdatesLoading(true)
+      getProductUpdates(user.id).then(async (updates) => {
+        setProductUpdates(updates)
+        const unreadIds = updates.filter((update) => !update.read).map((update) => update.id)
+        if (unreadIds.length) await markProductUpdatesRead(user.id, unreadIds)
+      }).catch(() => setProductUpdates([])).finally(() => setUpdatesLoading(false))
+    }
+  }
   function closeSupportPanel() { setSupportPanel(null); setFeedbackText(''); setFeedbackSaved(false) }
-  function saveFeedback(event) {
+  async function saveFeedback(event) {
     event.preventDefault()
     if (!feedbackText.trim()) return
-    setFeedbackSaved(true)
-    setFeedbackText('')
+    setFeedbackSaving(true)
+    try {
+      await submitBetaFeedback({ userId: user.id, category: feedbackCategory, message: feedbackText, appArea: tab })
+      setFeedbackSaved(true); setFeedbackText('')
+    } catch (error) { setMessage(error.message || 'Feedback could not be saved. Please try again.') } finally { setFeedbackSaving(false) }
   }
   async function submitWeeklyCheckin(values) {
     const now = new Date()
@@ -994,7 +1035,7 @@ export default function AppV3({ user, onSignOut }) {
   async function saveSession() {
     if (!selectedWorkout || !draft || !completedSets) return
     setSaving(true)
-    try { const durationMin = workoutStartedAt ? Math.max(1, Math.round((Date.now() - workoutStartedAt) / 60000)) : 45; await saveWorkoutSession({ userId: user.id, workout: selectedWorkout, draft, durationMin, notes: sessionNotes.trim() }); await refresh(); setDraft(null); setWorkoutStartedAt(null); setSessionNotes(''); navigateToTab('Home'); setMessage(`Session saved — ${completedSets} sets logged.`) }
+    try { const durationMin = workoutStartedAt ? Math.max(1, Math.round((Date.now() - workoutStartedAt) / 60000)) : 45; await saveWorkoutSession({ userId: user.id, workout: selectedWorkout, draft, durationMin, notes: sessionNotes.trim() }); recordAlphaEvent('activation_milestone', { action: 'workout_saved' }).catch(() => {}); recordAlphaEvent('meaningful_return', { action: 'workout_saved' }).catch(() => {}); await refresh(); setDraft(null); setWorkoutStartedAt(null); setSessionNotes(''); navigateToTab('Home'); setMessage(`Session saved — ${completedSets} sets logged.`) }
     catch (e) { setMessage(e.message) } finally { setSaving(false) }
   }
 
@@ -1060,6 +1101,7 @@ export default function AppV3({ user, onSignOut }) {
         setWorkouts(updatedWorkouts)
         if (updatedWorkouts[0]) setSelectedId(updatedWorkouts[0].id)
       }
+      if (generatePlan) recordAlphaEvent('onboarding_completed', { entry: 'onboarding' }).catch(() => {})
       setProfile(next); setMessage(generatePlan ? 'Your personalised training plan is ready.' : 'Training preferences saved. Your existing plan stays in place until a planned review.')
     } catch (e) { setMessage(e.message) } finally { setSaving(false) }
   }
@@ -1109,6 +1151,8 @@ export default function AppV3({ user, onSignOut }) {
         <div className="brand-lockup"><div className="brand-emblem"><SteelMark /></div><div><div className="eyebrow">SPARTAN STRENGTH, EVERY DAY</div><h1>PROJECT <span>STEEL</span></h1></div></div>
         <button className={`account-button ${tab === 'Settings' ? 'active' : ''}`} onClick={openSettings}><Avatar url={avatarUrl} size={32} /><span className="account-copy"><strong>{accountName}</strong><small>Profile</small></span><ChevronRight size={15} /></button>
       </header>
+      {tab === 'Settings' && <FounderStatusCard founderStatus={founderStatus}/>}
+      {tab === 'Settings' && <AlphaSupportPanel category={feedbackCategory} setCategory={setFeedbackCategory} feedbackText={feedbackText} setFeedbackText={setFeedbackText} feedbackSaved={feedbackSaved} feedbackSaving={feedbackSaving} onSubmit={saveFeedback} productUpdates={productUpdates} updatesLoading={updatesLoading}/>}
       {message && <div className="toast-note">{message}</div>}
 
       {tab === 'Train' && (!selectedWorkout || !draft) && <StartWorkoutChooser workouts={workouts} openWorkout={openWorkout} onBrowse={() => navigateToTab('Plan')} onCreateCustom={() => { setEditingWorkout(null); setCustomLogOpen(true); navigateToTab('Plan') }} />}

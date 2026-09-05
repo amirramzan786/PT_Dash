@@ -27,6 +27,21 @@ Deno.serve(async (request) => {
 
   try {
     if (request.method === 'GET') {
+      const resource = new URL(request.url).searchParams.get('resource') || 'signups'
+      if (resource === 'feedback') {
+        const { data, error } = await context.admin.from('beta_feedback')
+          .select('id,user_id,category,message,app_area,triage_type,severity,triage_status,admin_notes,created_at,updated_at')
+          .order('created_at', { ascending: false })
+        if (error) throw error
+        return jsonResponse(origin, 200, { feedback: data || [] })
+      }
+      if (resource === 'updates') {
+        const { data, error } = await context.admin.from('product_updates')
+          .select('id,title,description,category,from_feedback,release_key,published_at,created_at,updated_at')
+          .order('published_at', { ascending: false, nullsFirst: false })
+        if (error) throw error
+        return jsonResponse(origin, 200, { updates: data || [] })
+      }
       const { data, error } = await context.admin.from('beta_signups')
         .select('id,email,status,founding_number,user_id,source,created_at,verified_at,approved_at,updated_at')
         .order('created_at', { ascending: true })
@@ -34,26 +49,40 @@ Deno.serve(async (request) => {
       return jsonResponse(origin, 200, { signups: data || [] })
     }
     if (request.method !== 'POST') return jsonResponse(origin, 405, { error: 'Use GET or POST.' })
-    const body = await request.json() as { id?: unknown; action?: unknown }
+    const body = await request.json() as { id?: unknown; action?: unknown; triage?: Record<string, unknown>; update?: Record<string, unknown> }
     const id = String(body.id || '').trim()
     const action = String(body.action || '').trim().toLowerCase()
-    if (!id || !['approve', 'reject', 'reconcile'].includes(action)) return jsonResponse(origin, 400, { error: 'Invalid admin action.', code: 'INVALID_REQUEST' })
+    if (action === 'publish_update') {
+      const update = body.update || {}
+      const title = String(update.title || '').trim()
+      const description = String(update.description || '').trim()
+      const category = String(update.category || '').trim() || null
+      if (!title || !description || (category && !['training', 'nutrition', 'progress', 'ux', 'fix'].includes(category))) return jsonResponse(origin, 400, { error: 'Invalid product update.', code: 'INVALID_REQUEST' })
+      const { data, error } = await context.admin.from('product_updates').insert({ title, description, category, from_feedback: update.fromFeedback === true, release_key: String(update.releaseKey || '').trim() || null, published_at: new Date().toISOString() }).select().single()
+      if (error) throw error
+      return jsonResponse(origin, 200, { ok: true, update: data })
+    }
+    if (action === 'triage_feedback') {
+      const triage = body.triage || {}
+      if (!id || !['new', 'reviewing', 'planned', 'resolved', 'closed'].includes(String(triage.status || '')) || !['bug', 'friction', 'feature_request', 'value_signal'].includes(String(triage.type || ''))) return jsonResponse(origin, 400, { error: 'Invalid feedback triage.', code: 'INVALID_REQUEST' })
+      const severity = Number(triage.severity)
+      if (!Number.isInteger(severity) || severity < 1 || severity > 4) return jsonResponse(origin, 400, { error: 'Invalid feedback severity.', code: 'INVALID_REQUEST' })
+      const { error } = await context.admin.from('beta_feedback').update({ triage_status: triage.status, triage_type: triage.type, severity, admin_notes: String(triage.notes || '').slice(0, 4000), updated_at: new Date().toISOString() }).eq('id', id)
+      if (error) throw error
+      return jsonResponse(origin, 200, { ok: true })
+    }
+    if (!id || !['approve', 'reject', 'reconcile', 'promote'].includes(action)) return jsonResponse(origin, 400, { error: 'Invalid admin action.', code: 'INVALID_REQUEST' })
     const { data: signup, error: signupError } = await context.admin.from('beta_signups').select('*').eq('id', id).maybeSingle()
     if (signupError || !signup) return jsonResponse(origin, 404, { error: 'Signup not found.', code: 'NOT_FOUND' })
     if (action === 'reject') {
-      const update: Record<string, unknown> = { status: 'rejected', updated_at: new Date().toISOString() }
-      const wasAllocatedFounder = signup.founding_number != null && ['verified', 'approved'].includes(signup.status)
-      if (wasAllocatedFounder) update.founding_number = null
-      const { error } = await context.admin.from('beta_signups').update(update).eq('id', id)
+      const { data, error } = await context.admin.rpc('admin_revoke_founder_signup', { p_signup_id: id })
       if (error) throw error
-      if (wasAllocatedFounder && signup.user_id) {
-        const { error: entitlementError } = await context.admin.from('membership_entitlements')
-          .delete()
-          .eq('user_id', signup.user_id)
-          .eq('plan_key', 'steel-core-premium-founder-lifetime')
-        if (entitlementError) throw entitlementError
-      }
-      return jsonResponse(origin, 200, { ok: true, status: 'rejected' })
+      return jsonResponse(origin, 200, { ok: true, ...data })
+    }
+    if (action === 'promote') {
+      const { data, error } = await context.admin.rpc('admin_promote_waitlisted_signup', { p_signup_id: id })
+      if (error) throw error
+      return jsonResponse(origin, 200, { ok: true, ...data })
     }
     if (!signup.user_id || !signup.verified_at || !['verified', 'approved'].includes(signup.status)) {
       return jsonResponse(origin, 409, { error: 'Only an email-verified signup linked to an account can be approved or reconciled.', code: 'NOT_VERIFIED' })

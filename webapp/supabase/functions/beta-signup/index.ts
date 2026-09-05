@@ -145,6 +145,14 @@ Deno.serve(async (request) => {
       verification_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       updated_at: now,
     }).eq('id', reservation.signup_id)
+    // Operational measurement only: no email, IP address or other raw PII is
+    // copied into analytics_events.
+    await admin.from('analytics_events').insert({
+      event_name: 'verification_email_sent',
+      signup_id: reservation.signup_id,
+      source: safeSource(body.source),
+      properties: {},
+    })
     const status = await publicStatus(admin)
     return jsonResponse(origin, 200, {
       ok: true,

@@ -36,3 +36,33 @@ test('migration contains the server-side allocation guardrails', async () => {
   assert.match(sql, /revoke all on table public\.beta_signups from anon, authenticated/i)
   assert.match(sql, /interval '24 hours'/)
 })
+
+test('Alpha 20 migration keeps founder, feedback, updates and analytics private', async () => {
+  const sql = await readFile(new URL('../supabase/migrations/20260905190000_alpha20_founder_experience.sql', import.meta.url), 'utf8')
+  assert.match(sql, /create table if not exists public\.beta_feedback/i)
+  assert.match(sql, /revoke all on table public\.beta_feedback from anon/i)
+  assert.match(sql, /get_my_founder_status\(\)/i)
+  assert.match(sql, /grant execute on function public\.get_my_founder_status\(\) to authenticated/i)
+  assert.match(sql, /pg_advisory_xact_lock\(187421, 20\)/i)
+  assert.match(sql, /admin_promote_waitlisted_signup/i)
+  assert.match(sql, /protect_founder_entitlement/i)
+  assert.match(sql, /verification_email_sent/i)
+  assert.match(sql, /day_bucket/i)
+})
+
+test('public client only calls constrained Alpha RPCs and never queries private founder tables', async () => {
+  const api = await readFile(new URL('../src/lib/steelApi.js', import.meta.url), 'utf8')
+  assert.match(api, /rpc\('get_my_founder_status'\)/)
+  assert.match(api, /rpc\('record_alpha_event'/)
+  assert.doesNotMatch(api, /from\('beta_signups'\)/)
+  assert.doesNotMatch(api, /from\('analytics_events'\)/)
+})
+
+test('admin function keeps privileged promotion and publishing behind an authenticated admin boundary', async () => {
+  const admin = await readFile(new URL('../supabase/functions/beta-admin/index.ts', import.meta.url), 'utf8')
+  assert.match(admin, /role\?\.role !== 'admin'/)
+  assert.match(admin, /admin_promote_waitlisted_signup/)
+  assert.match(admin, /admin_revoke_founder_signup/)
+  assert.match(admin, /publish_update/)
+  assert.match(admin, /triage_feedback/)
+})
