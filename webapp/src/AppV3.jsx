@@ -433,7 +433,7 @@ function TodayMealPlan({ mealOrder, recipes, selectedChoices, setSelectedChoices
   </section>
 }
 function NutritionPage({ preferences, navigateToTab, userId }) {
-  const [nutritionView, setNutritionView] = useState('plan')
+  const [nutritionView, setNutritionView] = useState('diary')
   const [diaryMeal, setDiaryMeal] = useState('BREAKFAST')
   const [loggedMeals, setLoggedMeals] = useState([])
   const [openMeal, setOpenMeal] = useState(null)
