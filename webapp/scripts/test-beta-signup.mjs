@@ -66,3 +66,17 @@ test('admin function keeps privileged promotion and publishing behind an authent
   assert.match(admin, /publish_update/)
   assert.match(admin, /triage_feedback/)
 })
+
+test('current-main Home, recovery and food-diary integration contracts remain present', async () => {
+  const app = await readFile(new URL('../src/AppV3.jsx', import.meta.url), 'utf8')
+  const diary = await readFile(new URL('../src/components/FoodDiary.jsx', import.meta.url), 'utf8')
+  assert.match(app, /<ManualSteps /)
+  assert.match(app, /<ReminderSettings /)
+  assert.match(app, /<HealthIntegrations\/>/)
+  assert.match(app, /desktopNavCollapsed && label\) button\.setAttribute\('title', label\)/)
+  assert.match(app, /tab === 'MealPlan'.*<NutritionPage/s)
+  assert.match(diary, /searchNutritionFoods/)
+  assert.match(diary, /getNutritionFavouriteFoods/)
+  assert.match(diary, /getNutritionFoodServings/)
+  assert.match(diary, /getNutritionFoodByBarcode/)
+})

@@ -858,6 +858,16 @@ export default function AppV3({ user, onSignOut }) {
     }).catch(() => setProductUpdates([])).finally(() => setUpdatesLoading(false))
   }, [tab, user.id])
 
+  useEffect(() => {
+    // Keep the compact desktop rail understandable without opening it.
+    const buttons = document.querySelectorAll('.v4-desktop-nav button[aria-label]')
+    buttons.forEach((button) => {
+      const label = button.getAttribute('aria-label') || ''
+      if (desktopNavCollapsed && label) button.setAttribute('title', label)
+      else button.removeAttribute('title')
+    })
+  }, [desktopNavCollapsed])
+
   function navigateToTab(next, { replace = false } = {}) {
     const resolved = typeof next === 'function' ? next(tab) : next
     const valid = [...tabs.map(({ id }) => id), 'Settings'].includes(resolved) ? resolved : 'Home'
