@@ -1,4 +1,6 @@
 .venv/
+node_modules/
+webapp/dist/
 .DS_Store
 __pycache__/
 .pytest_cache/

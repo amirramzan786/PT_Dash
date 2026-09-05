@@ -461,6 +461,21 @@ button { cursor: pointer; }
 .v4-metric-link span { color: var(--steel-muted); font-size: .59rem; letter-spacing: .08em; font-weight: 900; }
 .v4-metric-link strong { color: var(--steel-gold-2); font-size: 1.2rem; }
 .v4-metric-link small { color: #7f8996; font-size: .63rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-direction-card { display: grid; gap: 13px; padding: 16px; border: 1px solid rgba(217,173,85,.28); border-radius: 19px; background: linear-gradient(145deg,rgba(33,28,17,.96),rgba(14,22,31,.98)); }
+.home-direction-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.home-direction-header h3 { margin: 5px 0 4px; font-size: 1rem; }
+.home-direction-header p, .home-direction-signal p { margin: 0; color: var(--steel-muted); font-size: .74rem; line-height: 1.45; }
+.direction-mode { flex: 0 0 auto; padding: 6px 8px; border: 1px solid rgba(217,173,85,.35); border-radius: 999px; color: var(--steel-gold-2); font-size: .59rem; font-weight: 900; letter-spacing: .1em; }
+.direction-recover { color: #a8d7b4; border-color: rgba(116,201,145,.4); }
+.direction-reduce { color: #e4c18a; }
+.home-direction-signal { display: grid; grid-template-columns: minmax(0,1fr) minmax(150px,.6fr); gap: 12px; padding-top: 12px; border-top: 1px solid rgba(217,173,85,.17); }
+.home-direction-signal strong { display: block; margin: 5px 0 4px; font-size: .86rem; }
+.home-direction-evidence { display: grid; align-content: center; gap: 5px; padding-left: 12px; border-left: 1px solid rgba(217,173,85,.17); }
+.home-direction-evidence span { color: var(--steel-gold-2); font-size: .59rem; font-weight: 900; letter-spacing: .1em; }
+.home-direction-evidence small { color: var(--steel-muted); font-size: .66rem; line-height: 1.4; }
+.home-direction-actions { display: flex; align-items: center; gap: 14px; }
+.home-direction-actions .gold-button { min-height: 40px; padding-inline: 12px; font-size: .7rem; }
+.home-direction-actions .text-link { display: inline-flex; align-items: center; gap: 5px; }
 .journey-card { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--steel-line); border-radius: 20px; background: linear-gradient(145deg,#151d27,#0e151e); box-shadow: 0 12px 30px rgba(0,0,0,.16), inset 0 1px rgba(255,255,255,.018); }
 .journey-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
 .journey-card-header h3 { margin: 5px 0 4px; font-size: 1rem; }
@@ -662,14 +677,16 @@ button { cursor: pointer; }
 @media (min-width: 900px) {
   .home-page-stack { grid-template-columns: minmax(0,1.12fr) minmax(0,.88fr); align-items: start; }
   .home-page-stack > .v4-welcome-card,
+  .home-page-stack > .home-direction-card,
   .home-page-stack > .journey-card,
   .home-page-stack > .v4-quick-actions,
   .home-page-stack > .v4-progress-section { grid-column: 1 / -1; }
   .home-page-stack > .v4-welcome-card { grid-row: 1; }
-  .home-page-stack > .v4-quick-actions { grid-row: 2; }
-  .home-page-stack > .journey-card { grid-row: 3; }
-  .home-page-stack > .movement-card { grid-column: 2; grid-row: 4; min-height: 100%; }
-  .home-page-stack > .home-workout-section { grid-column: 1; grid-row: 4; }
+  .home-page-stack > .home-direction-card { grid-row: 2; }
+  .home-page-stack > .v4-quick-actions { grid-row: 3; }
+  .home-page-stack > .journey-card { grid-row: 4; }
+  .home-page-stack > .movement-card { grid-column: 2; grid-row: 5; min-height: 100%; }
+  .home-page-stack > .home-workout-section { grid-column: 1; grid-row: 5; }
   .home-page-stack .workout-tile { grid-template-columns: 76px minmax(0,1fr) 34px; }
   .home-page-stack .tile-copy strong { font-size: .9rem; }
   .home-page-stack .tile-copy small { font-size: .66rem; }
@@ -681,6 +698,11 @@ button { cursor: pointer; }
 
 @media (max-width: 520px) {
   .hero-checkin-reminder { max-width: 100%; font-size: .62rem; }
+  .home-direction-header { display: grid; gap: 9px; }
+  .direction-mode { justify-self: start; }
+  .home-direction-signal { grid-template-columns: 1fr; }
+  .home-direction-evidence { padding: 10px 0 0; border-top: 1px solid rgba(217,173,85,.17); border-left: 0; }
+  .home-direction-actions { align-items: flex-start; flex-direction: column; gap: 9px; }
   .journey-card-header { display: grid; gap: 8px; }
   .journey-card-header .text-link { justify-self: start; }
   .checkin-rating-grid { grid-template-columns: repeat(2,1fr); }
