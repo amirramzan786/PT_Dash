@@ -320,7 +320,7 @@ button { cursor: pointer; }
 .nutrition-macro-grid b { display: block; height: 100%; min-width: 6px; border-radius: inherit; background: linear-gradient(90deg,#d29d35,#f2c660); }
 .nutrition-custom-form { display: grid; gap: 13px; padding: 16px; }
 .meal-plan-edit-strip { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border: 1px solid rgba(217,170,72,.32); border-radius: 14px; background: linear-gradient(120deg, rgba(217,170,72,.08), rgba(13,20,29,.5)); color: var(--steel-muted); font-size: .76rem; }
-.nutrition-page-plan .meal-plan-edit-strip, .nutrition-page-plan .nutrition-plan-list { display: none; }
+.nutrition-page-plan .meal-plan-edit-strip, .nutrition-page-plan .nutrition-plan-list, .nutrition-page-plan .nutrition-plan-summary { display: none; }
 .today-meal-plan { display: grid; gap: 12px; }
 .today-meal-card { display: grid; gap: 11px; padding: 15px; border: 1px solid var(--steel-line); border-radius: 16px; background: linear-gradient(135deg, rgba(18,29,41,.98), rgba(10,16,24,.9)); }
 .today-meal-card.is-logged { border-color: rgba(87,190,128,.45); }
