@@ -8,9 +8,15 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test scripts/test-home-guidance.mjs scripts/test-programme-generator.mjs scripts/test-recovery.mjs"
+    "test": "node --test scripts/test-home-guidance.mjs scripts/test-programme-generator.mjs scripts/test-recovery.mjs",
+    "mobile:sync": "npm run build && cap sync",
+    "mobile:android": "npm run mobile:sync && cap open android",
+    "mobile:ios": "npm run mobile:sync && cap open ios"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/core": "^8.5.1",
+    "@capacitor/ios": "^8.5.1",
     "@supabase/supabase-js": "latest",
     "@vitejs/plugin-react": "latest",
     "lucide-react": "latest",
@@ -20,6 +26,7 @@
     "vite": "latest"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.1",
     "@eslint/js": "10.0.1",
     "eslint": "10.10.0",
     "globals": "17.12.0"
