@@ -321,6 +321,11 @@ button { cursor: pointer; }
 .nutrition-custom-form { display: grid; gap: 13px; padding: 16px; }
 .meal-plan-edit-strip { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border: 1px solid rgba(217,170,72,.32); border-radius: 14px; background: linear-gradient(120deg, rgba(217,170,72,.08), rgba(13,20,29,.5)); color: var(--steel-muted); font-size: .76rem; }
 .nutrition-page-plan .meal-plan-edit-strip, .nutrition-page-plan .nutrition-plan-list, .nutrition-page-plan .nutrition-plan-summary { display: none; }
+.nutrition-page-plan .nutrition-hero { order: 1; }
+.nutrition-page-plan .nutrition-macro-board { order: 2; }
+.nutrition-page-plan .today-meal-plan { order: 3; }
+.nutrition-page-plan .inline-food-finder { order: 4; }
+.nutrition-page-plan .meal-component-editor { order: 5; }
 .today-meal-plan { display: grid; gap: 12px; }
 .today-meal-card { display: grid; gap: 11px; padding: 15px; border: 1px solid var(--steel-line); border-radius: 16px; background: linear-gradient(135deg, rgba(18,29,41,.98), rgba(10,16,24,.9)); }
 .today-meal-card.is-logged { border-color: rgba(87,190,128,.45); }
