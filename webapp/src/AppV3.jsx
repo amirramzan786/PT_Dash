@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  Activity, ArrowLeft, ArrowRight, Camera, Check, ChevronDown, ChevronRight, Dumbbell, ExternalLink, Flame,
-  Footprints, HelpCircle, Home, Info, LineChart, LogOut, MessageSquare, MoreHorizontal, Play, RotateCcw, Salad, Save, Scale, Search, Settings,
+  Activity, ArrowLeft, ArrowRight, ArrowUpRight, Camera, Check, ChevronDown, ChevronRight, Circle, Dumbbell, ExternalLink, Flame,
+  Footprints, HelpCircle, Home, Info, LineChart, LogOut, MessageSquare, Play, RotateCcw, Salad, Save, Scale, Search, Settings,
   Send, ShieldCheck, Sparkles, Target, Trash2, UserRound, Watch, ListChecks, ClipboardCheck, X,
 } from 'lucide-react'
 import {
@@ -36,7 +36,7 @@ const mobileTabs = [
   { id: 'Home', label: 'Home', icon: Home },
   { id: 'Plan', label: 'Train', icon: Dumbbell },
   { id: 'MealPlan', label: 'Fuel', icon: Salad },
-  { id: 'Progress', label: 'Progress', icon: LineChart },
+  { id: 'Progress', label: 'Progress', icon: ArrowUpRight },
 ]
 
 const experienceOptions = ['Beginner', 'Intermediate', 'Advanced']
@@ -1195,7 +1195,7 @@ export default function AppV3({ user, onSignOut }) {
       <small className="steel-build">Steel · Build {import.meta.env.VITE_BUILD_SHA || "development"}</small>
     </main>
     {moreOpen && <div className="more-sheet-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setMoreOpen(false) }}><section className="more-sheet" role="dialog" aria-modal="true" aria-labelledby="more-sheet-title"><div className="more-sheet-handle"/><div className="more-sheet-heading"><div><span className="eyebrow">PROJECT STEEL</span><h2 id="more-sheet-title">More</h2></div><button type="button" className="more-sheet-close" aria-label="Close more menu" onClick={() => setMoreOpen(false)}>×</button></div><div className="more-sheet-grid"><button onClick={() => navigateToTab('Plan')}><Dumbbell/><span>Workouts</span></button><button onClick={() => navigateToTab('Library')}><ListChecks/><span>Exercise library</span></button><button onClick={() => navigateToTab('Checkin')}><ClipboardCheck/><span>Weekly check-in</span></button><button onClick={() => navigateToTab('Weight')}><Scale/><span>Weight</span></button><button onClick={openSettings}><Settings/><span>Settings</span></button></div></section></div>}
-    <nav className="v2-bottom-nav" aria-label="Project Steel navigation">{mobileTabs.map(({id,label,icon:Icon})=><button key={id} className={tab===id?'active':''} onClick={()=>navigateToTab(id)}><Icon size={20}/><span>{label}</span></button>)}<button className={moreOpen || !mobileTabs.some(({id})=>id===tab) ? 'active' : ''} aria-expanded={moreOpen} onClick={()=>setMoreOpen((open)=>!open)}><MoreHorizontal size={20}/><span>More</span></button></nav>
+    <nav className="v2-bottom-nav" aria-label="Project Steel navigation">{mobileTabs.map(({id,label,icon:Icon})=><button key={id} className={tab===id?'active':''} onClick={()=>navigateToTab(id)}><Icon size={19}/><span>{label}</span></button>)}<button className={moreOpen || !mobileTabs.some(({id})=>id===tab) ? 'active' : ''} aria-expanded={moreOpen} onClick={()=>setMoreOpen((open)=>!open)}><Circle size={17}/><span>More</span></button></nav>
     <nav className={`v4-desktop-nav ${desktopNavCollapsed ? 'is-collapsed' : ''}`} aria-label="Project Steel desktop navigation"><div className="v4-desktop-brand"><div className="brand-emblem"><SteelMark size={22}/></div><strong>PROJECT STEEL</strong></div><button type="button" className="desktop-nav-toggle" onClick={() => setDesktopNavCollapsed((collapsed) => !collapsed)} aria-label={desktopNavCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={desktopNavCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-expanded={!desktopNavCollapsed}><ChevronRight size={20}/><span>{desktopNavCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}</span></button>{tabs.filter(({id})=>id!=='Train').map(({id,label,icon:Icon})=><button key={id} className={tab===id?'active':''} onClick={()=>navigateToTab(id)} aria-label={label} title={desktopNavCollapsed ? undefined : label}><Icon size={20}/><span>{label}</span></button>)}<button className={tab==='Settings'?'active':''} onClick={openSettings} aria-label="Settings" title={desktopNavCollapsed ? undefined : "Settings"}><Settings size={20}/><span>Settings</span></button><div className="v4-desktop-support"><span className="eyebrow">SUPPORT</span><button onClick={openSettings}>Help &amp; Support <ChevronRight size={15}/></button><button onClick={openSettings}>About Steel <ChevronRight size={15}/></button></div></nav>
   </div>
 }
