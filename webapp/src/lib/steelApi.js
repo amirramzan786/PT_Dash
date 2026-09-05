@@ -479,6 +479,23 @@ export async function getNutritionFavouriteFoods(userId) {
   return foodIds.map((id) => byId.get(id)).filter(Boolean)
 }
 
+export async function getNutritionRecentFoods() {
+  const client = requireSupabase()
+  const { data: items, error: itemsError } = await client
+    .from('nutrition_meal_log_items')
+    .select('food_id,created_at')
+    .order('created_at', { ascending: false })
+    .limit(48)
+  if (itemsError) throw itemsError
+
+  const foodIds = [...new Set((items ?? []).map((item) => item.food_id).filter(Boolean))].slice(0, 16)
+  if (!foodIds.length) return []
+  const { data: foods, error } = await client.from('nutrition_foods').select(nutritionFoodFields).in('id', foodIds)
+  if (error) throw error
+  const byId = new Map((foods ?? []).map((food) => [food.id, food]))
+  return foodIds.map((id) => byId.get(id)).filter(Boolean)
+}
+
 export async function setNutritionFoodFavourite({ userId, foodId, favourite }) {
   const client = requireSupabase()
   if (!favourite) {
