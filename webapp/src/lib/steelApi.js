@@ -529,6 +529,33 @@ export async function saveNutritionFoodEntry({ mealDate, mealType, food, grams, 
   return data
 }
 
+// Planned meals use the same server-side writer as the diary so every component
+// remains a real, catalogue-backed food entry rather than a client-side macro total.
+export async function saveNutritionMealComponents({ mealDate, mealType, recipeName, notes, items }) {
+  const client = requireSupabase()
+  const components = (items ?? []).filter((item) => item.foodId && Number(item.grams) > 0).map((item) => {
+    const multiplier = Number(item.grams) / 100
+    return {
+      foodId: item.foodId,
+      name: item.name,
+      brand: item.brand || '',
+      servingLabel: item.servingLabel || `${item.grams}g`,
+      grams: Number(item.grams),
+      calories: Number(item.caloriesPer100 || 0) * multiplier,
+      protein: Number(item.proteinPer100 || 0) * multiplier,
+      carbs: Number(item.carbsPer100 || 0) * multiplier,
+      fat: Number(item.fatPer100 || 0) * multiplier,
+      fibre: Number(item.fibrePer100 || 0) * multiplier,
+      sugar: Number(item.sugarPer100 || 0) * multiplier,
+      salt: Number(item.saltPer100 || 0) * multiplier,
+    }
+  })
+  if (!components.length) throw new Error('Add at least one catalogue food before logging this meal.')
+  const { data, error } = await client.rpc('save_nutrition_meal_entry', { p_entry: { mealDate, mealType, entryType: 'planned', recipeName, notes: notes || 'Steel meal plan' }, p_items: components })
+  if (error) throw error
+  return data
+}
+
 export async function getWeeklyActivitySummary(userId, weekStart, weekEnd) {
   const client = requireSupabase()
   const [sessionsResult, mealsResult] = await Promise.all([
