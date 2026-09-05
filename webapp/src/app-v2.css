@@ -333,17 +333,32 @@ button { cursor: pointer; }
 .nutrition-page-plan .nutrition-next-card .text-link { font-size: .72rem; }
 .today-meal-plan { display: grid; gap: 12px; }
 .diet-plan-overview { display: grid; gap: 12px; }
-.diet-plan-target { padding: 14px; border: 1px solid rgba(217,173,85,.35); border-radius: 15px; background: linear-gradient(115deg, rgba(217,173,85,.1), rgba(17,24,33,.7)); }
+.diet-plan-target { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px; border: 1px solid rgba(217,173,85,.35); border-radius: 15px; background: linear-gradient(115deg, rgba(217,173,85,.1), rgba(17,24,33,.7)); }
 .diet-plan-target div { display: grid; gap: 4px; }
 .diet-plan-target strong { color: #f0f3f5; font-size: .95rem; }
 .diet-plan-target small, .diet-plan-note { color: var(--steel-muted); font-size: .74rem; line-height: 1.45; }
 .diet-plan-meals { display: grid; gap: 9px; }
-.diet-plan-meal { display: grid; gap: 5px; padding: 13px; border: 1px solid var(--steel-line); border-radius: 14px; background: rgba(13,20,29,.72); }
-.diet-plan-meal h4, .diet-plan-meal p { margin: 0; }
-.diet-plan-meal h4 { color: #eef1f4; font-size: .9rem; }
-.diet-plan-meal p, .diet-plan-meal small { color: var(--steel-muted); font-size: .73rem; line-height: 1.4; }
-.diet-plan-meal footer { display: flex; gap: 7px; padding-top: 5px; }
-.diet-plan-meal footer span { padding: 4px 7px; border-radius: 7px; color: var(--steel-gold-2); background: rgba(217,173,85,.1); font-size: .66rem; font-weight: 800; }
+.diet-plan-meal-group { display: grid; gap: 7px; }
+.diet-plan-meal-group-heading { display: flex; align-items: center; justify-content: space-between; padding: 2px 3px; }
+.diet-plan-meal-group-heading small { color: var(--steel-muted); font-size: .67rem; font-weight: 750; }
+.diet-plan-recipe-list { display: grid; gap: 7px; }
+.diet-plan-recipe { overflow: hidden; border: 1px solid var(--steel-line); border-radius: 13px; background: rgba(13,20,29,.72); }
+.diet-plan-recipe summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 13px; cursor: pointer; list-style: none; }
+.diet-plan-recipe summary::-webkit-details-marker { display: none; }
+.diet-plan-recipe summary > span:first-child { min-width: 0; display: grid; gap: 3px; }
+.diet-plan-recipe summary strong { color: #eef1f4; font-size: .84rem; }
+.diet-plan-recipe summary small { overflow: hidden; color: var(--steel-muted); font-size: .69rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.diet-plan-recipe-summary { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; color: var(--steel-muted); }
+.diet-plan-recipe-summary em { color: var(--steel-gold-2); font-size: .67rem; font-style: normal; font-weight: 800; }
+.diet-plan-recipe-summary svg { transition: transform .18s ease; }
+.diet-plan-recipe[open] { border-color: rgba(217,173,85,.45); background: linear-gradient(135deg, rgba(36,32,21,.65), rgba(13,20,29,.86)); }
+.diet-plan-recipe[open] .diet-plan-recipe-summary svg { transform: rotate(180deg); }
+.diet-plan-recipe-content { display: grid; gap: 10px; padding: 0 13px 13px; border-top: 1px solid rgba(255,255,255,.08); }
+.diet-plan-recipe-content > div:not(.diet-plan-recipe-macros) { display: grid; gap: 3px; }
+.diet-plan-recipe-content strong { padding-top: 10px; color: var(--steel-gold-2); font-size: .67rem; letter-spacing: .06em; text-transform: uppercase; }
+.diet-plan-recipe-content p { margin: 0; color: var(--steel-muted); font-size: .72rem; line-height: 1.45; }
+.diet-plan-recipe-macros { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 11px; }
+.diet-plan-recipe-macros span { padding: 4px 6px; border-radius: 7px; color: #cdd3d8; background: rgba(135,151,166,.12); font-size: .63rem; font-weight: 750; }
 .diet-plan-note { margin: 0; }
 .today-meal-card { display: grid; gap: 11px; padding: 15px; border: 1px solid var(--steel-line); border-radius: 16px; background: linear-gradient(135deg, rgba(18,29,41,.98), rgba(10,16,24,.9)); }
 .today-meal-card.is-logged { border-color: rgba(87,190,128,.45); }
@@ -770,6 +785,8 @@ button { cursor: pointer; }
 }
 
 @media (max-width: 520px) {
+  .diet-plan-target { align-items: flex-start; flex-direction: column; }
+  .diet-plan-target .text-link { min-height: 30px; }
   .hero-checkin-reminder { max-width: 100%; font-size: .62rem; }
   .home-direction-header { display: grid; gap: 9px; }
   .direction-mode { justify-self: start; }
