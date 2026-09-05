@@ -427,7 +427,7 @@ function TodayMealPlan({ mealOrder, recipes, selectedChoices, setSelectedChoices
         <div className="today-meal-selected"><div><strong>{selected.name}</strong><small>{(selected.ingredients || []).map(ingredientLabel).join(' · ')}</small></div><label><span>Portion</span><select value={portion} onChange={(event) => setPortions({ ...portions, [meal]: Number(event.target.value) })}>{[[.5,'½'],[.75,'¾'],[1,'Full'],[1.25,'1¼'],[1.5,'1½']].map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label></div>
         <div className="today-meal-macros"><span>{Math.round(selected.calories * portion)} kcal</span><span>{Math.round(selected.protein * portion)}g protein</span><span>{Math.round(selected.carbs * portion)}g carbs</span><span>{Math.round(selected.fat * portion)}g fat</span></div>
         <div className="today-meal-actions"><button type="button" onClick={() => onEdit(selected)}>Edit ingredients</button><button type="button" onClick={() => onFindFood(meal)}><Search size={15}/> Add food</button>{existing ? <button type="button" className="today-meal-unlog" disabled={logBusy} onClick={() => onUnlog(existing)}>Unlog</button> : <button type="button" className="gold-button" disabled={logBusy} onClick={() => onLog(selected)}>Log meal</button>}</div>
-        {editor?.recipe?.meal === meal && editor.recipe.optionKey === selected.optionKey && <InlineMealIngredientEditor {...editor}/>}
+        {editor?.recipe?.meal === meal && <InlineMealIngredientEditor {...editor}/>}
       </article>
     })}
   </section>
