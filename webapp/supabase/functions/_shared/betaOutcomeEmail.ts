@@ -41,25 +41,24 @@ export async function sendBetaOutcomeEmail(admin: SupabaseClient, outcome: Found
   }
 
   const message = copyFor(outcome, config.appUrl)
-  const { data: delivery, error: reservationError } = await admin
+  const { error: reservationError } = await admin
     .from('beta_outcome_email_deliveries')
     .upsert({ signup_id: outcome.signupId, kind: message.kind }, { onConflict: 'signup_id,kind', ignoreDuplicates: true })
-    .select('id,sent_at')
-    .maybeSingle()
 
   if (reservationError) throw reservationError
-  if (!delivery) {
-    const { data: existing, error: existingError } = await admin
-      .from('beta_outcome_email_deliveries')
-      .select('id,sent_at')
-      .eq('signup_id', outcome.signupId)
-      .eq('kind', message.kind)
-      .single()
-    if (existingError) throw existingError
-    if (existing.sent_at) return { delivered: true, configured: true }
-    return { delivered: false, configured: true }
-  }
+  const { data: delivery, error: deliveryError } = await admin
+    .from('beta_outcome_email_deliveries')
+    .select('id,sent_at,attempt_count')
+    .eq('signup_id', outcome.signupId)
+    .eq('kind', message.kind)
+    .single()
+  if (deliveryError) throw deliveryError
   if (delivery.sent_at) return { delivered: true, configured: true }
+
+  // Multiple idempotent verification callbacks may race after a provider
+  // failure. Resend deduplicates the request and the delivery row retains the
+  // true attempt count, so a transient failure remains safely retryable.
+  const attemptCount = delivery.attempt_count + 1
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -79,7 +78,7 @@ export async function sendBetaOutcomeEmail(admin: SupabaseClient, outcome: Found
 
   if (!response.ok) {
     await admin.from('beta_outcome_email_deliveries').update({
-      attempt_count: 1,
+      attempt_count: attemptCount,
       last_attempt_at: new Date().toISOString(),
       last_error_code: `provider_${response.status}`,
       updated_at: new Date().toISOString(),
@@ -93,7 +92,7 @@ export async function sendBetaOutcomeEmail(admin: SupabaseClient, outcome: Found
     provider_message_id: payload.id || null,
     sent_at: new Date().toISOString(),
     last_attempt_at: new Date().toISOString(),
-    attempt_count: 1,
+    attempt_count: attemptCount,
     last_error_code: null,
     updated_at: new Date().toISOString(),
   }).eq('id', delivery.id)
