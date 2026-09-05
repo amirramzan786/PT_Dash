@@ -1,5 +1,5 @@
 import { supabase, supabaseConfigured } from './supabase'
-import { localDay, validateSteps, preferredSteps, dailyStepHistory } from './steps'
+import { localDay, validateSteps, validateDailyStepGoal, preferredSteps, dailyStepHistory } from './steps'
 import { normalizeReminders } from './reminders'
 
 function requireSupabase() {
@@ -351,7 +351,7 @@ export async function saveWeight(userId, checkinDate, weightLb) {
 
 export async function getProfile(userId) {
   const client = requireSupabase()
-  const { data, error } = await client.from('profiles').select('id,display_name,phone,goal,avatar_url,experience_level,available_equipment,training_days,checkin_day,units,limitations,onboarding_completed,dietary_preference,allergies,meals_per_day,notification_preferences,created_at,updated_at').eq('id', userId).maybeSingle()
+  const { data, error } = await client.from('profiles').select('id,display_name,phone,goal,avatar_url,experience_level,available_equipment,training_days,checkin_day,units,daily_step_goal,limitations,onboarding_completed,dietary_preference,allergies,meals_per_day,notification_preferences,created_at,updated_at').eq('id', userId).maybeSingle()
   if (error) throw error
   return data
 }
@@ -562,7 +562,7 @@ export async function uploadCheckinMedia({ userId, weekStart, file, mediaType = 
   return data
 }
 
-export async function saveProfile(userId, { displayName, phone, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, checkinDay, units, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay }) {
+export async function saveProfile(userId, { displayName, phone, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, checkinDay, units, dailyStepGoal, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay }) {
   const client = requireSupabase()
   const payload = { id: userId, display_name: displayName || null, goal: goal || 'Lose fat and gain muscle', updated_at: new Date().toISOString() }
   if (avatarUrl !== undefined) payload.avatar_url = avatarUrl || null
@@ -572,6 +572,7 @@ export async function saveProfile(userId, { displayName, phone, goal, avatarUrl,
   if (trainingDays !== undefined) payload.training_days = trainingDays
   if (checkinDay !== undefined) payload.checkin_day = checkinDay
   if (units !== undefined) payload.units = units
+  if (dailyStepGoal !== undefined) payload.daily_step_goal = validateDailyStepGoal(dailyStepGoal)
   if (limitations !== undefined) payload.limitations = limitations || null
   if (onboardingCompleted !== undefined) payload.onboarding_completed = onboardingCompleted
   if (dietaryPreference !== undefined) payload.dietary_preference = dietaryPreference

@@ -9,6 +9,18 @@ export function validateSteps(value) {
   return steps
 }
 
+export function validateDailyStepGoal(value) {
+  const goal = Number(value)
+  if (!Number.isSafeInteger(goal) || goal < 1000 || goal > 100000) throw new Error('Choose a whole-number daily goal between 1,000 and 100,000 steps.')
+  return goal
+}
+
+export function stepGoalProgress(steps, goal = 10000) {
+  const safeGoal = validateDailyStepGoal(goal)
+  const safeSteps = Math.max(0, Number(steps) || 0)
+  return { goal: safeGoal, completed: Math.min(100, Math.round((safeSteps / safeGoal) * 100)), remaining: Math.max(0, safeGoal - safeSteps) }
+}
+
 // Provider totals overlap. Choose one total per day, preferring connected data.
 export function preferredSteps(rows = []) {
   return [...rows].sort((a, b) => {

@@ -14,6 +14,7 @@ create table if not exists profiles (
   training_days smallint not null default 3 check (training_days between 1 and 7),
   checkin_day smallint not null default 0 check (checkin_day between 0 and 6),
   units text not null default 'lb' check (units in ('lb','kg')),
+  daily_step_goal integer not null default 10000 check (daily_step_goal between 1000 and 100000),
   limitations text,
   onboarding_completed boolean not null default false,
   dietary_preference text not null default 'No preference',

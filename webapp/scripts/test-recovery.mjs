@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { localDay, validateSteps, preferredSteps, dailyStepHistory } from '../src/lib/steps.js'
+import { localDay, validateSteps, validateDailyStepGoal, stepGoalProgress, preferredSteps, dailyStepHistory } from '../src/lib/steps.js'
 import { normalizeReminders, dueReminders } from '../src/lib/reminders.js'
 
 test('steps accept zero but reject blank, fractions, negative and excessive totals', () => {
@@ -24,6 +24,13 @@ test('overlapping providers contribute exactly one daily total, with manual fall
 test('date keys use the local calendar date near midnight', () => {
   const now = new Date(2026, 8, 5, 0, 1)
   assert.equal(localDay(now), '2026-09-05')
+})
+
+test('daily step goals are bounded and communicate progress without exceeding 100%', () => {
+  assert.equal(validateDailyStepGoal(10000), 10000)
+  for (const value of ['', 999, 100001, 10000.5]) assert.throws(() => validateDailyStepGoal(value))
+  assert.deepEqual(stepGoalProgress(2222, 8000), { goal: 8000, completed: 28, remaining: 5778 })
+  assert.deepEqual(stepGoalProgress(12000, 10000), { goal: 10000, completed: 100, remaining: 0 })
 })
 
 test('stored reminder preferences retain schedules and reject malformed fields', () => {

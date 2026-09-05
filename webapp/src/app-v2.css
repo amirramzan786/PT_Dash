@@ -503,6 +503,12 @@ button { cursor: pointer; }
 .step-total { display: grid; justify-items: end; gap: 2px; }
 .step-total strong { color: var(--steel-gold-2); font-size: clamp(1.45rem, 6vw, 2rem); line-height: 1; }
 .step-total small { color: var(--steel-muted); font-size: .64rem; }
+.step-goal-summary { display: grid; gap: 7px; padding: 10px 12px; border: 1px solid var(--steel-line); border-radius: 11px; background: linear-gradient(110deg, rgba(215,164,63,.09), transparent 58%); }
+.step-goal-summary > div:first-child { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.step-goal-summary strong { color: var(--steel-gold-2); font-size: .92rem; }
+.step-goal-summary span { color: var(--steel-muted); font-size: .67rem; text-align: right; }
+.step-goal-track { height: 5px; overflow: hidden; border-radius: 999px; background: #22303e; }
+.step-goal-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--steel-gold), #f4c95e); }
 .movement-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 10px; border-top: 1px solid var(--steel-line); color: var(--steel-muted); font-size: .68rem; }
 .movement-card-meta strong { color: #edf0f3; }
 .movement-card.is-empty { gap: 8px; }
