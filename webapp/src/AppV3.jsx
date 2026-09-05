@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import {
   changePassword, deleteMealLog, getDashboardStats, getLatestWeeklyCheckin, getMealLogs, getProfile, getRecentSessions, getTodaySteps, getStepHistory, getWeightHistory, getWeeklyCheckinHistory,
-  getActiveGeneratedProgramme, getNutritionPlan, getProgrammeIntake, getWeeklyActivitySummary, loadExerciseCatalog, loadUserRole, loadWorkouts, replaceGeneratedProgramme, resetOnboarding, saveCustomWorkout, saveMealLog, saveMealPlanItem, saveNutritionMealComponents, saveProgrammeIntake, saveProfile, saveWeight, saveWeeklyCheckin as saveWeeklyCheckinRecord, saveWorkoutSession, sendOnboardingAiMessage, updateAccount, updateCustomWorkout, uploadAvatar, uploadCheckinMedia,
+  getActiveGeneratedProgramme, getNutritionPlan, getProgrammeIntake, getWeeklyActivitySummary, loadExerciseCatalog, loadUserRole, loadWorkouts, replaceGeneratedProgramme, resetOnboarding, saveCustomWorkout, saveMealLog, saveMealPlanItem, saveNutritionFoodEntry, saveNutritionMealComponents, saveProgrammeIntake, saveProfile, saveWeight, saveWeeklyCheckin as saveWeeklyCheckinRecord, saveWorkoutSession, sendOnboardingAiMessage, updateAccount, updateCustomWorkout, uploadAvatar, uploadCheckinMedia,
 } from './lib/steelApi'
 import { buildGeneratedProgramme } from './lib/programmeGenerator'
 import { buildDailySummary, buildTrainingRecommendation } from './lib/homeGuidance'
@@ -410,6 +410,9 @@ function componentTotals(components) {
   return (components || []).reduce((total, component) => { const factor = Number(component.grams || 0) / 100; return { calories: total.calories + Number(component.caloriesPer100 || 0) * factor, protein: total.protein + Number(component.proteinPer100 || 0) * factor, carbs: total.carbs + Number(component.carbsPer100 || 0) * factor, fat: total.fat + Number(component.fatPer100 || 0) * factor, servingG: total.servingG + Number(component.grams || 0) } }, { calories: 0, protein: 0, carbs: 0, fat: 0, servingG: 0 })
 }
 function ingredientLabel(ingredient) { return typeof ingredient === 'string' ? ingredient : `${Math.round(Number(ingredient.grams || 0))}g ${ingredient.name || 'Catalogue food'}` }
+function TodayMealPlan({ mealOrder, recipes, selectedChoices, setSelectedChoices, portions, setPortions, plannedLogs, logBusy, onEdit, onLog, onUnlog, onFindFood }) {
+  return <section className="today-meal-plan"><div className="section-heading"><div><span className="eyebrow">YOUR MEALS FOR TODAY</span><h3>Choose. Adjust. Log.</h3></div><span className="nutrition-progress">3 options per meal</span></div>{mealOrder.map((meal) => { const options = recipes.filter((recipe) => recipe.meal === meal); const selected = options.find((recipe) => recipe.optionKey === selectedChoices[meal]) || options[0]; const portion = Number(portions[meal] || 1); const existing = plannedLogs.find((entry) => entry.meal_type === meal); return <article className={existing ? 'today-meal-card is-logged' : 'today-meal-card'} key={meal}><div className="today-meal-heading"><span className="eyebrow">{meal}</span>{existing && <span className="meal-logged-label">LOGGED</span>}</div><div className="today-meal-options">{options.map((option) => <button type="button" key={option.optionKey} className={selected.optionKey === option.optionKey ? 'selected' : ''} onClick={() => setSelectedChoices({ ...selectedChoices, [meal]: option.optionKey })}><strong>{option.name}</strong><span>{option.detail}</span><em>{option.calories} kcal · {option.protein}g protein</em></button>)}</div><div className="today-meal-selected"><div><strong>{selected.name}</strong><small>{(selected.ingredients || []).map(ingredientLabel).join(' · ')}</small></div><label><span>Portion</span><select value={portion} onChange={(event) => setPortions({ ...portions, [meal]: Number(event.target.value) })}>{[[.5,'½'],[.75,'¾'],[1,'Full'],[1.25,'1¼'],[1.5,'1½']].map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label></div><div className="today-meal-macros"><span>{Math.round(selected.calories * portion)} kcal</span><span>{Math.round(selected.protein * portion)}g protein</span><span>{Math.round(selected.carbs * portion)}g carbs</span><span>{Math.round(selected.fat * portion)}g fat</span></div><div className="today-meal-actions"><button type="button" onClick={() => onEdit(selected)}>Edit ingredients</button><button type="button" onClick={() => onFindFood(meal)}><Search size={15}/> Add food</button>{existing ? <button type="button" className="today-meal-unlog" disabled={logBusy} onClick={() => onUnlog(existing)}>Unlog</button> : <button type="button" className="gold-button" disabled={logBusy} onClick={() => onLog(selected)}>Log meal</button>}</div></article> })}</section>
+}
 function NutritionPage({ preferences, navigateToTab, userId }) {
   const [nutritionView, setNutritionView] = useState('plan')
   const [diaryMeal, setDiaryMeal] = useState('BREAKFAST')
@@ -422,6 +425,8 @@ function NutritionPage({ preferences, navigateToTab, userId }) {
   const [editingComponents, setEditingComponents] = useState([])
   const [matchingComponentIndex, setMatchingComponentIndex] = useState(null)
   const [savingRecipe, setSavingRecipe] = useState(false)
+  const [finderOpen, setFinderOpen] = useState(false)
+  const [finderMeal, setFinderMeal] = useState('BREAKFAST')
   const [editingCustomGroup, setEditingCustomGroup] = useState(null)
   const [customForm, setCustomForm] = useState({ meal: 'SNACK', title: '', items: [{ name: '', grams: '', caloriesPer100: '', proteinPer100: '', carbsPer100: '', fatPer100: '' }] })
   const [logBusy, setLogBusy] = useState(false)
@@ -492,7 +497,8 @@ function NutritionPage({ preferences, navigateToTab, userId }) {
     try {
       const plan = await getNutritionPlan(userId)
       if (plan.target) setTarget({ calories: plan.target.calories || 2050, protein_g: plan.target.protein_g || 170 })
-      if (plan.meals.length) setRecipes(normalisePlan(plan.meals))
+      const seeded = plan.meals.length ? plan.meals : await Promise.all(Object.entries(starterChoices).flatMap(([meal, options]) => options.map((option, index) => saveMealPlanItem({ userId, item: { ...option, meal, optionKey: `${meal.toLowerCase()}-${index + 1}`, optionNumber: index + 1, sortOrder: index + 1 } }))))
+      setRecipes(normalisePlan(seeded))
     } catch (error) {
       setPlanError(error.message || 'Your assigned recipes could not be loaded.')
     } finally {
@@ -585,6 +591,10 @@ function NutritionPage({ preferences, navigateToTab, userId }) {
     setNutritionView('diary')
     window.setTimeout(() => document.getElementById('steel-food-search')?.focus(), 0)
   }
+  async function addFoundFood({ food, grams, servingLabel, mealType }) {
+    setLogBusy(true)
+    try { await saveNutritionFoodEntry({ mealDate: today, mealType, food, grams, servingLabel }); await refreshLoggedMeals(); setFinderOpen(false) } finally { setLogBusy(false) }
+  }
   const dietary = preferences.dietaryPreference || 'No preference'
   const allergyWords = (preferences.allergies || '').toLowerCase().split(/[,;]+/).map((word) => word.trim()).filter(Boolean)
   const assignedRecipes = recipes.filter((recipe) => {
@@ -605,9 +615,11 @@ function NutritionPage({ preferences, navigateToTab, userId }) {
     groups[key].logs.push(log)
     return groups
   }, {}))
-  return <div className="page-stack nutrition-page">
+  return <div className={`page-stack nutrition-page nutrition-page-${nutritionView}`}>
     <section className="page-intro"><span className="eyebrow">FUEL YOUR GOAL</span><h2>{nutritionView === 'diary' ? 'Food diary' : nutritionView === 'plan' ? 'Your meal plan' : 'Recipe library'}</h2><p>{nutritionView === 'diary' ? 'Track the food you actually ate, then let Steel keep the useful numbers clear.' : nutritionView === 'plan' ? 'Choose one balanced option per meal, adjust the portion and log what you actually eat.' : `Browse the recipes assigned around your ${dietary === 'No preference' ? 'training plan' : dietary.toLowerCase()} preferences.`}</p><div className="nutrition-view-switcher" role="tablist" aria-label="Nutrition views"><button type="button" className={nutritionView === 'diary' ? 'active' : ''} onClick={() => setNutritionView('diary')}>Food diary</button><button type="button" className={nutritionView === 'plan' ? 'active' : ''} onClick={() => setNutritionView('plan')}>Your meal plan</button><button type="button" className={nutritionView === 'library' ? 'active' : ''} onClick={() => setNutritionView('library')}>Recipe library</button></div></section>
     {planError && <div className="nutrition-plan-alert"><span>Showing your starter meals while your assigned plan reconnects.</span><button type="button" onClick={loadPlan}>Try again</button></div>}
+    {nutritionView === 'plan' && <TodayMealPlan mealOrder={mealOrder} recipes={assignedRecipes} selectedChoices={selectedChoices} setSelectedChoices={setSelectedChoices} portions={portions} setPortions={setPortions} plannedLogs={plannedLogs} logBusy={logBusy} onEdit={openRecipeEditor} onLog={logMeal} onUnlog={removeMeal} onFindFood={(meal) => { setFinderMeal(meal); setFinderOpen(true) }}/>}
+    {nutritionView === 'plan' && finderOpen && <section className="inline-food-finder steel-card"><div><span className="eyebrow">ADD TO {finderMeal}</span><h3>Find a food</h3><p>Search the catalogue or scan a barcode. Nothing is shown until you ask for it.</p></div><FoodDiary userId={userId} mealLogs={[]} initialMeal={finderMeal} onFoodPicked={addFoundFood}/><button type="button" className="text-link" onClick={() => setFinderOpen(false)}>Close food finder</button></section>}
     {nutritionView === 'plan' && !editingRecipe && <section className="meal-plan-edit-strip"><span>Make any meal your own</span>{mealOrder.map((meal) => { const options = assignedRecipes.filter((recipe) => recipe.meal === meal); const selected = options.find((recipe) => recipe.optionKey === selectedChoices[meal]) || options[0]; return <button type="button" key={meal} onClick={() => openRecipeEditor(selected)}>Edit {meal.toLowerCase()}</button> })}</section>}
     <article className="nutrition-hero"><div className="macro-orb"><span>{loggedCalories.toLocaleString('en-GB')}</span><small>kcal logged</small></div><div><span className="eyebrow">TODAY’S TARGET</span><h3>{target.calories.toLocaleString('en-GB')} kcal · {target.protein_g}g protein</h3><p>{dietary} · {preferences.mealsPerDay} meals per day</p></div></article>
     <section className="nutrition-macro-board"><div className="nutrition-board-heading"><div><span className="eyebrow">TODAY’S INTAKE</span><strong>{loggedCalories.toLocaleString('en-GB')} <small>/ {target.calories.toLocaleString('en-GB')} kcal</small></strong></div><span>{Math.max(0, target.calories - loggedCalories).toLocaleString('en-GB')} kcal remaining</span></div><div className="nutrition-macro-grid">{[['Protein', loggedProtein, macroTargets.protein, 'protein'], ['Carbs', loggedCarbs, macroTargets.carbs, 'carbs'], ['Fat', loggedFat, macroTargets.fat, 'fat']].map(([label, value, goal, key]) => <div key={key}><span>{label}</span><strong>{Math.round(value)}g <small>/ {goal}g</small></strong><i><b style={{ width: `${Math.min(100, Math.round((value / Math.max(1, goal)) * 100))}%` }}/></i></div>)}</div></section>
