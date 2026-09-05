@@ -29,6 +29,7 @@ test('migration contains the server-side allocation guardrails', async () => {
   const sql = await readFile(new URL('../supabase/migrations/20260904120000_founding20_beta_signups.sql', import.meta.url), 'utf8')
   assert.match(sql, /pg_advisory_xact_lock/)
   assert.match(sql, /between 1 and 20/)
+  assert.match(sql, /v_plan_key constant text/)
   assert.match(sql, /steel-core-premium-founder-lifetime/)
   assert.match(sql, /on conflict \(user_id\) do update/i)
   assert.match(sql, /plan_label, status, plan_change_limit/i)
@@ -123,4 +124,10 @@ test('current-main Home, recovery and food-diary integration contracts remain pr
   assert.match(diary, /getNutritionFavouriteFoods/)
   assert.match(diary, /getNutritionFoodServings/)
   assert.match(diary, /getNutritionFoodByBarcode/)
+})
+
+test('recipe foundation upgrades the earlier production recipes shape before indexing it', async () => {
+  const sql = await readFile(new URL('../supabase/migrations/20260905103543_nutrition_recipe_foundation.sql', import.meta.url), 'utf8')
+  assert.match(sql, /add column if not exists active boolean not null default true/)
+  assert.match(sql, /nutrition_recipes_user_meal_idx[\s\S]*active/)
 })

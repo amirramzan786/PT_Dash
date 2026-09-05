@@ -244,7 +244,7 @@ declare
   v_signup public.beta_signups;
   v_founder_number smallint;
   v_status text;
-  v_plan_key text constant := 'steel-core-premium-founder-lifetime';
+  v_plan_key constant text := 'steel-core-premium-founder-lifetime';
 begin
   if p_user_id is null or v_email = '' then
     raise exception 'A verified account and email are required.' using errcode = '22023';

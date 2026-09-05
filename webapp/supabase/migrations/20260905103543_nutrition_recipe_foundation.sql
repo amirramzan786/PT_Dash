@@ -52,6 +52,20 @@ create table if not exists public.nutrition_recipes (
   updated_at timestamptz not null default now()
 );
 
+-- Early Steel deployments already have a slimmer recipes table. Bring it up
+-- to the canonical shape before creating the index below, without replacing
+-- existing member recipes.
+alter table public.nutrition_recipes
+  add column if not exists description text,
+  add column if not exists source text not null default 'personal',
+  add column if not exists active boolean not null default true;
+
+alter table public.nutrition_recipes
+  drop constraint if exists nutrition_recipes_source_check;
+alter table public.nutrition_recipes
+  add constraint nutrition_recipes_source_check
+  check (source in ('assigned', 'personal', 'saved_from_diary'));
+
 create index if not exists nutrition_recipes_user_meal_idx on public.nutrition_recipes (user_id, meal_type, active, created_at desc);
 
 create table if not exists public.nutrition_recipe_items (
