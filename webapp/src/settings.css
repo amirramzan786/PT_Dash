@@ -72,6 +72,7 @@
 .preferences-form { display: grid; gap: 14px; }
 .preferences-form label, .preferences-form fieldset { display: grid; gap: 6px; }
 .preferences-form label > span, .preferences-form legend { color: var(--steel-muted); font-size: .68rem; font-weight: 850; }
+.preferences-form .field-label { color: var(--steel-muted); font-size: .68rem; font-weight: 850; }
 .preferences-form fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .preferences-form legend { padding: 0; }
 .preferences-form select, .preferences-form textarea { width: 100%; min-height: 45px; border: 1px solid #35404c; border-radius: 11px; background: #0a1017; color: #fff; padding: 0 11px; font: inherit; font-size: .82rem; outline: none; }

@@ -7,6 +7,11 @@ function requireSupabase() {
   return supabase
 }
 
+function hasPendingSnackPreferenceMigration(error) {
+  const detail = `${error?.message || ''} ${error?.details || ''}`.toLowerCase()
+  return error?.code === '42703' || (detail.includes('snacks_enabled') || detail.includes('snack_preferences'))
+}
+
 export async function getCurrentUser() {
   const client = requireSupabase()
   const { data, error } = await client.auth.getUser()
@@ -351,7 +356,13 @@ export async function saveWeight(userId, checkinDate, weightLb) {
 
 export async function getProfile(userId) {
   const client = requireSupabase()
-  const { data, error } = await client.from('profiles').select('id,display_name,phone,goal,avatar_url,experience_level,available_equipment,training_days,checkin_day,units,limitations,onboarding_completed,dietary_preference,allergies,meals_per_day,notification_preferences,created_at,updated_at').eq('id', userId).maybeSingle()
+  const profileColumns = 'id,display_name,phone,goal,avatar_url,experience_level,available_equipment,training_days,checkin_day,units,limitations,onboarding_completed,dietary_preference,allergies,meals_per_day,notification_preferences,created_at,updated_at'
+  let { data, error } = await client.from('profiles').select(`${profileColumns},snacks_enabled,snack_preferences`).eq('id', userId).maybeSingle()
+  if (error && hasPendingSnackPreferenceMigration(error)) {
+    const legacy = await client.from('profiles').select(profileColumns).eq('id', userId).maybeSingle()
+    data = legacy.data ? { ...legacy.data, snacks_enabled: true, snack_preferences: [] } : null
+    error = legacy.error
+  }
   if (error) throw error
   return data
 }
@@ -589,7 +600,7 @@ export async function uploadCheckinMedia({ userId, weekStart, file, mediaType = 
   return data
 }
 
-export async function saveProfile(userId, { displayName, phone, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, checkinDay, units, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay }) {
+export async function saveProfile(userId, { displayName, phone, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, checkinDay, units, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay, snacksEnabled, snackPreferences }) {
   const client = requireSupabase()
   const payload = { id: userId, display_name: displayName || null, goal: goal || 'Lose fat and gain muscle', updated_at: new Date().toISOString() }
   if (avatarUrl !== undefined) payload.avatar_url = avatarUrl || null
@@ -604,7 +615,14 @@ export async function saveProfile(userId, { displayName, phone, goal, avatarUrl,
   if (dietaryPreference !== undefined) payload.dietary_preference = dietaryPreference
   if (allergies !== undefined) payload.allergies = allergies || null
   if (mealsPerDay !== undefined) payload.meals_per_day = mealsPerDay
-  const { data, error } = await client.from('profiles').upsert(payload, { onConflict: 'id' }).select().single()
+  if (snacksEnabled !== undefined) payload.snacks_enabled = snacksEnabled === true
+  if (snackPreferences !== undefined) payload.snack_preferences = Array.isArray(snackPreferences) ? snackPreferences : []
+  let { data, error } = await client.from('profiles').upsert(payload, { onConflict: 'id' }).select().single()
+  if (error && hasPendingSnackPreferenceMigration(error)) {
+    delete payload.snacks_enabled
+    delete payload.snack_preferences
+    ;({ data, error } = await client.from('profiles').upsert(payload, { onConflict: 'id' }).select().single())
+  }
   if (error) throw error
   return data
 }
