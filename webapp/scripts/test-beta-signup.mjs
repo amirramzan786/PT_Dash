@@ -64,6 +64,20 @@ test('staged rollout controls begin safely at Alpha 20 without diluting the Foun
   assert.doesNotMatch(sql, /generate_series\(1, 20\)/)
 })
 
+test('post-verification Founder and waitlist emails stay server-side and idempotent', async () => {
+  const sql = await readFile(new URL('../supabase/migrations/20260905210000_beta_outcome_email_delivery.sql', import.meta.url), 'utf8')
+  const verify = await readFile(new URL('../supabase/functions/beta-verify/index.ts', import.meta.url), 'utf8')
+  const email = await readFile(new URL('../supabase/functions/_shared/betaOutcomeEmail.ts', import.meta.url), 'utf8')
+  assert.match(sql, /unique \(signup_id, kind\)/i)
+  assert.match(sql, /revoke all on table public\.beta_outcome_email_deliveries from anon, authenticated/i)
+  assert.match(verify, /sendBetaOutcomeEmail/)
+  assert.match(email, /RESEND_API_KEY/)
+  assert.match(email, /Idempotency-Key/)
+  assert.match(email, /founder_confirmed/)
+  assert.match(email, /waitlist_confirmed/)
+  assert.doesNotMatch(email, /VITE_|NEXT_PUBLIC_|PUBLIC_/)
+})
+
 test('public client only calls constrained Alpha RPCs and never queries private founder tables', async () => {
   const api = await readFile(new URL('../src/lib/steelApi.js', import.meta.url), 'utf8')
   assert.match(api, /rpc\('get_my_founder_status'\)/)

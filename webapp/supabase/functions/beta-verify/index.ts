@@ -1,5 +1,6 @@
 import { createAdminClient, createAuthClient } from '../_shared/supabase.ts'
 import { jsonResponse, preflightResponse, requestOrigin } from '../_shared/http.ts'
+import { sendBetaOutcomeEmail } from '../_shared/betaOutcomeEmail.ts'
 
 Deno.serve(async (request) => {
   const origin = requestOrigin(request)
@@ -29,6 +30,21 @@ Deno.serve(async (request) => {
       throw error
     }
     const foundingNumber = result?.founding_number == null ? null : Number(result.founding_number)
+    const { data: signup, error: signupError } = await admin
+      .from('beta_signups')
+      .select('id')
+      .eq('user_id', data.user.id)
+      .maybeSingle()
+    if (signupError || !signup) throw signupError || new Error('Verified beta signup was not found.')
+
+    // Outcome email delivery is intentionally non-blocking: allocation and
+    // entitlement have already committed, and a provider outage must never
+    // turn a valid Founder into an apparent failure.
+    try {
+      await sendBetaOutcomeEmail(admin, { signupId: signup.id, email: data.user.email, foundingNumber })
+    } catch (emailError) {
+      console.warn('beta outcome email failed', emailError instanceof Error ? emailError.name : 'unknown_error')
+    }
     return jsonResponse(origin, 200, {
       ok: true,
       status: result?.status,
