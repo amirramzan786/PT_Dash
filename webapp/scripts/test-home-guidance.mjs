@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildDailySummary, buildTrainingRecommendation } from '../src/lib/homeGuidance.js'
+import { buildDailySummary, buildTrainingRecommendation, dailyQuote } from '../src/lib/homeGuidance.js'
 
 test('daily summary is time-aware and uses current training context', () => {
   const morning = buildDailySummary({ now: new Date(2026, 8, 4, 9), hasWorkout: true })
@@ -10,6 +10,13 @@ test('daily summary is time-aware and uses current training context', () => {
   const evening = buildDailySummary({ now: new Date(2026, 8, 4, 20), latestSessionDate: '2026-09-04', hasWorkout: true })
   assert.equal(evening.eyebrow, 'GOOD EVENING,')
   assert.equal(evening.title, 'The work is done for today.')
+})
+
+test('the home quote is stable for a day and is used in the daily summary', () => {
+  const date = new Date(2026, 8, 5, 14)
+  const quote = dailyQuote(date)
+  assert.equal(dailyQuote(new Date(2026, 8, 5, 20)), quote)
+  assert.equal(buildDailySummary({ now: date, hasWorkout: true }).detail, quote)
 })
 
 test('recommendation explains the signal and changes mode conservatively', () => {

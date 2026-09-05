@@ -2,6 +2,27 @@ function dateKey(date) {
   return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-')
 }
 
+const dailyQuotes = [
+  'Discipline is choosing what matters most, again.',
+  'Small promises kept become real momentum.',
+  'The standard is set by what you repeat.',
+  'Make today count, then make tomorrow easier.',
+  'Strength is built one honest session at a time.',
+  'You do not need perfect. You need consistent.',
+  'The work you do today makes the next day lighter.',
+  'Show up for the person you are becoming.',
+  'Progress listens to repetition, not intention.',
+  'Train with purpose. Recover with patience.',
+  'The next rep is where the decision lives.',
+  'Build quietly. Let the results speak later.',
+]
+
+export function dailyQuote(date = new Date()) {
+  const key = dateKey(date).replaceAll('-', '')
+  const index = Number(key) % dailyQuotes.length
+  return dailyQuotes[index]
+}
+
 export function timeOfDay(date = new Date()) {
   const hour = date.getHours()
   if (hour < 12) return 'MORNING'
@@ -12,10 +33,11 @@ export function timeOfDay(date = new Date()) {
 export function buildDailySummary({ now = new Date(), todaySteps = 0, latestSessionDate = null, hasWorkout = false }) {
   const trainedToday = latestSessionDate && dateKey(now) === String(latestSessionDate).slice(0, 10)
   const steps = Number(todaySteps) || 0
-  if (trainedToday) return { eyebrow: `GOOD ${timeOfDay(now)},`, title: 'The work is done for today.', detail: 'Let the session settle. Recovery is part of the standard.' }
-  if (steps >= 8000) return { eyebrow: `GOOD ${timeOfDay(now)},`, title: 'Movement is already in the bank.', detail: 'Keep the next decision useful: train with intent, or make space to recover.' }
-  if (hasWorkout) return { eyebrow: `GOOD ${timeOfDay(now)},`, title: 'Your next session is ready.', detail: 'Make the next useful decision obvious. Start the work when you are ready.' }
-  return { eyebrow: `GOOD ${timeOfDay(now)},`, title: 'Build the next useful step.', detail: 'Your data will become more useful as you train, check in and return.' }
+  const detail = dailyQuote(now)
+  if (trainedToday) return { eyebrow: `GOOD ${timeOfDay(now)},`, title: 'The work is done for today.', detail }
+  if (steps >= 8000) return { eyebrow: `GOOD ${timeOfDay(now)},`, title: 'Movement is already in the bank.', detail }
+  if (hasWorkout) return { eyebrow: `GOOD ${timeOfDay(now)},`, title: 'Your next session is ready.', detail }
+  return { eyebrow: `GOOD ${timeOfDay(now)},`, title: 'Build the next useful step.', detail }
 }
 
 export function buildTrainingRecommendation({ checkin = null, hasWorkout = false }) {
