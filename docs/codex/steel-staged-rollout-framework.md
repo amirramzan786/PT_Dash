@@ -161,6 +161,25 @@ The cohort numbers are deliberate working gates, not permanent operating limits.
 
 They are not rigid vanity milestones. Steel advances when the evidence supports it, not simply because the previous cohort filled up. Once the Release Candidate gate is passed, staggered user-count testing is complete and Steel enters normal public operation.
 
+## Implementation control plane
+
+The database contains one private `rollout_controls` record. It starts at
+`alpha20` with a target of 20, unrestricted public signup disabled and billing
+disabled. It is deliberately inaccessible to browsers and is not a user-facing
+switch.
+
+At each approved gate, a separately reviewed, admin-authorised server change
+may move that record to the next phase and configure the corresponding cohort
+target. This does **not** change the separate Founding 20 allocation cap: that
+cap remains permanently fixed at 20 because it protects a distinct promise,
+not an overall tester limit.
+
+At Public Launch, the approved change must set `public_launch`, remove the
+overall tester target and enable unrestricted signup. Future rollout safety is
+then feature-level: flags, canaries and percentage rollouts—not new whole-app
+signup cohorts. Billing remains disabled unless the relevant commercial gate
+has separately approved it.
+
 ## Relationship to Founding 20
 The first 20 users remain a distinct founding cohort and should retain visible Founder recognition and their promised lifetime core Premium entitlement.
 

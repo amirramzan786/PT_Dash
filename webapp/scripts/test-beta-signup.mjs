@@ -53,6 +53,17 @@ test('Alpha 20 migration keeps founder, feedback, updates and analytics private'
   assert.match(sql, /old\.status = 'waitlist' and new\.status = 'approved'/i)
 })
 
+test('staged rollout controls begin safely at Alpha 20 without diluting the Founder cap', async () => {
+  const sql = await readFile(new URL('../supabase/migrations/20260905200000_staged_rollout_controls.sql', import.meta.url), 'utf8')
+  assert.match(sql, /default 'alpha20'/)
+  assert.match(sql, /tester_target = 20/)
+  assert.match(sql, /unrestricted_public_signup_enabled boolean not null default false/)
+  assert.match(sql, /billing_enabled boolean not null default false/)
+  assert.match(sql, /phase = 'public_launch' and tester_target is null and unrestricted_public_signup_enabled/)
+  assert.match(sql, /revoke all on table public\.rollout_controls from anon, authenticated/i)
+  assert.doesNotMatch(sql, /generate_series\(1, 20\)/)
+})
+
 test('public client only calls constrained Alpha RPCs and never queries private founder tables', async () => {
   const api = await readFile(new URL('../src/lib/steelApi.js', import.meta.url), 'utf8')
   assert.match(api, /rpc\('get_my_founder_status'\)/)

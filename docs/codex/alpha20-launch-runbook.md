@@ -22,6 +22,14 @@ This document does **not** replace:
 
 Those remain authoritative where they define specific product rules.
 
+## Active rollout configuration
+
+The only active phase is **Alpha 20**. The private `rollout_controls` record
+must remain `alpha20` / target `20`, with unrestricted public signup and
+billing both disabled. Do not change this record merely because the Founder
+places are filled: verified users after Founder #20 remain on the Alpha
+waitlist until the Alpha commercial gate authorises the next rollout step.
+
 ---
 
 # 1. Alpha launch objective
