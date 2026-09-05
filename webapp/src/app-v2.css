@@ -324,14 +324,27 @@ button { cursor: pointer; }
 .nutrition-page-plan > .meal-component-editor { display: none; }
 .nutrition-page-plan .nutrition-hero { order: 1; }
 .nutrition-page-plan .nutrition-macro-board { order: 2; }
-.nutrition-page-plan .today-meal-plan { order: 3; }
-.nutrition-page-plan .inline-food-finder { order: 4; }
-.nutrition-page-plan .nutrition-next-card { order: 5; }
+.nutrition-page-plan .diet-plan-overview { order: 3; }
+.nutrition-page-plan .nutrition-next-card { order: 4; }
+.nutrition-page-diary .nutrition-next-card, .nutrition-page-library .nutrition-next-card { display: none; }
 .nutrition-page-plan .nutrition-next-card { padding: 11px 14px; border-color: rgba(94,111,129,.45); background: transparent; }
 .nutrition-page-plan .nutrition-next-card h3 { font-size: .8rem; }
 .nutrition-page-plan .nutrition-next-card p { font-size: .7rem; }
 .nutrition-page-plan .nutrition-next-card .text-link { font-size: .72rem; }
 .today-meal-plan { display: grid; gap: 12px; }
+.diet-plan-overview { display: grid; gap: 12px; }
+.diet-plan-target { padding: 14px; border: 1px solid rgba(217,173,85,.35); border-radius: 15px; background: linear-gradient(115deg, rgba(217,173,85,.1), rgba(17,24,33,.7)); }
+.diet-plan-target div { display: grid; gap: 4px; }
+.diet-plan-target strong { color: #f0f3f5; font-size: .95rem; }
+.diet-plan-target small, .diet-plan-note { color: var(--steel-muted); font-size: .74rem; line-height: 1.45; }
+.diet-plan-meals { display: grid; gap: 9px; }
+.diet-plan-meal { display: grid; gap: 5px; padding: 13px; border: 1px solid var(--steel-line); border-radius: 14px; background: rgba(13,20,29,.72); }
+.diet-plan-meal h4, .diet-plan-meal p { margin: 0; }
+.diet-plan-meal h4 { color: #eef1f4; font-size: .9rem; }
+.diet-plan-meal p, .diet-plan-meal small { color: var(--steel-muted); font-size: .73rem; line-height: 1.4; }
+.diet-plan-meal footer { display: flex; gap: 7px; padding-top: 5px; }
+.diet-plan-meal footer span { padding: 4px 7px; border-radius: 7px; color: var(--steel-gold-2); background: rgba(217,173,85,.1); font-size: .66rem; font-weight: 800; }
+.diet-plan-note { margin: 0; }
 .today-meal-card { display: grid; gap: 11px; padding: 15px; border: 1px solid var(--steel-line); border-radius: 16px; background: linear-gradient(135deg, rgba(18,29,41,.98), rgba(10,16,24,.9)); }
 .today-meal-card.is-logged { border-color: rgba(87,190,128,.45); }
 .today-meal-heading { display: flex; align-items: center; justify-content: space-between; }
