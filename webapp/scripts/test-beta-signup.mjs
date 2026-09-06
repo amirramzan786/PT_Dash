@@ -94,6 +94,8 @@ test('admin function keeps privileged promotion and publishing behind an authent
   assert.match(admin, /admin_revoke_founder_signup/)
   assert.match(admin, /publish_update/)
   assert.match(admin, /triage_feedback/)
+  assert.match(admin, /grant_trainer_premium/)
+  assert.match(admin, /admin_grant_trainer_premium/)
 })
 
 test('browser-facing endpoints require an exact allowed Origin and analytics cannot block signup', async () => {
@@ -157,4 +159,33 @@ test('recipe foundation upgrades the earlier production recipes shape before ind
   const sql = await readFile(new URL('../supabase/migrations/20260905103543_nutrition_recipe_foundation.sql', import.meta.url), 'utf8')
   assert.match(sql, /add column if not exists active boolean not null default true/)
   assert.match(sql, /nutrition_recipes_user_meal_idx[\s\S]*active/)
+})
+
+test('programme review and PT access rules are server-enforced and preserve canonical entitlements', async () => {
+  const sql = await readFile(new URL('../supabase/migrations/20260906103400_membership_plan_change_and_pt_seats.sql', import.meta.url), 'utf8')
+  assert.match(sql, /plan_change_windows/)
+  assert.match(sql, /greatest\(v_period_days, 1\)/)
+  assert.match(sql, /pg_advisory_xact_lock/)
+  assert.match(sql, /get_my_plan_change_status/)
+  assert.match(sql, /seat_limit smallint not null default 10/)
+  assert.match(sql, /trainer_premium_one_active_grant_per_client_idx/)
+  assert.match(sql, /admin_grant_trainer_premium/)
+  assert.match(sql, /steel-core-premium-founder-lifetime/)
+  assert.match(sql, /grant execute on function public\.admin_grant_trainer_premium\(uuid, uuid\) to service_role/i)
+  assert.match(sql, /revoke all on table public\.trainer_premium_seat_pools, public\.trainer_premium_grants from anon, authenticated/i)
+})
+
+test('two-step verification enrolls and challenges authenticator factors without exposing secrets', async () => {
+  const api = await readFile(new URL('../src/lib/steelApi.js', import.meta.url), 'utf8')
+  const authGate = await readFile(new URL('../src/AuthGate.jsx', import.meta.url), 'utf8')
+  const app = await readFile(new URL('../src/AppV3.jsx', import.meta.url), 'utf8')
+  assert.match(api, /auth\.mfa\.enroll\(\{ factorType: 'totp'/)
+  assert.match(api, /auth\.mfa\.challengeAndVerify/)
+  assert.match(api, /auth\.mfa\.getAuthenticatorAssuranceLevel/)
+  assert.match(authGate, /mfaGate === 'required'/)
+  assert.match(authGate, /verifyAuthenticatorApp/)
+  assert.match(app, /Set up an authenticator app/)
+  assert.match(app, /SMS verification/)
+  assert.match(app, /Biometric \/ passkey/)
+  assert.doesNotMatch(api, /service_role|SUPABASE_SERVICE_ROLE/)
 })

@@ -49,7 +49,7 @@ Deno.serve(async (request) => {
       return jsonResponse(origin, 200, { signups: data || [] })
     }
     if (request.method !== 'POST') return jsonResponse(origin, 405, { error: 'Use GET or POST.' })
-    const body = await request.json() as { id?: unknown; action?: unknown; triage?: Record<string, unknown>; update?: Record<string, unknown> }
+    const body = await request.json() as { id?: unknown; action?: unknown; triage?: Record<string, unknown>; update?: Record<string, unknown>; trainerGrant?: Record<string, unknown> }
     const id = String(body.id || '').trim()
     const action = String(body.action || '').trim().toLowerCase()
     if (action === 'publish_update') {
@@ -70,6 +70,16 @@ Deno.serve(async (request) => {
       const { error } = await context.admin.from('beta_feedback').update({ triage_status: triage.status, triage_type: triage.type, severity, admin_notes: String(triage.notes || '').slice(0, 4000), updated_at: new Date().toISOString() }).eq('id', id)
       if (error) throw error
       return jsonResponse(origin, 200, { ok: true })
+    }
+    if (action === 'grant_trainer_premium') {
+      const grant = body.trainerGrant || {}
+      const trainerId = String(grant.trainerId || '').trim()
+      const clientId = String(grant.clientId || '').trim()
+      const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      if (!uuid.test(trainerId) || !uuid.test(clientId) || trainerId === clientId) return jsonResponse(origin, 400, { error: 'A valid trainer and client are required.', code: 'INVALID_REQUEST' })
+      const { data, error } = await context.admin.rpc('admin_grant_trainer_premium', { p_trainer_id: trainerId, p_client_id: clientId })
+      if (error) throw error
+      return jsonResponse(origin, 200, { ok: true, grant: data })
     }
     if (!id || !['approve', 'reject', 'reconcile', 'promote'].includes(action)) return jsonResponse(origin, 400, { error: 'Invalid admin action.', code: 'INVALID_REQUEST' })
     const { data: signup, error: signupError } = await context.admin.from('beta_signups').select('*').eq('id', id).maybeSingle()

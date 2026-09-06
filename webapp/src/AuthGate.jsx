@@ -3,7 +3,7 @@ import { Loader2, LockKeyhole, Play } from 'lucide-react'
 import AppV3 from './AppV3'
 import GuestApp from './GuestApp'
 import './auth.css'
-import { getCurrentUser, onAuthChange, sendPasswordReset, signIn, signOut, signUp, updatePassword } from './lib/steelApi'
+import { getCurrentUser, getMfaAssuranceLevel, getMfaFactors, onAuthChange, sendPasswordReset, signIn, signOut, signUp, updatePassword, verifyAuthenticatorApp } from './lib/steelApi'
 import SteelMark from './components/SteelMark'
 
 export default function AuthGate() {
@@ -17,11 +17,25 @@ export default function AuthGate() {
   const [recoveryMode, setRecoveryMode] = useState(false)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+  const [mfaGate, setMfaGate] = useState('checking')
+  const [mfaFactor, setMfaFactor] = useState(null)
+  const [mfaCode, setMfaCode] = useState('')
+
+  async function assessMfa(nextUser) {
+    if (!nextUser) { setMfaFactor(null); setMfaGate('clear'); return }
+    setMfaGate('checking')
+    try {
+      const [factors, assurance] = await Promise.all([getMfaFactors(), getMfaAssuranceLevel()])
+      const factor = factors.find((item) => item.factor_type === 'totp' && item.status === 'verified')
+      if (factor && assurance?.currentLevel !== 'aal2') { setMfaFactor(factor); setMfaGate('required') }
+      else { setMfaFactor(null); setMfaGate('clear') }
+    } catch { setMfaFactor(null); setMfaGate('clear') }
+  }
 
   useEffect(() => {
     let active = true
-    getCurrentUser().then((currentUser) => { if (active) setUser(currentUser) }).catch(() => { if (active) setUser(null) })
-    const unsubscribe = onAuthChange((nextUser, event) => { setUser(nextUser); if (nextUser) setGuestMode(false); if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true) })
+    getCurrentUser().then((currentUser) => { if (active) { setUser(currentUser); assessMfa(currentUser) } }).catch(() => { if (active) { setUser(null); setMfaGate('clear') } })
+    const unsubscribe = onAuthChange((nextUser, event) => { setUser(nextUser); assessMfa(nextUser); if (nextUser) setGuestMode(false); if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true) })
     return () => { active = false; unsubscribe() }
   }, [])
 
@@ -48,10 +62,20 @@ export default function AuthGate() {
     } catch (error) { setMessage(error.message || 'Unable to continue.') } finally { setBusy(false) }
   }
 
-  if (user === undefined) return <div className="auth-shell"><Loader2 className="spin" size={28}/><span>Opening Project Steel…</span></div>
+  async function submitMfa(event) {
+    event.preventDefault()
+    if (!mfaFactor || !/^\d{6}$/.test(mfaCode)) { setMessage('Enter the 6-digit code from your authenticator app.'); return }
+    setBusy(true); setMessage('')
+    try { await verifyAuthenticatorApp({ factorId: mfaFactor.id, code: mfaCode }); setMfaCode(''); setMfaGate('clear') }
+    catch (error) { setMessage(error.message || 'That code could not be verified.') } finally { setBusy(false) }
+  }
+
+  if (user === undefined || (user && mfaGate === 'checking')) return <div className="auth-shell"><Loader2 className="spin" size={28}/><span>Opening Project Steel…</span></div>
   if (guestMode) return <GuestApp onExit={() => setGuestMode(false)} />
 
   if (recoveryMode) return <main className="auth-shell"><section className="auth-card"><div className="auth-mark"><SteelMark size={30}/></div><div className="eyebrow">ACCOUNT SECURITY</div><h1>Set a new password</h1><p>Choose a strong password for your Project Steel account.</p><form onSubmit={submit} className="auth-form"><label>New password<input type="password" autoComplete="new-password" minLength="6" required value={recoveryPassword} onChange={(e)=>setRecoveryPassword(e.target.value)}/></label><label>Confirm new password<input type="password" autoComplete="new-password" minLength="6" required value={recoveryConfirm} onChange={(e)=>setRecoveryConfirm(e.target.value)}/></label><button className="primary" disabled={busy}>{busy?'Updating…':'Update password'}</button></form>{message&&<p className="auth-message">{message}</p>}</section></main>
+
+  if (user && mfaGate === 'required') return <main className="auth-shell"><section className="auth-card"><div className="auth-mark"><SteelMark size={30}/></div><div className="eyebrow">TWO-STEP VERIFICATION</div><h1>Confirm it’s you</h1><p>Enter the current 6-digit code from your authenticator app to continue to Steel.</p><form onSubmit={submitMfa} className="auth-form"><label>Authenticator code<input inputMode="numeric" autoComplete="one-time-code" maxLength="6" required value={mfaCode} onChange={(e)=>setMfaCode(e.target.value.replace(/\D/g,''))}/></label><button className="primary" disabled={busy}>{busy?'Checking…':'Continue securely'}</button></form>{message&&<p className="auth-message">{message}</p>}<button className="text-button auth-switch" type="button" onClick={async()=>{await signOut();setUser(null)}}>Use a different account</button></section></main>
 
   if (!user) return <main className="auth-shell"><section className="auth-card"><div className="auth-mark"><SteelMark size={30}/></div><div className="eyebrow">SPARTAN STRENGTH, EVERY DAY</div><h1>PROJECT <span>STEEL</span></h1><p>{mode === 'reset' ? 'We’ll send a secure link to help you get back in.' : 'Your private training, weight and progress space.'}</p><form onSubmit={submit} className="auth-form"><label>Email<input type="email" autoComplete="email" required value={email} onChange={(e)=>setEmail(e.target.value)}/></label>{mode !== 'reset' && <label>Password<input type="password" autoComplete={mode==='signup'?'new-password':'current-password'} minLength="6" required value={password} onChange={(e)=>setPassword(e.target.value)}/></label>}<button className="primary" disabled={busy}>{busy?'Please wait…':mode==='reset'?'Send reset link':mode==='signup'?'Create account':'Sign in'}</button></form>{message&&<p className="auth-message">{message}</p>}{mode === 'reset' ? <button className="text-button auth-switch" type="button" onClick={()=>{setMode('signin');setMessage('')}}>Back to sign in</button> : <><button className="text-button auth-switch" type="button" onClick={()=>{setMode(mode==='signup'?'signin':'signup');setMessage('')}}>{mode==='signup'?'Already have an account? Sign in':'First time? Create account'}</button>{mode === 'signin' && <button className="text-button auth-switch" type="button" onClick={()=>{setMode('reset');setMessage('')}}>Forgot password?</button>}</>}<div style={{height:'1px',background:'#27313d',margin:'12px 0'}}/><button className="primary" type="button" style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'}} onClick={()=>setGuestMode(true)}><Play size={17}/> Try Guest Demo</button><p className="auth-message" style={{marginTop:10}}>Demo mode is isolated from all private account data.</p><div className="auth-private"><LockKeyhole size={15}/> Protected by Supabase authentication + RLS</div></section></main>
 

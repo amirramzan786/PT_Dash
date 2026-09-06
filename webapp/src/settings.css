@@ -335,6 +335,26 @@
 .membership-status-badge { margin-left: auto; align-self: flex-start; border: 1px solid rgba(153,166,183,.38); border-radius: 999px; color: var(--steel-muted); font-size: .62rem; font-weight: 850; letter-spacing: .08em; padding: 5px 7px; }
 .membership-status-badge.active { border-color: rgba(218,174,74,.48); color: #f3c85d; }
 .settings-page-v5 .alpha-support-panel { width: 100%; margin: 0; }
+.programme-review-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid #25313d; margin-top: 16px; padding-top: 15px; }
+.programme-review-card strong, .programme-review-card p { display: block; }
+.programme-review-card p { margin: 5px 0 0; color: var(--steel-muted); font-size: .82rem; line-height: 1.45; }
+.programme-review-card .text-link:disabled { color: #687485; cursor: not-allowed; }
+.account-security-panel { display: grid; gap: 14px; }
+.security-factor-row, .security-coming-soon > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #273544; border-radius: 12px; padding: 12px; background: #0d151e; }
+.security-factor-row strong, .security-factor-row small, .security-coming-soon span, .security-coming-soon small { display: block; }
+.security-factor-row small, .security-coming-soon small { margin-top: 3px; color: var(--steel-muted); font-size: .75rem; }
+.settings-security-action { min-height: 42px; border: 1px solid rgba(218,174,74,.45); border-radius: 11px; background: rgba(218,174,74,.09); color: #f3c85d; font-weight: 800; text-align: left; padding: 0 12px; }
+.security-coming-soon { display: grid; gap: 8px; }
+.security-coming-soon em { border: 1px solid #394452; border-radius: 999px; color: #8996a7; font-size: .62rem; font-style: normal; font-weight: 800; letter-spacing: .07em; padding: 4px 6px; }
+.totp-enrollment { display: grid; grid-template-columns: 122px minmax(0, 1fr); gap: 14px; border: 1px solid rgba(218,174,74,.38); border-radius: 14px; padding: 14px; }
+.totp-enrollment img { width: 122px; height: 122px; border-radius: 8px; background: white; }
+.totp-enrollment p { margin: 5px 0 10px; color: var(--steel-muted); font-size: .78rem; line-height: 1.45; }
+.totp-enrollment code { color: #e9eef4; overflow-wrap: anywhere; }
+.totp-enrollment label { display: grid; gap: 5px; max-width: 190px; }
+.totp-enrollment label span { color: var(--steel-muted); font-size: .7rem; font-weight: 800; }
+.totp-enrollment input { min-height: 40px; letter-spacing: .18em; }
+.totp-enrollment > div > div { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+@media (max-width: 560px) { .programme-review-card { align-items: flex-start; flex-direction: column; } .totp-enrollment { grid-template-columns: 1fr; } .totp-enrollment img { width: 150px; height: 150px; } }
 .alpha-support-panel { display: grid; gap: 18px; }
 .alpha-support-panel .section-heading p,.alpha-whats-new > p { margin: 5px 0 0; color: var(--steel-muted); }
 .alpha-support-panel .support-feedback-form { max-width: 720px; }

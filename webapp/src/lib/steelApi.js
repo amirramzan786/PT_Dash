@@ -44,6 +44,41 @@ export async function getMyMembershipEntitlement() {
   return data || null
 }
 
+export async function getMyPlanChangeStatus() {
+  const { data, error } = await requireSupabase().rpc('get_my_plan_change_status')
+  if (error) throw error
+  return data || { period_days: 28, has_programme: false, can_change_now: false, next_change_at: null }
+}
+
+export async function getMfaFactors() {
+  const { data, error } = await requireSupabase().auth.mfa.listFactors()
+  if (error) throw error
+  return [...(data?.totp || []), ...(data?.phone || [])]
+}
+
+export async function getMfaAssuranceLevel() {
+  const { data, error } = await requireSupabase().auth.mfa.getAuthenticatorAssuranceLevel()
+  if (error) throw error
+  return data
+}
+
+export async function enrollAuthenticatorApp() {
+  const { data, error } = await requireSupabase().auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Project Steel' })
+  if (error) throw error
+  return data
+}
+
+export async function verifyAuthenticatorApp({ factorId, code }) {
+  const { data, error } = await requireSupabase().auth.mfa.challengeAndVerify({ factorId, code: code.trim() })
+  if (error) throw error
+  return data
+}
+
+export async function removeMfaFactor(factorId) {
+  const { error } = await requireSupabase().auth.mfa.unenroll({ factorId })
+  if (error) throw error
+}
+
 export async function submitBetaFeedback({ userId, category, message, appArea = null }) {
   const client = requireSupabase()
   const { data, error } = await client.from('beta_feedback')
