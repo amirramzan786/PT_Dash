@@ -150,6 +150,29 @@ button { cursor: pointer; }
 .log-workout-cta span { display: grid; gap: 3px; }
 .log-workout-cta strong { font-size: .78rem; }
 .log-workout-cta small { color: var(--steel-muted); font-size: .64rem; }
+.next-session-card { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 15px; border: 1px solid var(--steel-gold-dark); border-radius: 16px; background: linear-gradient(135deg,#211b10,#111a23); }
+.next-session-card > div { min-width: 0; }
+.next-session-card h3 { margin: 4px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1rem; }
+.next-session-card p { margin: 0; color: var(--steel-muted); font-size: .7rem; line-height: 1.4; }
+.next-session-card .gold-button { flex: 0 0 auto; min-height: 38px; padding-inline: 11px; font-size: .68rem; }
+.programme-session-list { display: grid; gap: 7px; }
+.programme-session-list .section-heading { margin: 3px 1px 1px; }
+.programme-session { border: 1px solid var(--steel-line); border-radius: 14px; background: #101821; overflow: hidden; }
+.programme-session summary { min-height: 62px; display: grid; grid-template-columns: 32px minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; list-style: none; }
+.programme-session summary::-webkit-details-marker { display: none; }
+.programme-session summary > span:nth-child(2) { display: grid; min-width: 0; gap: 3px; }
+.programme-session summary strong, .programme-session summary small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.programme-session summary strong { font-size: .8rem; }
+.programme-session summary small { color: var(--steel-muted); font-size: .65rem; }
+.programme-session summary > svg { color: #94a0ad; transition: transform .18s ease; }
+.programme-session[open] summary { border-bottom: 1px solid var(--steel-line); background: rgba(217,173,85,.04); }
+.programme-session[open] summary > svg { color: var(--steel-gold-2); transform: rotate(180deg); }
+.programme-session-number { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid rgba(217,173,85,.28); border-radius: 9px; color: var(--steel-gold-2); background: rgba(217,173,85,.07); font-size: .63rem; font-weight: 900; }
+.programme-session-content { padding: 11px 12px 12px; }
+.programme-session-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.programme-session-actions button { min-height: 32px; padding: 0 10px; border: 1px solid #374350; border-radius: 9px; background: #121a23; color: #bcc5ce; font-size: .65rem; font-weight: 850; }
+.programme-session-actions .gold-button { border: 0; color: #101010; background: var(--steel-gold); }
+.programme-session-content .compact-exercise-list { margin: 10px 0; }
 .log-workout-name, .log-workout-name span { display: grid; gap: 6px; }
 .log-workout-name span { color: var(--steel-muted); font-size: .68rem; font-weight: 850; letter-spacing: .06em; }
 .log-workout-name input { min-height: 46px; border: 1px solid #35404c; border-radius: 12px; background: #0a1017; color: #fff; padding: 0 12px; font-size: 16px; }
