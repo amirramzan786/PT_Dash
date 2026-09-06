@@ -122,6 +122,7 @@ test('membership labels are read-only, Settings-scoped, and retain Founder prece
   assert.doesNotMatch(api, /membership_entitlements'\)\.(insert|upsert|update|delete)/)
   assert.match(app, /function MembershipStatusCard/)
   assert.match(app, /if \(founderStatus\?\.founder_number\) return <FounderStatusCard/)
+  assert.match(app, /id="settings-membership-v5" eyebrow="MEMBERSHIP" title="Membership & access"/)
   assert.match(app, /<MembershipStatusCard founderStatus=\{founderStatus\} membershipEntitlement=\{membershipEntitlement\}\/>/)
   assert.match(app, /id="settings-alpha-feedback"/)
   assert.match(app, /<AlphaSupportPanel \{\.\.\.feedbackProps\}\/>/)
