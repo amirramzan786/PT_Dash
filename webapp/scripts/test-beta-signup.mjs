@@ -125,9 +125,19 @@ test('current-main Home, recovery and food-diary integration contracts remain pr
   assert.match(diary, /getNutritionFoodServings/)
   assert.match(diary, /getNutritionFoodByBarcode/)
   assert.match(diary, /compact = false/)
+  assert.match(diary, /await onFoodPicked\(/)
   assert.match(app, /FoodDiary compact userId=/)
   assert.match(app, /recipeSaveError/)
   assert.match(app, /saveError: recipeSaveError/)
+})
+
+test('exercise library supports combined, clearable multi-select filters', async () => {
+  const app = await readFile(new URL('../src/AppV3.jsx', import.meta.url), 'utf8')
+  assert.match(app, /const \[muscleGroups, setMuscleGroups\] = useState\(\[\]\)/)
+  assert.match(app, /const \[equipment, setEquipment\] = useState\(\[\]\)/)
+  assert.match(app, /aria-pressed=\{muscleGroups\.includes\(muscle\)\}/)
+  assert.match(app, /\.some\(\(item\) => equipment\.includes\(item\)\)/)
+  assert.match(app, /Clear filters/)
 })
 
 test('recipe foundation upgrades the earlier production recipes shape before indexing it', async () => {

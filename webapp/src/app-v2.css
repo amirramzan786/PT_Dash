@@ -180,6 +180,13 @@ button { cursor: pointer; }
 .library-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .library-filters select { min-height: 42px; min-width: 0; border: 1px solid #303c49; border-radius: 11px; background: #111923; color: #dce1e6; padding: 0 9px; font-size: .7rem; }
 .library-result-count { color: var(--steel-muted); font-size: .68rem; font-weight: 800; }
+.library-filter-groups { display: grid; gap: 8px; }
+.library-filter-group { display: grid; grid-template-columns: 70px minmax(0, 1fr); align-items: start; gap: 8px; }
+.library-filter-group > span { color: var(--steel-muted); font-size: .64rem; font-weight: 800; letter-spacing: .08em; line-height: 30px; text-transform: uppercase; }
+.library-filter-group > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.library-filter-group button, .library-clear-filters { min-height: 30px; border: 1px solid #303c49; border-radius: 999px; background: #111923; color: #aab5c5; padding: 0 10px; font-size: .68rem; font-weight: 750; }
+.library-filter-group button:hover, .library-filter-group button.active { border-color: rgba(231, 181, 70, .72); background: rgba(231, 181, 70, .12); color: #f3c85d; }
+.library-clear-filters { justify-self: start; color: #f3c85d; border-color: rgba(231, 181, 70, .5); }
 .exercise-library-list { display: grid; gap: 8px; }
 .exercise-library-card { display: grid; grid-template-columns: 37px minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 11px; border: 1px solid var(--steel-line); border-radius: 15px; background: linear-gradient(145deg,#141d27,#0e151e); }
 .library-exercise-icon { width: 35px; height: 35px; display: grid; place-items: center; border: 1px solid #554426; border-radius: 10px; color: var(--steel-gold-2); background: #211a0f; }
@@ -766,8 +773,8 @@ button { cursor: pointer; }
   .home-page-stack > .v4-quick-actions,
   .home-page-stack > .v4-progress-section { grid-column: 1 / -1; }
   .home-page-stack > .v4-welcome-card { grid-row: 1; }
-  .home-page-stack > .home-direction-card { grid-row: 2; }
-  .home-page-stack > .v4-quick-actions { grid-row: 3; }
+  .home-page-stack > .v4-quick-actions { grid-row: 2; }
+  .home-page-stack > .home-direction-card { grid-row: 3; }
   .home-page-stack > .journey-card { grid-row: 4; }
   .home-page-stack > .movement-card { grid-column: 2; grid-row: 5; min-height: 100%; }
   .home-page-stack > .home-workout-section { grid-column: 1; grid-row: 5; }
@@ -847,6 +854,12 @@ button { cursor: pointer; }
 .progress-stat-grid article { padding: 11px; }
 .weight-overview-card { padding: 14px; border-radius: 16px; }
 .goal-card, .home-direction-card, .journey-card { gap: 10px; padding: 13px; border-radius: 16px; }
+.home-direction-card { gap: 8px; padding: 12px 13px; }
+.home-direction-header h3 { margin-block: 3px; font-size: .92rem; }
+.home-direction-header p, .home-direction-signal p { font-size: .68rem; }
+.home-direction-signal { display: block; padding-top: 8px; }
+.home-direction-signal strong { margin: 3px 0; font-size: .8rem; }
+.home-direction-actions .gold-button { min-height: 38px; font-size: .68rem; }
 .journey-plan-list { gap: 6px; }
 .journey-plan-list button { grid-template-columns: 45px minmax(0,1fr) auto; gap: 8px; padding: 8px; border-radius: 10px; }
 .movement-card { gap: 9px; }
