@@ -334,6 +334,14 @@
 .membership-status-card small { display: block; margin-top: 5px; color: var(--steel-muted); }
 .membership-status-badge { margin-left: auto; align-self: flex-start; border: 1px solid rgba(153,166,183,.38); border-radius: 999px; color: var(--steel-muted); font-size: .62rem; font-weight: 850; letter-spacing: .08em; padding: 5px 7px; }
 .membership-status-badge.active { border-color: rgba(218,174,74,.48); color: #f3c85d; }
+.profile-membership-badge { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; min-width: 0; padding: 6px 8px; border: 1px solid rgba(153,166,183,.34); border-radius: 11px; color: #aeb8c5; background: rgba(11,18,26,.58); }
+.profile-membership-badge svg { flex: 0 0 auto; color: #98a5b4; }
+.profile-membership-badge > span { display: grid; gap: 1px; min-width: 0; }
+.profile-membership-badge strong { overflow: hidden; color: #e7ebef; font-size: .67rem; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+.profile-membership-badge small { color: #8e9aaa; font-size: .5rem; font-weight: 850; letter-spacing: .1em; line-height: 1.1; }
+.profile-membership-badge.is-founder, .profile-membership-badge.is-active { border-color: rgba(218,174,74,.46); background: rgba(72,53,18,.2); }
+.profile-membership-badge.is-founder svg, .profile-membership-badge.is-founder strong, .profile-membership-badge.is-founder small, .profile-membership-badge.is-active svg, .profile-membership-badge.is-active strong, .profile-membership-badge.is-active small { color: #f2c75d; }
+@media (max-width: 520px) { .settings-profile-card.editable-profile { grid-template-columns: auto minmax(0, 1fr); gap: 10px; } .profile-membership-badge { grid-column: 2; justify-self: start; margin: -4px 0 0; } }
 .settings-page-v5 .alpha-support-panel { width: 100%; margin: 0; }
 .programme-review-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid #25313d; margin-top: 16px; padding-top: 15px; }
 .programme-review-card strong, .programme-review-card p { display: block; }
