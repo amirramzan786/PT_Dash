@@ -44,8 +44,9 @@ const equipmentOptions = ['Machines', 'Dumbbells', 'Barbell', 'Cables', 'Bodywei
 const dietaryOptions = ['No preference', 'High protein', 'Vegetarian', 'Vegan', 'Pescatarian', 'Halal']
 const checkinDays = [['Monday', 0], ['Tuesday', 1], ['Wednesday', 2], ['Thursday', 3], ['Friday', 4], ['Saturday', 5], ['Sunday', 6]]
 
-function SettingsDisclosure({ id, eyebrow, title, icon: Icon, open, onToggle, children }) {
-  return <section className={`settings-disclosure ${open ? 'is-open' : ''}`}><button type="button" className="settings-disclosure-trigger" onClick={onToggle} aria-expanded={open} aria-controls={id}><span className="settings-disclosure-label"><span className="settings-security-icon"><Icon size={19}/></span><span><span className="eyebrow">{eyebrow}</span><strong>{title}</strong></span></span><ChevronDown size={18} className={open ? 'rotated' : ''}/></button>{open && <div className="settings-disclosure-content" id={id}>{children}</div>}</section>
+function SettingsDisclosure({ id, eyebrow, title, icon: Icon, open, onToggle, trailing, children }) {
+  const membershipBadge = id === 'settings-membership-v5' && children?.props ? <MembershipTitleBadge founderStatus={children.props.founderStatus} membershipEntitlement={children.props.membershipEntitlement}/> : null
+  return <section className={`settings-disclosure ${open ? 'is-open' : ''}`}><button type="button" className="settings-disclosure-trigger" onClick={onToggle} aria-expanded={open} aria-controls={id}><span className="settings-disclosure-label"><span className="settings-security-icon"><Icon size={19}/></span><span><span className="eyebrow">{eyebrow}</span><strong>{title}</strong></span></span><span className="settings-disclosure-end">{trailing || membershipBadge}<ChevronDown size={18} className={open ? 'rotated' : ''}/></span></button>{open && <div className="settings-disclosure-content" id={id}>{children}</div>}</section>
 }
 
 function makeDraft(workout) {
@@ -770,17 +771,32 @@ function SessionNotesField({ value, onChange, completedSets }) {
   return <section className="steel-card session-notes-panel"><div><span className="eyebrow">OPTIONAL</span><h3>Session notes</h3><p>Add anything worth remembering about today’s workout.</p></div><textarea value={value} onChange={(event) => onChange(event.target.value)} placeholder="Energy, substitutions, how it felt…" rows="3" maxLength="500" aria-label="Session notes"/><small className="session-save-hint">{completedSets ? `${completedSets} set${completedSets === 1 ? '' : 's'} ready to save.` : 'Complete at least one set to save this session.'}</small></section>
 }
 
-function FounderStatusCard({ founderStatus }) {
+function MembershipDetailGrid({ founderStatus, membershipEntitlement }) {
+  const founder = Boolean(founderStatus?.founder_number)
+  const active = membershipEntitlement?.status === 'active' && (!membershipEntitlement.ends_at || new Date(membershipEntitlement.ends_at) > new Date())
+  const access = membershipEntitlement ? [membershipEntitlement.training_access && 'Training', membershipEntitlement.nutrition_access && 'Nutrition'].filter(Boolean).join(' + ') : 'Training + Nutrition'
+  return <dl className="membership-detail-grid"><div><dt>ACCESS</dt><dd>{founder ? 'Steel Premium' : active ? (access || 'Steel access') : 'Private Alpha access'}</dd></div><div><dt>PRICE</dt><dd>{founder ? '£0 — lifetime' : '£0 — current access'}</dd></div><div><dt>PAYMENT METHOD</dt><dd>No payment method on file</dd></div><div><dt>RENEWAL</dt><dd>{founder ? 'No renewal charge' : 'No renewal configured'}</dd></div></dl>
+}
+
+function MembershipTitleBadge({ founderStatus, membershipEntitlement }) {
+  const founderNumber = founderStatus?.founder_number
+  const active = membershipEntitlement?.status === 'active' && (!membershipEntitlement.ends_at || new Date(membershipEntitlement.ends_at) > new Date())
+  const label = founderNumber ? `Founder #${String(founderNumber).padStart(2, '0')}` : active ? membershipEntitlement.plan_label : 'Steel Alpha'
+  const status = founderNumber ? 'PREMIUM FOR LIFE' : active ? 'ACTIVE ACCESS' : 'BETA ACCESS'
+  return <span className={`membership-title-badge ${founderNumber ? 'is-founder' : active ? 'is-active' : ''}`}><ShieldCheck size={15}/><span><strong>{label}</strong><small>{status}</small></span></span>
+}
+
+function FounderStatusCard({ founderStatus, membershipEntitlement }) {
   if (!founderStatus?.founder_number) return null
   if (!founderStatus.has_lifetime_entitlement) return <article className="settings-security-card steel-founder-card steel-founder-recovery"><span className="settings-security-icon"><ShieldCheck size={22}/></span><div><span className="eyebrow">FOUNDING MEMBER</span><h3>Your Founding access needs a check</h3><p>Your Founder allocation is retained. Please contact Support so Steel can restore the lifetime access attached to your account.</p></div></article>
-  return <article className="settings-security-card steel-founder-card"><span className="settings-security-icon"><ShieldCheck size={22}/></span><div><span className="eyebrow">FOUNDING MEMBER</span><h3>Founder #{String(founderStatus.founder_number).padStart(2, '0')}</h3><p><strong>PREMIUM FREE FOR LIFE</strong> · Steel Premium</p><small>£0 — Lifetime Founding Access · No payment method required · No renewal charge</small></div></article>
+  return <article className="settings-security-card steel-founder-card"><span className="settings-security-icon"><ShieldCheck size={22}/></span><div><span className="eyebrow">FOUNDING MEMBER</span><h3>Founder #{String(founderStatus.founder_number).padStart(2, '0')}</h3><p><strong>PREMIUM FREE FOR LIFE</strong> · Steel Premium</p></div><MembershipDetailGrid founderStatus={founderStatus} membershipEntitlement={membershipEntitlement}/></article>
 }
 
 function MembershipStatusCard({ founderStatus, membershipEntitlement }) {
-  if (founderStatus?.founder_number) return <FounderStatusCard founderStatus={founderStatus}/>
+  if (founderStatus?.founder_number) return <FounderStatusCard founderStatus={founderStatus} membershipEntitlement={membershipEntitlement}/>
   const active = membershipEntitlement?.status === 'active' && (!membershipEntitlement.ends_at || new Date(membershipEntitlement.ends_at) > new Date())
   const access = membershipEntitlement ? [membershipEntitlement.training_access && 'Training', membershipEntitlement.nutrition_access && 'Nutrition'].filter(Boolean).join(' + ') : 'Training + Nutrition'
-  return <article className="settings-security-card membership-status-card"><span className="settings-security-icon"><ShieldCheck size={22}/></span><div><span className="eyebrow">MEMBERSHIP</span><h3>{active ? membershipEntitlement.plan_label : 'Steel Alpha access'}</h3><p>{active ? `${access || 'Steel'} access is active on this account.` : 'Your private Steel account is active during the current testing phase.'}</p><small>{active ? 'Membership access is managed securely by Steel.' : 'No payment method or renewal is configured in the app.'}</small></div><span className={active ? 'membership-status-badge active' : 'membership-status-badge'}>{active ? 'ACTIVE' : 'ALPHA'}</span></article>
+  return <article className="settings-security-card membership-status-card"><span className="settings-security-icon"><ShieldCheck size={22}/></span><div><span className="eyebrow">MEMBERSHIP</span><h3>{active ? membershipEntitlement.plan_label : 'Steel Alpha access'}</h3><p>{active ? `${access || 'Steel'} access is active on this account.` : 'Your private Steel account is active during the current testing phase.'}</p></div><span className={active ? 'membership-status-badge active' : 'membership-status-badge'}>{active ? 'ACTIVE' : 'ALPHA'}</span><MembershipDetailGrid membershipEntitlement={membershipEntitlement}/></article>
 }
 
 function ProfileMembershipBadge({ founderStatus, membershipEntitlement }) {
