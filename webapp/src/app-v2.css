@@ -673,6 +673,8 @@ button { cursor: pointer; }
 .v2-bottom-nav button:focus-visible { outline: 2px solid var(--steel-gold-2); outline-offset: 2px; }
 .more-sheet-backdrop { position: fixed; inset: 0; z-index: 30; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.48); animation: more-backdrop-in .18s ease-out; }
 .more-sheet { width: min(100%,560px); padding: 8px 14px calc(12px + env(safe-area-inset-bottom)); border: 1px solid #334151; border-bottom: 0; border-radius: 20px 20px 0 0; background: linear-gradient(160deg,#131b24,#090f16); box-shadow: 0 -14px 36px rgba(0,0,0,.3); animation: more-sheet-up .22s ease-out; }
+.more-sheet-backdrop.is-closing { pointer-events: none; animation: more-backdrop-out .2s ease-in forwards; }
+.more-sheet-backdrop.is-closing .more-sheet { animation: more-sheet-down .2s ease-in forwards; }
 .more-sheet-handle { width: 34px; height: 3px; margin: 0 auto 10px; border-radius: 99px; background: #56616d; }
 .more-sheet-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 9px; }
 .more-sheet-heading .eyebrow { display: none; }
@@ -694,6 +696,8 @@ button { cursor: pointer; }
 .picker-error { color: #e3aaaa; }
 @keyframes more-sheet-up { from { transform: translateY(100%); opacity: .6; } to { transform: translateY(0); opacity: 1; } }
 @keyframes more-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes more-sheet-down { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: .55; } }
+@keyframes more-backdrop-out { from { opacity: 1; } to { opacity: 0; } }
 
 @media (max-width: 430px) {
   .dashboard-grid { grid-template-columns: 1fr 1fr; }

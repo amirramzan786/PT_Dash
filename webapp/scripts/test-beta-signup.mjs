@@ -153,6 +153,15 @@ test('current-main Home, recovery and food-diary integration contracts remain pr
   assert.match(app, /saveError: recipeSaveError/)
 })
 
+test('mobile More menu stays mounted long enough to animate closed', async () => {
+  const app = await readFile(new URL('../src/AppV3.jsx', import.meta.url), 'utf8')
+  const styles = await readFile(new URL('../src/app-v2.css', import.meta.url), 'utf8')
+  assert.match(app, /const \[moreClosing, setMoreClosing\] = useState\(false\)/)
+  assert.match(app, /function closeMore\(\)[\s\S]*setMoreClosing\(true\)[\s\S]*setMoreOpen\(false\)/)
+  assert.match(app, /more-sheet-backdrop \$\{moreClosing \? 'is-closing' : ''\}/)
+  assert.match(styles, /\.more-sheet-backdrop\.is-closing \.more-sheet \{ animation: more-sheet-down/)
+})
+
 test('exercise library supports combined, clearable multi-select filters', async () => {
   const app = await readFile(new URL('../src/AppV3.jsx', import.meta.url), 'utf8')
   assert.match(app, /const \[muscleGroups, setMuscleGroups\] = useState\(\[\]\)/)

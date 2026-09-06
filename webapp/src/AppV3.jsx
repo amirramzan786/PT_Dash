@@ -876,6 +876,7 @@ export default function AppV3({ user, onSignOut }) {
   const [loadError, setLoadError] = useState('')
   const [message, setMessage] = useState('')
   const [moreOpen, setMoreOpen] = useState(false)
+  const [moreClosing, setMoreClosing] = useState(false)
   const [customLogOpen, setCustomLogOpen] = useState(false)
   const [editingWorkout, setEditingWorkout] = useState(null)
   const [exercisePickerOpen, setExercisePickerOpen] = useState(false)
@@ -898,7 +899,7 @@ export default function AppV3({ user, onSignOut }) {
       const requested = window.location.hash.replace(/^#/, '')
       const next = [...tabs.map(({ id }) => id), 'Settings'].includes(requested) ? requested : 'Home'
       setTab(next)
-      setMoreOpen(false)
+      closeMore()
       if (next !== 'Settings') setSettingsReturnTab(next)
     }
     if (!window.location.hash) window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#Home`)
@@ -933,11 +934,28 @@ export default function AppV3({ user, onSignOut }) {
     })
   }, [desktopNavCollapsed])
 
+  function closeMore() {
+    if (!moreOpen || moreClosing) return
+    setMoreClosing(true)
+    window.setTimeout(() => {
+      setMoreOpen(false)
+      setMoreClosing(false)
+    }, 200)
+  }
+
+  function toggleMore() {
+    if (moreOpen) closeMore()
+    else {
+      setMoreClosing(false)
+      setMoreOpen(true)
+    }
+  }
+
   function navigateToTab(next, { replace = false } = {}) {
     const resolved = typeof next === 'function' ? next(tab) : next
     const valid = [...tabs.map(({ id }) => id), 'Settings'].includes(resolved) ? resolved : 'Home'
     setTab(valid)
-    setMoreOpen(false)
+    closeMore()
     if (valid === 'Checkin') refreshWeeklyActivity()
     const url = `${window.location.pathname}${window.location.search}#${valid}`
     if (replace) window.history.replaceState(null, '', url)
@@ -1266,8 +1284,8 @@ export default function AppV3({ user, onSignOut }) {
       {supportPanel && <div className="support-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeSupportPanel() }}><section className="support-dialog" role="dialog" aria-modal="true" aria-labelledby="support-dialog-title"><button className="support-dialog-close" type="button" aria-label="Close support panel" onClick={closeSupportPanel}>×</button>{supportPanel === 'help' && <><div className="support-dialog-icon"><HelpCircle size={22}/></div><span className="eyebrow">STEEL HELP</span><h2 id="support-dialog-title">Train with confidence</h2><p>Choose a workout from Home or Workouts, complete each set, then save the session at the end. Your logged sessions, weight and steps feed the Progress view.</p><div className="support-help-list"><div><strong>Can’t see your steps?</strong><span>Open Settings and connect a supported health provider when integrations are enabled.</span></div><div><strong>Need to change your plan?</strong><span>Start with your goal and equipment preferences; personalised journeys are coming next.</span></div><div><strong>Something went wrong?</strong><span>Refresh once, then check that you are signed in to the correct Steel account.</span></div></div></>}{supportPanel === 'about' && <><div className="support-dialog-icon"><Info size={22}/></div><span className="eyebrow">ABOUT PROJECT STEEL</span><h2 id="support-dialog-title">Your training homebase</h2><p>Project Steel is a private, mobile-first training space for workouts, progress, body-weight check-ins and daily movement.</p><div className="support-about-points"><span>Private account data protected by Supabase authentication and row-level security.</span><span>Spartan-inspired guidance designed to make consistent training feel clear and achievable.</span><span>AI trainer, meal planning and connected fitness journeys are part of the wider roadmap.</span></div></>}{supportPanel === 'feedback' && <><div className="support-dialog-icon"><MessageSquare size={22}/></div><span className="eyebrow">SHAPE THE NEXT RELEASE</span><h2 id="support-dialog-title">Send feedback</h2>{feedbackSaved ? <div className="support-feedback-success"><strong>Thanks — your feedback is captured for this session.</strong><button className="gold-button" type="button" onClick={() => setFeedbackSaved(false)}>Add more feedback</button></div> : <form className="support-feedback-form" onSubmit={saveFeedback}><label htmlFor="steel-feedback">What should Steel improve next?</label><textarea id="steel-feedback" value={feedbackText} onChange={(event) => setFeedbackText(event.target.value)} placeholder="Tell us what would make your next session easier…" rows="5" required/><button className="gold-button" type="submit" disabled={!feedbackText.trim()}>Save feedback</button></form>}</>}{supportPanel !== 'feedback' && <button className="gold-button support-dialog-action" type="button" onClick={closeSupportPanel}>Back to Settings</button>}</section></div>}
       <small className="steel-build">Steel · Build {import.meta.env.VITE_BUILD_SHA || "development"}</small>
     </main>
-    {moreOpen && <div className="more-sheet-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setMoreOpen(false) }}><section className="more-sheet" role="dialog" aria-modal="true" aria-labelledby="more-sheet-title"><div className="more-sheet-handle"/><div className="more-sheet-heading"><div><span className="eyebrow">PROJECT STEEL</span><h2 id="more-sheet-title">More</h2></div><button type="button" className="more-sheet-close" aria-label="Close more menu" onClick={() => setMoreOpen(false)}>×</button></div><div className="more-sheet-grid"><button onClick={() => navigateToTab('Plan')}><Dumbbell/><span>Workouts</span></button><button onClick={() => navigateToTab('Library')}><ListChecks/><span>Exercise library</span></button><button onClick={() => navigateToTab('Checkin')}><ClipboardCheck/><span>Weekly check-in</span></button><button onClick={() => navigateToTab('Weight')}><Scale/><span>Weight</span></button><button onClick={openSettings}><Settings/><span>Settings</span></button></div></section></div>}
-    <nav className="v2-bottom-nav" aria-label="Project Steel navigation">{mobileTabs.map(({id,label,icon:Icon})=><button key={id} className={tab===id?'active':''} onClick={()=>navigateToTab(id)}><Icon size={19}/><span>{label}</span></button>)}<button className={moreOpen || !mobileTabs.some(({id})=>id===tab) ? 'active' : ''} aria-expanded={moreOpen} onClick={()=>setMoreOpen((open)=>!open)}><Circle size={17}/><span>More</span></button></nav>
+    {moreOpen && <div className={`more-sheet-backdrop ${moreClosing ? 'is-closing' : ''}`} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeMore() }}><section className="more-sheet" role="dialog" aria-modal="true" aria-labelledby="more-sheet-title"><div className="more-sheet-handle"/><div className="more-sheet-heading"><div><span className="eyebrow">PROJECT STEEL</span><h2 id="more-sheet-title">More</h2></div><button type="button" className="more-sheet-close" aria-label="Close more menu" onClick={closeMore}>×</button></div><div className="more-sheet-grid"><button onClick={() => navigateToTab('Plan')}><Dumbbell/><span>Workouts</span></button><button onClick={() => navigateToTab('Library')}><ListChecks/><span>Exercise library</span></button><button onClick={() => navigateToTab('Checkin')}><ClipboardCheck/><span>Weekly check-in</span></button><button onClick={() => navigateToTab('Weight')}><Scale/><span>Weight</span></button><button onClick={openSettings}><Settings/><span>Settings</span></button></div></section></div>}
+    <nav className="v2-bottom-nav" aria-label="Project Steel navigation">{mobileTabs.map(({id,label,icon:Icon})=><button key={id} className={tab===id?'active':''} onClick={()=>navigateToTab(id)}><Icon size={19}/><span>{label}</span></button>)}<button className={moreOpen || !mobileTabs.some(({id})=>id===tab) ? 'active' : ''} aria-expanded={moreOpen} onClick={toggleMore}><Circle size={17}/><span>More</span></button></nav>
     <nav className={`v4-desktop-nav ${desktopNavCollapsed ? 'is-collapsed' : ''}`} aria-label="Project Steel desktop navigation"><div className="v4-desktop-brand"><div className="brand-emblem"><SteelMark size={22}/></div><strong>PROJECT STEEL</strong></div><button type="button" className="desktop-nav-toggle" onClick={() => setDesktopNavCollapsed((collapsed) => !collapsed)} aria-label={desktopNavCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={desktopNavCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-expanded={!desktopNavCollapsed}><ChevronRight size={20}/><span>{desktopNavCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}</span></button>{tabs.filter(({id})=>id!=='Train').map(({id,label,icon:Icon})=><button key={id} className={tab===id?'active':''} onClick={()=>navigateToTab(id)} aria-label={label} title={desktopNavCollapsed ? undefined : label}><Icon size={20}/><span>{label}</span></button>)}<button className={tab==='Settings'?'active':''} onClick={openSettings} aria-label="Settings" title={desktopNavCollapsed ? undefined : "Settings"}><Settings size={20}/><span>Settings</span></button><div className="v4-desktop-support"><span className="eyebrow">SUPPORT</span><button onClick={openSettings}>Help &amp; Support <ChevronRight size={15}/></button><button onClick={openSettings}>About Steel <ChevronRight size={15}/></button></div></nav>
   </div>
 }
