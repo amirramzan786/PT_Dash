@@ -124,6 +124,10 @@ test('current-main Home, recovery and food-diary integration contracts remain pr
   assert.match(diary, /getNutritionFavouriteFoods/)
   assert.match(diary, /getNutritionFoodServings/)
   assert.match(diary, /getNutritionFoodByBarcode/)
+  assert.match(diary, /compact = false/)
+  assert.match(app, /FoodDiary compact userId=/)
+  assert.match(app, /recipeSaveError/)
+  assert.match(app, /saveError: recipeSaveError/)
 })
 
 test('recipe foundation upgrades the earlier production recipes shape before indexing it', async () => {

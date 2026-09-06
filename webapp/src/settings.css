@@ -395,3 +395,25 @@
   .ai-onboarding-panel { right: 10px; bottom: 72px; width: calc(100vw - 20px); max-height: calc(100dvh - 92px); border-radius: 18px; }
   .ai-chat-messages { min-height: 150px; }
 }
+
+/* Keep Settings and Fuel visually consistent with the compact navigation. */
+.settings-profile-card { gap: 11px; padding: 14px; border-radius: 16px; }
+.settings-avatar { width: 50px; height: 50px; border-radius: 15px; }
+.settings-profile-card h3 { font-size: 1.02rem; }
+.settings-row { min-height: 58px; gap: 9px; }
+.settings-security-card { grid-template-columns: 38px minmax(0,1fr); gap: 10px; padding: 13px; border-radius: 14px; }
+.signout-button { min-height: 44px; border-radius: 11px; }
+.settings-disclosure { border-radius: 14px; }
+.settings-disclosure-trigger { min-height: 60px; gap: 10px; padding: 8px 11px; }
+.settings-disclosure-content { gap: 10px; padding: 11px; }
+.nutrition-plan-summary { gap: 10px; padding: 11px 12px; border-radius: 13px; }
+.nutrition-daily-summary { border-radius: 13px; }
+.nutrition-daily-summary > div { min-height: 64px; padding: 10px 11px; }
+.nutrition-next-card { gap: 11px; padding: 11px; border-radius: 13px; }
+.food-search-panel { gap: 8px; padding: 11px; border-radius: 13px; }
+.food-portion-sheet { gap: 10px; padding: 17px 14px; border-radius: 18px 18px 0 0; }
+.support-dialog { padding: 18px; border-radius: 18px; }
+.support-dialog-icon { width: 38px; height: 38px; margin-bottom: 11px; border-radius: 11px; }
+.support-feedback-success { gap: 10px; margin-top: 13px; padding: 11px; }
+.food-diary-compact .food-search-panel { margin-top: 0; }
+.meal-component-save-error { margin: 0; padding: 9px 10px; border: 1px solid rgba(216,117,117,.5); border-radius: 10px; color: #f0b7b7; background: rgba(116,38,44,.16); font-size: .72rem; line-height: 1.4; }

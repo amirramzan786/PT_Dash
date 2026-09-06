@@ -806,3 +806,57 @@ button { cursor: pointer; }
   .library-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .checkin-measurement-grid { grid-template-columns: repeat(2,1fr); }
 }
+
+/* Compact Steel system: preserve clear hierarchy and 44px+ touch targets while
+   removing unnecessary visual weight from repeated surfaces. */
+.page-intro { padding: 3px 1px 0; }
+.page-intro h2 { margin: 4px 0; font-size: 1.45rem; }
+.gold-button { min-height: 44px; border-radius: 10px; padding-inline: 13px; font-size: .8rem; }
+.start-workout-list { gap: 8px; }
+.start-workout-option { grid-template-columns: 48px minmax(0, 1fr) auto; gap: 10px; padding: 10px; border-radius: 13px; }
+.start-workout-art { width: 48px; height: 48px; border-radius: 11px; }
+.custom-workout-card { grid-template-columns: 42px minmax(0, 1fr) auto; gap: 9px; padding: 10px; border-radius: 13px; }
+.custom-workout-icon { width: 42px; height: 42px; border-radius: 10px; }
+.workout-tile { min-height: 78px; grid-template-columns: 74px minmax(0,1fr) 36px; border-radius: 14px; }
+.tile-copy { padding: 9px 8px; }
+.tile-copy strong { font-size: .86rem; }
+.tile-copy small { font-size: .65rem; }
+.tile-arrow { width: 26px; height: 26px; }
+.plan-block { border-radius: 16px; }
+.plan-image { min-height: 90px; padding: 12px; }
+.plan-image-icon { width: 46px; height: 46px; border-radius: 14px; }
+.plan-content { padding: 13px; }
+.plan-title-row h3 { font-size: 1.05rem; }
+.log-workout-cta { padding: 10px; border-radius: 12px; }
+.exercise-library-card { padding: 9px; border-radius: 12px; }
+.library-state { padding: 16px 10px; }
+.exercise-focus-card { grid-template-columns: 86px minmax(0,1fr); border-radius: 16px; }
+.exercise-focus-copy { padding: 13px 11px; }
+.exercise-focus-copy h2 { font-size: 1.05rem; }
+.set-row-v2 { min-height: 94px; padding: 9px; border-radius: 13px; }
+.finisher-panel { grid-template-columns: 46px 1fr; gap: 10px; padding: 12px; border-radius: 15px; }
+.finisher-symbol { width: 44px; height: 44px; border-radius: 12px; }
+.session-summary-v2, .weight-entry-card, .progress-detail-card, .progress-chart-card, .weight-history-card { padding: 12px; border-radius: 15px; }
+.nutrition-intake-dashboard { gap: 12px; padding: 13px; border-radius: 16px; }
+.diet-plan-target, .today-meal-card, .meal-component-editor, .nutrition-custom-form { padding: 12px; border-radius: 13px; }
+.today-meal-card { gap: 9px; }
+.nutrition-meal-card { gap: 9px; padding: 11px; border-radius: 13px; }
+.nutrition-choice-list button { min-height: 58px; padding: 8px; border-radius: 10px; }
+.progress-hero-card { padding: 13px; border-radius: 16px; }
+.progress-metric strong, .weight-overview-card strong { font-size: 1.6rem; }
+.progress-stat-grid article { padding: 11px; }
+.weight-overview-card { padding: 14px; border-radius: 16px; }
+.goal-card, .home-direction-card, .journey-card { gap: 10px; padding: 13px; border-radius: 16px; }
+.journey-plan-list { gap: 6px; }
+.journey-plan-list button { grid-template-columns: 45px minmax(0,1fr) auto; gap: 8px; padding: 8px; border-radius: 10px; }
+.movement-card { gap: 9px; }
+.more-sheet { padding-inline: 14px; border-radius: 20px 20px 0 0; }
+.more-sheet-grid { gap: 7px; }
+.more-sheet-grid button { min-height: 58px; padding-inline: 11px; border-radius: 12px; }
+.exercise-picker-list button { min-height: 54px; padding: 7px 9px; border-radius: 11px; }
+
+@media (max-width: 430px) {
+  .v4-action-grid button { min-height: 72px; }
+  .workout-tile { grid-template-columns: 66px minmax(0,1fr) 32px; }
+  .exercise-focus-card { grid-template-columns: 74px minmax(0,1fr); }
+}
