@@ -513,6 +513,7 @@ button { cursor: pointer; }
 .v4-hero-copy { position: relative; z-index: 2; align-self: center; max-width: 58%; padding: 23px 17px 25px; }
 .v4-hero-copy h2 { margin: 6px 0; font-size: 1.48rem; }
 .v4-hero-copy p { margin: 0; color: var(--steel-muted); font-size: .8rem; line-height: 1.45; }
+.v4-hero-copy .daily-motivation { max-width: 320px; color: #c4ccd5; font-size: .82rem; font-style: italic; line-height: 1.5; }
 .hero-checkin-reminder { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 8px 10px; border: 1px solid rgba(217,173,85,.35); border-radius: 10px; color: var(--steel-gold-2); background: rgba(8,17,27,.42); font-size: .67rem; font-weight: 800; text-align: left; }
 .hero-checkin-reminder:hover { border-color: var(--steel-gold); background: rgba(217,173,85,.1); }
 .v4-hero-art { position: absolute; inset: 0 0 74px 31%; background-image: linear-gradient(90deg,rgba(10,15,20,.98) 0%,rgba(10,15,20,.52) 34%,rgba(10,15,20,.14) 72%),linear-gradient(180deg,rgba(8,13,20,.28),rgba(8,13,20,.8)),url('/assets/spartan-leonidas.jpg'); background-size: cover; background-position: 70% 78%; filter: saturate(.7) sepia(.22); }
@@ -549,9 +550,9 @@ button { cursor: pointer; }
 .v4-metric-link span { color: var(--steel-muted); font-size: .59rem; letter-spacing: .08em; font-weight: 900; }
 .v4-metric-link strong { color: var(--steel-gold-2); font-size: 1.2rem; }
 .v4-metric-link small { color: #7f8996; font-size: .63rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.home-direction-card { display: grid; gap: 13px; padding: 16px; border: 1px solid rgba(217,173,85,.28); border-radius: 19px; background: linear-gradient(145deg,rgba(33,28,17,.96),rgba(14,22,31,.98)); }
+.home-direction-card { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 14px; border: 1px solid rgba(217,173,85,.28); border-radius: 15px; background: linear-gradient(145deg,rgba(33,28,17,.96),rgba(14,22,31,.98)); }
 .home-direction-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
-.home-direction-header h3 { margin: 5px 0 4px; font-size: 1rem; }
+.home-direction-header h3 { margin: 4px 0 0; font-size: .92rem; }
 .home-direction-header p, .home-direction-signal p { margin: 0; color: var(--steel-muted); font-size: .74rem; line-height: 1.45; }
 .direction-mode { flex: 0 0 auto; padding: 6px 8px; border: 1px solid rgba(217,173,85,.35); border-radius: 999px; color: var(--steel-gold-2); font-size: .59rem; font-weight: 900; letter-spacing: .1em; }
 .direction-recover { color: #a8d7b4; border-color: rgba(116,201,145,.4); }
@@ -561,8 +562,8 @@ button { cursor: pointer; }
 .home-direction-evidence { display: grid; align-content: center; gap: 5px; padding-left: 12px; border-left: 1px solid rgba(217,173,85,.17); }
 .home-direction-evidence span { color: var(--steel-gold-2); font-size: .59rem; font-weight: 900; letter-spacing: .1em; }
 .home-direction-evidence small { color: var(--steel-muted); font-size: .66rem; line-height: 1.4; }
-.home-direction-actions { display: flex; align-items: center; gap: 14px; }
-.home-direction-actions .gold-button { min-height: 40px; padding-inline: 12px; font-size: .7rem; }
+.home-direction-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 10px; }
+.home-direction-actions .gold-button { min-height: 36px; padding-inline: 11px; font-size: .67rem; }
 .home-direction-actions .text-link { display: inline-flex; align-items: center; gap: 5px; }
 .journey-card { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--steel-line); border-radius: 20px; background: linear-gradient(145deg,#151d27,#0e151e); box-shadow: 0 12px 30px rgba(0,0,0,.16), inset 0 1px rgba(255,255,255,.018); }
 .journey-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
