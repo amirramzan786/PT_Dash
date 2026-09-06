@@ -330,6 +330,11 @@
 .steel-founder-card,.alpha-support-panel { width: min(100% - 32px, 1120px); margin: 14px auto 0; }
 .steel-founder-card { border-color: rgba(218,174,74,.45); background: linear-gradient(115deg, rgba(218,174,74,.12), rgba(16,24,33,.96) 42%); }
 .steel-founder-card small { display: block; margin-top: 5px; color: var(--steel-muted); }
+.membership-status-card { position: relative; width: 100%; margin: 0; }
+.membership-status-card small { display: block; margin-top: 5px; color: var(--steel-muted); }
+.membership-status-badge { margin-left: auto; align-self: flex-start; border: 1px solid rgba(153,166,183,.38); border-radius: 999px; color: var(--steel-muted); font-size: .62rem; font-weight: 850; letter-spacing: .08em; padding: 5px 7px; }
+.membership-status-badge.active { border-color: rgba(218,174,74,.48); color: #f3c85d; }
+.settings-page-v5 .alpha-support-panel { width: 100%; margin: 0; }
 .alpha-support-panel { display: grid; gap: 18px; }
 .alpha-support-panel .section-heading p,.alpha-whats-new > p { margin: 5px 0 0; color: var(--steel-muted); }
 .alpha-support-panel .support-feedback-form { max-width: 720px; }

@@ -112,6 +112,19 @@ test('Founder entitlement mismatches fail visibly rather than silently downgradi
   assert.match(app, /Your Founder allocation is retained/)
 })
 
+test('membership labels are read-only, Settings-scoped, and retain Founder precedence', async () => {
+  const api = await readFile(new URL('../src/lib/steelApi.js', import.meta.url), 'utf8')
+  const app = await readFile(new URL('../src/AppV3.jsx', import.meta.url), 'utf8')
+  assert.match(api, /export async function getMyMembershipEntitlement/)
+  assert.match(api, /from\('membership_entitlements'\)[\s\S]*\.select\('plan_key,plan_label,status,training_access,nutrition_access,starts_at,ends_at'\)/)
+  assert.doesNotMatch(api, /membership_entitlements'\)\.(insert|upsert|update|delete)/)
+  assert.match(app, /function MembershipStatusCard/)
+  assert.match(app, /if \(founderStatus\?\.founder_number\) return <FounderStatusCard/)
+  assert.match(app, /<MembershipStatusCard founderStatus=\{founderStatus\} membershipEntitlement=\{membershipEntitlement\}\/>/)
+  assert.match(app, /id="settings-alpha-feedback"/)
+  assert.match(app, /<AlphaSupportPanel \{\.\.\.feedbackProps\}\/>/)
+})
+
 test('current-main Home, recovery and food-diary integration contracts remain present', async () => {
   const app = await readFile(new URL('../src/AppV3.jsx', import.meta.url), 'utf8')
   const diary = await readFile(new URL('../src/components/FoodDiary.jsx', import.meta.url), 'utf8')

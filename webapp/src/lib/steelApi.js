@@ -34,6 +34,16 @@ export async function getFounderStatus() {
   return data || { status: 'none', founder_number: null, has_lifetime_entitlement: false }
 }
 
+// This is deliberately read-only and RLS-scoped to the signed-in member. Plan
+// grants themselves remain a server/admin responsibility.
+export async function getMyMembershipEntitlement() {
+  const { data, error } = await requireSupabase().from('membership_entitlements')
+    .select('plan_key,plan_label,status,training_access,nutrition_access,starts_at,ends_at')
+    .maybeSingle()
+  if (error) throw error
+  return data || null
+}
+
 export async function submitBetaFeedback({ userId, category, message, appArea = null }) {
   const client = requireSupabase()
   const { data, error } = await client.from('beta_feedback')
