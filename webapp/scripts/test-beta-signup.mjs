@@ -25,6 +25,14 @@ test('marketing bundle never paints a fake initial Founder count', async () => {
   assert.match(html, /Do not increment optimistically|paintCounter/) // source-level guard
 })
 
+test('marketing verification shows a dedicated confirmation screen before the app handoff', async () => {
+  const html = await readFile(new URL('../../marketing-site/index.html', import.meta.url), 'utf8')
+  assert.match(html, /id="verification-screen"[^>]*hidden/)
+  assert.match(html, /You’re <em>verified\.<\/em>/)
+  assert.match(html, /showVerificationScreen\(data\)/)
+  assert.match(html, /verificationContinue\.href=appUrl/)
+})
+
 test('migration contains the server-side allocation guardrails', async () => {
   const sql = await readFile(new URL('../supabase/migrations/20260904120000_founding20_beta_signups.sql', import.meta.url), 'utf8')
   assert.match(sql, /pg_advisory_xact_lock/)

@@ -54,11 +54,13 @@
 .hero-title{font-size:clamp(68px,10.1vw,154px);text-wrap:balance}
 .hero-copy{max-width:590px;color:#b1bac4}
  .hero-actions{align-items:center;flex-wrap:wrap}
-.hero-signup{display:grid;grid-template-columns:minmax(220px,320px) auto;gap:7px;padding:6px;border:1px solid rgba(255,255,255,.13);border-radius:15px;background:rgba(7,11,17,.72);backdrop-filter:blur(18px);box-shadow:0 16px 45px rgba(0,0,0,.24)}
+.hero-signup{display:grid;grid-template-columns:minmax(220px,320px) auto;gap:7px;align-items:end;padding:9px;border:1px solid rgba(255,255,255,.13);border-radius:15px;background:rgba(7,11,17,.72);backdrop-filter:blur(18px);box-shadow:0 16px 45px rgba(0,0,0,.24)}
 .hero-signup:focus-within{border-color:rgba(217,173,85,.48);box-shadow:0 16px 45px rgba(0,0,0,.28),0 0 0 3px rgba(217,173,85,.06)}
-.hero-signup input{min-height:44px;border:0;background:transparent;color:#fff;padding:0 12px;outline:none;font:inherit;font-size:12px}
-.hero-signup input::placeholder{color:#6f7a86}
-.hero-signup button{min-height:44px;border:0;border-radius:10px;padding:0 17px;background:linear-gradient(180deg,#efbe60,#c89031);color:#0b0d0f;font-weight:950;font-size:11px;letter-spacing:.02em;cursor:pointer;white-space:nowrap;transition:.25s}
+.signup-email-field{display:grid;gap:5px;color:#b8c2cc;font-size:9px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.hero-signup input{min-height:48px;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:rgba(5,8,12,.68);color:#fff;padding:0 12px;outline:none;font:inherit;font-size:13px;transition:border-color .2s,box-shadow .2s}
+.hero-signup input:focus{border-color:var(--gold2);box-shadow:0 0 0 3px rgba(217,173,85,.12)}
+.hero-signup input::placeholder{color:#8b97a4}
+.hero-signup button{grid-column:2;grid-row:1;min-height:48px;border:0;border-radius:10px;padding:0 17px;background:linear-gradient(180deg,#efbe60,#c89031);color:#0b0d0f;font-weight:950;font-size:11px;letter-spacing:.02em;cursor:pointer;white-space:nowrap;transition:.25s}
 .hero-signup button:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(217,173,85,.16)}
 .hero-mindset{min-height:56px}
 .hero-signup-note{width:100%;margin-top:8px;color:#6e7883;font-size:9px;letter-spacing:.03em}
@@ -612,11 +614,20 @@
   .menu-toggle{width:40px;height:40px;flex-basis:40px}
 }
 
+.verification-screen{position:fixed;inset:0;z-index:240;display:grid;place-items:center;padding:22px;background:rgba(2,4,7,.84);backdrop-filter:blur(18px)}.verification-screen[hidden]{display:none}.verification-card{width:min(620px,100%);padding:clamp(28px,5vw,52px);border:1px solid rgba(217,173,85,.42);border-radius:26px;background:linear-gradient(145deg,#17212c,#0a1017 72%);box-shadow:0 50px 160px rgba(0,0,0,.72),0 0 0 1px rgba(255,255,255,.04);text-align:left}.verification-mark{width:58px;height:58px;display:grid;place-items:center;margin-bottom:25px;border:1px solid rgba(217,173,85,.62);border-radius:18px;color:var(--gold2);background:rgba(217,173,85,.1);font-size:27px;font-weight:900}.verification-card h2{margin:0 0 13px;font-size:clamp(34px,6vw,60px);line-height:.95;letter-spacing:-.065em}.verification-card h2 em{font-style:normal;color:var(--gold2)}.verification-card p{margin:0;color:#a5afba;line-height:1.65;font-size:15px}.verification-result{margin:25px 0;padding:16px 17px;border-left:2px solid var(--gold);border-radius:0 13px 13px 0;background:rgba(217,173,85,.08);color:#f4f5f6;font-weight:850;line-height:1.45}.verification-result strong{display:block;color:var(--gold2);font-size:11px;letter-spacing:.16em;margin-bottom:5px}.verification-actions{display:flex;align-items:center;gap:12px;margin-top:28px}.verification-actions .btn{min-height:48px}.verification-close{border:0;background:transparent;color:#8e99a5;font-size:12px;font-weight:850;cursor:pointer}.verification-close:hover{color:#fff}
 </style>
 <style>
 .turnstile-slot{grid-column:1/-1;min-height:65px;display:flex;align-items:center;justify-content:center}
 .turnstile-slot iframe{max-width:100%}
 .beta-form button:disabled,.hero-signup button:disabled{opacity:.6;cursor:wait;transform:none}
+.hero-signup,.beta-form{max-width:100%}
+.beta-form{grid-template-columns:minmax(0,1fr) auto;align-items:end;padding:10px}
+.beta-form .signup-email-field{text-align:left}
+.beta-form input{min-height:48px;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:rgba(5,8,12,.68);color:#fff;padding:0 12px;outline:none;font:inherit;font-size:13px;transition:border-color .2s,box-shadow .2s}
+.beta-form input:focus{border-color:var(--gold2);box-shadow:0 0 0 3px rgba(217,173,85,.12)}
+.beta-form input::placeholder{color:#8b97a4}
+.beta-form button{grid-column:2;grid-row:1;min-height:48px;border:0;border-radius:10px;padding:0 19px;background:linear-gradient(180deg,#efbe60,#c89031);color:#0b0d0f;font-weight:950;font-size:11px;letter-spacing:.02em;cursor:pointer;white-space:nowrap}
+@media(max-width:640px){.hero-signup,.beta-form{grid-template-columns:1fr}.hero-signup button,.beta-form button{grid-column:auto;grid-row:auto;width:100%;min-height:48px}.signup-email-field{gap:6px}.turnstile-slot{min-height:65px}}
 </style>
 </head>
 <body>
@@ -675,7 +686,7 @@
 <div class="mobile-menu-backdrop" id="mobile-menu-backdrop" aria-hidden="true"></div>
 </header>
 <main id="top">
-<section class="hero" id="top"><div class="hero-bg" id="heroBg"></div><div class="hero-overlay"></div><div class="hero-rings"></div><div class="hero-brand-seal" aria-hidden="true"><div class="hero-brand-seal-image"></div><small>FORGED FOR CONSISTENCY</small></div><div class="shell hero-content"><div class="hero-status reveal"><i></i>PRIVATE BETA · £0 · NO CARD REQUIRED</div><h1 class="hero-title"><span class="top reveal">PERFORMANCE</span><span class="reveal delay1">WITHOUT<br>THE <em>NOISE.</em></span></h1><p class="hero-copy reveal delay2">Train, fuel, recover and progress in one disciplined system. Built to make the next useful decision obvious — and everything else disappear.</p><div class="hero-actions reveal delay3"><form class="hero-signup" id="hero-signup" data-beta-form data-source="hero"><input type="email" required placeholder="Your email address" aria-label="Email address"><div class="turnstile-slot" data-turnstile-widget aria-label="Human verification"></div><button type="submit">Request access</button></form><a class="btn ghost hero-mindset" href="#code">Enter the mindset ↓</a></div><div class="hero-subproof reveal delay3"><span><b>01</b> TRAIN</span><span><b>02</b> FUEL</span><span><b>03</b> RECOVER</span><span><b>04</b> PROGRESS</span></div></div><div class="hero-footer shell"><span>SPARTAN MINDSET</span><i></i><span>SPARTAN STRENGTH</span><i></i><span>EVERY DAY</span></div><div class="hero-scroll"><span>ENTER STEEL</span><i></i></div></section>
+<section class="hero" id="top"><div class="hero-bg" id="heroBg"></div><div class="hero-overlay"></div><div class="hero-rings"></div><div class="hero-brand-seal" aria-hidden="true"><div class="hero-brand-seal-image"></div><small>FORGED FOR CONSISTENCY</small></div><div class="shell hero-content"><div class="hero-status reveal"><i></i>PRIVATE BETA · £0 · NO CARD REQUIRED</div><h1 class="hero-title"><span class="top reveal">PERFORMANCE</span><span class="reveal delay1">WITHOUT<br>THE <em>NOISE.</em></span></h1><p class="hero-copy reveal delay2">Train, fuel, recover and progress in one disciplined system. Built to make the next useful decision obvious — and everything else disappear.</p><div class="hero-actions reveal delay3"><form class="hero-signup" id="hero-signup" data-beta-form data-source="hero"><label class="signup-email-field"><span>Email address</span><input type="email" required placeholder="you@example.com" autocomplete="email"></label><div class="turnstile-slot" data-turnstile-widget aria-label="Human verification"></div><button type="submit">Request access</button></form><a class="btn ghost hero-mindset" href="#code">Enter the mindset ↓</a></div><div class="hero-subproof reveal delay3"><span><b>01</b> TRAIN</span><span><b>02</b> FUEL</span><span><b>03</b> RECOVER</span><span><b>04</b> PROGRESS</span></div></div><div class="hero-footer shell"><span>SPARTAN MINDSET</span><i></i><span>SPARTAN STRENGTH</span><i></i><span>EVERY DAY</span></div><div class="hero-scroll"><span>ENTER STEEL</span><i></i></div></section>
 <section class="forge" id="code"><div class="forge-sticky"><div class="forge-bg" id="forgeBg"></div><div class="forge-fade"></div><div class="shell forge-grid"><div class="forge-copy"><span class="eyebrow">THE STEEL CODE</span><h2><span data-forge="0">SPARTAN <b>MINDSET.</b></span><span data-forge="1">SPARTAN <b>STRENGTH.</b></span><span data-forge="2"><b>EVERY DAY.</b></span></h2><p>Motivation fades. Standards remain. Steel is built around the work you repeat when nobody is watching.</p><div class="code-list"><div><b>01</b><strong>DISCIPLINE</strong><small>Do the work you said you would.</small></div><div><b>02</b><strong>CONSISTENCY</strong><small>Build proof one session at a time.</small></div><div><b>03</b><strong>RESILIENCE</strong><small>Adapt. Recover. Return stronger.</small></div><div><b>04</b><strong>PROGRESS</strong><small>Measure what actually moves.</small></div></div></div><div class="forge-visual"><div class="forge-mark" id="forgeMark"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><svg class="steel-mark-inline steel-logo-v5" viewBox="0 0 64 64" aria-hidden="true"><path class="logo-ring" d="M24 7.5C14.7 10.8 8.2 19.6 8.2 30c0 9.9 5.7 18.9 14.7 23.2M40 7.5C49.3 10.8 55.8 19.6 55.8 30c0 9.9-5.7 18.9-14.7 23.2"/><path class="logo-crest" d="M32 3.5 36.3 11 35 27.5 32 32l-3-4.5L27.7 11 32 3.5Z"/><path class="logo-helmet" d="M30.1 15.5 22.5 18.8 17.5 27.8 19.8 43.8 27.4 52.7V34.6l-6.1-4.1h8.8V15.5ZM33.9 15.5l7.6 3.3 5 9-2.3 16-7.6 8.9V34.6l6.1-4.1h-8.8V15.5Z"/><path class="logo-face" d="M28.9 31.1h6.2L32 37.6l-3.1-6.5Z"/></svg></div></div></div></div></section>
 <section class="interrupt"><div class="shell reveal"><span class="eyebrow">ONE SYSTEM. FOUR SIGNALS.</span><h2>YOUR BODY IS ALREADY<br>GIVING YOU THE DATA.</h2><p>Steel turns it into a decision.</p></div></section>
 <section class="product" id="system"><div class="product-sticky"><div class="mobile-system-label"><span>THE STEEL SYSTEM</span><i></i><b>01—04</b></div><div class="shell product-grid"><div class="product-copy"><div class="counter"><span id="counter">01</span> / 04</div><div class="story active" data-story="0"><span class="eyebrow">TRAIN</span><h2>SHOW UP.<br><em>KNOW THE WORK.</em></h2><p>Structured sessions, progressive overload and a clear next move. The plan stays obvious so the work can stay hard.</p></div><div class="story" data-story="1"><span class="eyebrow">FUEL</span><h2>FEED THE WORK.<br><em>NOT THE LEDGER.</em></h2><p>Nutrition targets and meal planning that live beside the training — quick enough to use, useful enough to matter.</p></div><div class="story" data-story="2"><span class="eyebrow">RECOVER</span><h2>THE WORK DOESN'T END<br><em>WHEN THE SET DOES.</em></h2><p>Recovery signals put readiness and fatigue beside the plan, so more is not always mistaken for better.</p></div><div class="story" data-story="3"><span class="eyebrow">PROGRESS</span><h2>PROOF.<br><em>NOT VIBES.</em></h2><p>Training, weight, consistency and performance in one view — enough context to know what is actually changing.</p></div></div><div class="device-stage"><div class="device-glow"></div><div class="device" id="device"><div class="device-top"><span>9:41</span><span class="island"></span><span>● ●</span></div>
@@ -706,7 +717,7 @@
     <p>Once the 20 founding places are allocated, the lifetime Premium offer closes.</p>
     <div class="launch">Covers the core Premium features available at public launch. Separate future products or add-ons may be excluded.</div>
   </div>
-</div><div class="beta-actions reveal delay3"><a class="btn primary" href="#beta-form">Join the Private Beta ↓</a><a class="btn ghost" href="#faq">Read the useful questions ↓</a></div><form class="beta-form reveal" id="beta-form" data-beta-form data-source="beta"><input type="email" required placeholder="you@example.com" aria-label="Email address"><div class="turnstile-slot" data-turnstile-widget aria-label="Human verification"></div><button type="submit">Request access</button></form>
+</div><div class="beta-actions reveal delay3"><a class="btn primary" href="#beta-form">Join the Private Beta ↓</a><a class="btn ghost" href="#faq">Read the useful questions ↓</a></div><form class="beta-form reveal" id="beta-form" data-beta-form data-source="beta"><label class="signup-email-field"><span>Email address</span><input type="email" required placeholder="you@example.com" autocomplete="email"></label><div class="turnstile-slot" data-turnstile-widget aria-label="Human verification"></div><button type="submit">Request access</button></form>
 <div class="founding-counter reveal" id="founding-counter" data-capacity="20" data-claimed="" aria-busy="true" aria-label="Founding beta availability">
   <div class="founding-counter-top">
     <span>FOUNDING 20</span>
@@ -743,6 +754,7 @@
 
 <footer class="legal-footer"><div class="shell"><div class="footer-grid"><div class="footer-brand"><a class="brand" href="#top"><svg class="mark steel-logo-v5" viewBox="0 0 64 64" aria-hidden="true"><path class="logo-ring" d="M24 7.5C14.7 10.8 8.2 19.6 8.2 30c0 9.9 5.7 18.9 14.7 23.2M40 7.5C49.3 10.8 55.8 19.6 55.8 30c0 9.9-5.7 18.9-14.7 23.2"/><path class="logo-crest" d="M32 3.5 36.3 11 35 27.5 32 32l-3-4.5L27.7 11 32 3.5Z"/><path class="logo-helmet" d="M30.1 15.5 22.5 18.8 17.5 27.8 19.8 43.8 27.4 52.7V34.6l-6.1-4.1h8.8V15.5ZM33.9 15.5l7.6 3.3 5 9-2.3 16-7.6 8.9V34.6l6.1-4.1h-8.8V15.5Z"/><path class="logo-face" d="M28.9 31.1h6.2L32 37.6l-3.1-6.5Z"/></svg><span>PROJECT <b>STEEL</b></span></a><p>One disciplined system for training, fuel, recovery and progress.</p></div><div class="footer-col"><strong>PRODUCT</strong><a href="#system">The System</a><a href="#why">Why Steel</a><a href="#beta">Private Beta</a><a href="#faq">FAQ</a></div><div class="footer-col"><strong>ACCESS</strong><a href="#beta-form">Join private beta</a><a href="#beta">Founding beta</a><a href="#faq">Before you start</a></div><div class="footer-col"><strong>LEGAL</strong><button class="legal-btn" data-legal="privacy">Privacy</button><button class="legal-btn" data-legal="terms">Terms</button><button class="legal-btn" data-legal="cookies">Cookies</button><button class="legal-btn" data-legal="beta">Beta Terms</button><button class="legal-btn" data-legal="contact">Contact</button></div></div><div class="footer-bottom"><span>PROJECT STEEL · PRIVATE BETA · BUILT IN THE UK</span><span>SPARTAN MINDSET. SPARTAN STRENGTH. EVERY DAY.</span></div></div></footer>
 <button class="back-top" id="backTop" type="button" aria-label="Back to top"><small>BACK TO TOP</small><span>↑</span></button>
+<div class="verification-screen" id="verification-screen" hidden aria-hidden="true"><section class="verification-card" role="status" aria-live="polite"><div class="verification-mark" aria-hidden="true">✓</div><span class="eyebrow">PROJECT STEEL · ACCESS CONFIRMED</span><h2>You’re <em>verified.</em></h2><p>Your email ownership is confirmed. Your beta access result is now secured and your next step is to finish setting up Steel.</p><div class="verification-result" id="verification-result"><strong>YOUR BETA RESULT</strong><span id="verification-result-copy">Your verified access is ready.</span></div><div class="verification-actions"><a class="btn primary" id="verification-continue" href="#">Continue to Project Steel →</a><button class="verification-close" id="verification-close" type="button">Return to the site</button></div></section></div>
 <div class="legal-modal" id="legalModal" role="dialog" aria-modal="true" aria-labelledby="legalTitle"><div class="legal-card"><div class="legal-head"><strong id="legalTitle">PROJECT STEEL</strong><button class="legal-close" id="legalClose" type="button" aria-label="Close">×</button></div><div class="legal-body" id="legalBody"></div></div></div>
 
 <script type="module">
@@ -759,7 +771,20 @@ const steelConfig=window.STEEL_CONFIG||{};
 const steelClient=steelConfig.supabaseUrl&&steelConfig.supabasePublishableKey?createClient(steelConfig.supabaseUrl,steelConfig.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
 const formNote=q('#form-note');
 const appUrl=steelConfig.appUrl||'https://pt-dash.pages.dev';
+const verificationScreen=q('#verification-screen'),verificationResultCopy=q('#verification-result-copy'),verificationContinue=q('#verification-continue'),verificationClose=q('#verification-close');
 function setFormMessage(message,kind=''){if(!formNote)return;formNote.className=`form-note${kind?' '+kind:''}`;formNote.innerHTML=message}
+function showVerificationScreen(data){
+  if(!verificationScreen)return;
+  const founder=Number(data?.foundingNumber);
+  verificationResultCopy.innerHTML=founder?`You’re Founder #${String(founder).padStart(2,'0')} of 20. Your Founding place is secured, with core Steel Premium free for life.`:'Your email is verified and you’re on the Steel beta waitlist. We’ll contact you when additional beta access becomes available.';
+  verificationContinue.href=appUrl;
+  verificationScreen.hidden=false;
+  verificationScreen.setAttribute('aria-hidden','false');
+  document.body.style.overflow='hidden';
+  verificationContinue.focus({preventScroll:true});
+}
+function hideVerificationScreen(){if(!verificationScreen)return;verificationScreen.hidden=true;verificationScreen.setAttribute('aria-hidden','true');document.body.style.overflow=''}
+verificationClose?.addEventListener('click',hideVerificationScreen);
 function setCounterUnavailable(message='Live availability is temporarily unavailable.'){
   if(!foundingCounter)return;
   foundingCounter.setAttribute('aria-busy','false');
@@ -830,9 +855,9 @@ async function completeVerification(){
   try{
     const {data,error}=await steelClient.functions.invoke('beta-verify',{body:{}});
     if(error){let detail=null;try{detail=await error.context?.json()}catch{};throw new Error(detail?.error||error.message||'Verification could not be completed.')}
-    if(data?.foundingNumber)setFormMessage(`${data.message}<br><a href="${appUrl}">Open Project Steel →</a>`,'success');
-    else setFormMessage(`${data?.message||'Your email is verified and you’re on the beta waitlist.'}<br><a href="${appUrl}">Continue to Project Steel →</a>`,'success');
-    q('#beta')?.scrollIntoView({behavior:'smooth',block:'start'});loadFoundingAvailability();
+    if(data?.foundingNumber)setFormMessage(`${data.message} Your next step is to finish setting up Steel.`,'success');
+    else setFormMessage(`${data?.message||'Your email is verified and you’re on the beta waitlist.'} Your next step is to finish setting up Steel.`,'success');
+    showVerificationScreen(data);loadFoundingAvailability();
   }catch(error){verificationComplete=false;setFormMessage(error.message||'We could not finish verification right now. Please try again.','error')}
 }
 steelClient?.auth.onAuthStateChange((event,session)=>{if(verificationIntent&&session&&(event==='SIGNED_IN'||event==='INITIAL_SESSION'))setTimeout(completeVerification,0)});

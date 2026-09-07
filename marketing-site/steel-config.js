@@ -4,5 +4,5 @@ window.STEEL_CONFIG = {
   supabaseUrl: 'https://devpjwpirhhctrwizzab.supabase.co',
   supabasePublishableKey: 'sb_publishable_OMOuou7cTDMsEeBJtxKjtA_ky3a_SmL',
   turnstileSiteKey: '0x4AAAAAAEpXXz4ouCGqwReO',
-  appUrl: 'https://pt-dash.pages.dev',
+  appUrl: 'https://app.projectsteel.co.uk',
 }
