@@ -87,6 +87,14 @@ test('public client only calls constrained Alpha RPCs and never queries private 
   assert.doesNotMatch(api, /from\('analytics_events'\)/)
 })
 
+test('account confirmation and recovery use the configured trusted app redirect', async () => {
+  const api = await readFile(new URL('../src/lib/steelApi.js', import.meta.url), 'utf8')
+  assert.match(api, /auth\.signUp\(\{ email, password, options: \{ emailRedirectTo: getAuthRedirectUrl\(\) \} \}\)/)
+  assert.match(api, /resetPasswordForEmail\(email, \{ redirectTo \}\)/)
+  const productionEnv = await readFile(new URL('../.env.production', import.meta.url), 'utf8')
+  assert.match(productionEnv, /^VITE_APP_URL=https:\/\/app\.projectsteel\.co\.uk$/m)
+})
+
 test('admin function keeps privileged promotion and publishing behind an authenticated admin boundary', async () => {
   const admin = await readFile(new URL('../supabase/functions/beta-admin/index.ts', import.meta.url), 'utf8')
   assert.match(admin, /role\?\.role !== 'admin'/)

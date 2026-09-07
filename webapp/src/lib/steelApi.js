@@ -127,7 +127,9 @@ export async function signIn(email, password) {
 
 export async function signUp(email, password) {
   const client = requireSupabase()
-  const { data, error } = await client.auth.signUp({ email, password })
+  // Keep confirmations on the same trusted app origin as password recovery.
+  // The URL must also remain in Supabase Auth's exact redirect allow-list.
+  const { data, error } = await client.auth.signUp({ email, password, options: { emailRedirectTo: getAuthRedirectUrl() } })
   if (error) throw error
   return data
 }
