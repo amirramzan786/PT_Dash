@@ -239,9 +239,9 @@
 .settings-admin-button:hover { border-color: var(--steel-gold); background: rgba(217,173,85,.18); }
 @media (max-width: 520px) { .settings-admin-footer { align-items: flex-start; flex-direction: column; } }
 .nutrition-page { max-width: 760px; margin-inline: auto; }
-.nutrition-view-switcher { display: inline-flex; gap: 4px; padding: 4px; margin-top: 14px; border: 1px solid var(--steel-line); border-radius: 12px; background: rgba(10,16,24,.7); }
-.nutrition-view-switcher button { min-height: 34px; padding: 0 11px; border: 0; border-radius: 9px; color: var(--steel-muted); background: transparent; font: inherit; font-size: .7rem; font-weight: 800; }
-.nutrition-view-switcher button.active { color: #111820; background: var(--steel-gold); }
+.nutrition-view-switcher { display: inline-flex; gap: 4px; padding: 3px; margin-top: 13px; border: 1px solid var(--steel-line); border-radius: 11px; background: #0c141d; }
+.nutrition-view-switcher button { min-height: 32px; padding: 0 11px; border: 0; border-radius: 8px; color: var(--steel-muted); background: transparent; font: inherit; font-size: .68rem; font-weight: 850; }
+.nutrition-view-switcher button.active { color: var(--steel-gold-2); background: #2a2417; }
 .nutrition-plan-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; border: 1px solid rgba(217,173,85,.35); border-radius: 15px; background: linear-gradient(115deg, rgba(217,173,85,.12), rgba(17,24,33,.7)); }
 .nutrition-plan-summary > div { display: grid; gap: 4px; }
 .nutrition-plan-summary strong { font-size: .86rem; }

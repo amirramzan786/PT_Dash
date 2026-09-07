@@ -153,6 +153,22 @@ test('current-main Home, recovery and food-diary integration contracts remain pr
   assert.match(app, /saveError: recipeSaveError/)
 })
 
+test('food diary keeps every core logging route available from the compact diary flow', async () => {
+  const app = await readFile(new URL('../src/AppV3.jsx', import.meta.url), 'utf8')
+  const diary = await readFile(new URL('../src/components/FoodDiary.jsx', import.meta.url), 'utf8')
+  assert.match(diary, /searchNutritionFoods\(query\)/)
+  assert.match(diary, /getNutritionFoodByBarcode\(code\)/)
+  assert.match(diary, /getNutritionFoodServings\(food\.id\)/)
+  assert.match(diary, /setNutritionFoodFavourite/)
+  assert.match(diary, /saveNutritionFoodEntry/)
+  assert.match(app, /Save meal changes/)
+  assert.match(app, /Edit ingredients/)
+  assert.match(app, /Add food/)
+  assert.match(app, /Log meal/)
+  assert.match(app, /Unlog/)
+  assert.match(app, /role="tab" aria-selected=\{nutritionView === 'diary'\}/)
+})
+
 test('mobile More menu stays mounted long enough to animate closed', async () => {
   const app = await readFile(new URL('../src/AppV3.jsx', import.meta.url), 'utf8')
   const styles = await readFile(new URL('../src/app-v2.css', import.meta.url), 'utf8')
