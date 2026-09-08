@@ -425,9 +425,9 @@
 
 @media (min-width: 521px) {
   .settings-support-footer { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.45fr); align-items: start; gap: 14px 22px; }
-  .settings-support-footer .settings-footer-layout { display: contents; }
-  .settings-support-footer .section-heading { grid-column: 1; grid-row: 1; }
-  .settings-support-footer .settings-footer-cards { grid-column: 2; grid-row: 1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .settings-support-footer .settings-footer-layout { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.45fr); align-items: start; gap: 14px 22px; }
+  .settings-support-footer .settings-footer-heading { grid-column: 1; }
+  .settings-support-footer .settings-footer-cards { grid-column: 2; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .settings-support-footer .settings-support-list { grid-column: 1 / -1; grid-row: 2; }
 }
 
