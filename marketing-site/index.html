@@ -72,7 +72,7 @@ window.STEEL_CONFIG = {
 .hero-signup button{grid-column:2;grid-row:1;min-height:48px;border:0;border-radius:10px;padding:0 17px;background:linear-gradient(180deg,#efbe60,#c89031);color:#0b0d0f;font-weight:950;font-size:11px;letter-spacing:.02em;cursor:pointer;white-space:nowrap;transition:.25s}
 .hero-signup button:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(217,173,85,.16)}
 .hero-mindset{min-height:56px}
-.hero-signup-note{width:100%;margin-top:8px;color:#6e7883;font-size:9px;letter-spacing:.03em}
+.hero-signup-note{grid-column:1/-1;width:100%;margin:1px 2px 0;color:#aab4bf;font-size:10px;line-height:1.4;letter-spacing:.01em}.hero-signup-note.success{color:#9bd4aa}.hero-signup-note.error{color:#f0a4a4}
 
 .hero-subproof{display:flex;gap:20px;align-items:center;margin-top:22px;color:#77828e;font-size:8px;letter-spacing:.12em;font-weight:800}
 .hero-subproof span{display:flex;align-items:center;gap:7px}
@@ -584,7 +584,7 @@ window.STEEL_CONFIG = {
 </div>
 </header>
 <main id="top">
-<section class="hero" id="top"><div class="hero-bg" id="heroBg"></div><div class="hero-overlay"></div><div class="hero-rings"></div><div class="hero-brand-seal" aria-hidden="true"><div class="hero-brand-seal-image"></div><small>FORGED FOR CONSISTENCY</small></div><div class="shell hero-content"><div class="hero-status reveal"><i></i>PRIVATE BETA · £0 · NO CARD REQUIRED</div><h1 class="hero-title"><span class="top reveal">PERFORMANCE</span><span class="reveal delay1">WITHOUT<br>THE <em>NOISE.</em></span></h1><p class="hero-copy reveal delay2">Train, fuel, recover and progress in one disciplined system. Built to make the next useful decision obvious — and everything else disappear.</p><div class="hero-actions reveal delay3"><form class="hero-signup" id="hero-signup" data-beta-form data-source="hero"><label class="signup-email-field"><span>Email address</span><input type="email" required placeholder="you@example.com" autocomplete="email"></label><div class="turnstile-slot" data-turnstile-widget aria-label="Human verification"></div><button type="submit">Request access</button></form><a class="btn ghost hero-mindset" href="#code">Enter the mindset ↓</a></div><div class="hero-subproof reveal delay3"><span><b>01</b> TRAIN</span><span><b>02</b> FUEL</span><span><b>03</b> RECOVER</span><span><b>04</b> PROGRESS</span></div></div><div class="hero-footer shell"><span>SPARTAN MINDSET</span><i></i><span>SPARTAN STRENGTH</span><i></i><span>EVERY DAY</span></div><div class="hero-scroll"><span>ENTER STEEL</span><i></i></div></section>
+<section class="hero" id="top"><div class="hero-bg" id="heroBg"></div><div class="hero-overlay"></div><div class="hero-rings"></div><div class="hero-brand-seal" aria-hidden="true"><div class="hero-brand-seal-image"></div><small>FORGED FOR CONSISTENCY</small></div><div class="shell hero-content"><div class="hero-status reveal"><i></i>PRIVATE BETA · £0 · NO CARD REQUIRED</div><h1 class="hero-title"><span class="top reveal">PERFORMANCE</span><span class="reveal delay1">WITHOUT<br>THE <em>NOISE.</em></span></h1><p class="hero-copy reveal delay2">Train, fuel, recover and progress in one disciplined system. Built to make the next useful decision obvious — and everything else disappear.</p><div class="hero-actions reveal delay3"><form class="hero-signup" id="hero-signup" data-beta-form data-source="hero"><label class="signup-email-field"><span>Email address</span><input type="email" required placeholder="you@example.com" autocomplete="email"></label><div class="turnstile-slot" data-turnstile-widget aria-label="Human verification"></div><button type="submit">Request access</button><p class="hero-signup-note" data-form-note role="status" aria-live="polite">Complete the human check, then request access.</p></form><a class="btn ghost hero-mindset" href="#code">Enter the mindset ↓</a></div><div class="hero-subproof reveal delay3"><span><b>01</b> TRAIN</span><span><b>02</b> FUEL</span><span><b>03</b> RECOVER</span><span><b>04</b> PROGRESS</span></div></div><div class="hero-footer shell"><span>SPARTAN MINDSET</span><i></i><span>SPARTAN STRENGTH</span><i></i><span>EVERY DAY</span></div><div class="hero-scroll"><span>ENTER STEEL</span><i></i></div></section>
 <section class="forge" id="code"><div class="forge-sticky"><div class="forge-bg" id="forgeBg"></div><div class="forge-fade"></div><div class="shell forge-grid"><div class="forge-copy"><span class="eyebrow">THE STEEL CODE</span><h2><span data-forge="0">SPARTAN <b>MINDSET.</b></span><span data-forge="1">SPARTAN <b>STRENGTH.</b></span><span data-forge="2"><b>EVERY DAY.</b></span></h2><p>Motivation fades. Standards remain. Steel is built around the work you repeat when nobody is watching.</p><div class="code-list"><div><b>01</b><strong>DISCIPLINE</strong><small>Do the work you said you would.</small></div><div><b>02</b><strong>CONSISTENCY</strong><small>Build proof one session at a time.</small></div><div><b>03</b><strong>RESILIENCE</strong><small>Adapt. Recover. Return stronger.</small></div><div><b>04</b><strong>PROGRESS</strong><small>Measure what actually moves.</small></div></div></div><div class="forge-visual"><div class="forge-mark" id="forgeMark"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><svg class="steel-mark-inline steel-logo-v5" viewBox="0 0 64 64" aria-hidden="true"><path class="logo-ring" d="M24 7.5C14.7 10.8 8.2 19.6 8.2 30c0 9.9 5.7 18.9 14.7 23.2M40 7.5C49.3 10.8 55.8 19.6 55.8 30c0 9.9-5.7 18.9-14.7 23.2"/><path class="logo-crest" d="M32 3.5 36.3 11 35 27.5 32 32l-3-4.5L27.7 11 32 3.5Z"/><path class="logo-helmet" d="M30.1 15.5 22.5 18.8 17.5 27.8 19.8 43.8 27.4 52.7V34.6l-6.1-4.1h8.8V15.5ZM33.9 15.5l7.6 3.3 5 9-2.3 16-7.6 8.9V34.6l6.1-4.1h-8.8V15.5Z"/><path class="logo-face" d="M28.9 31.1h6.2L32 37.6l-3.1-6.5Z"/></svg></div></div></div></div></section>
 <section class="interrupt"><div class="shell reveal"><span class="eyebrow">ONE SYSTEM. FOUR SIGNALS.</span><h2>YOUR BODY IS ALREADY<br>GIVING YOU THE DATA.</h2><p>Steel turns it into a decision.</p></div></section>
 <section class="product" id="system"><div class="product-sticky"><div class="mobile-system-label"><span>THE STEEL SYSTEM</span><i></i><b>01—04</b></div><div class="shell product-grid"><div class="product-copy"><div class="counter"><span id="counter">01</span> / 04</div><div class="story active" data-story="0"><span class="eyebrow">TRAIN</span><h2>SHOW UP.<br><em>KNOW THE WORK.</em></h2><p>Structured sessions, progressive overload and a clear next move. The plan stays obvious so the work can stay hard.</p></div><div class="story" data-story="1"><span class="eyebrow">FUEL</span><h2>FEED THE WORK.<br><em>NOT THE LEDGER.</em></h2><p>Nutrition targets and meal planning that live beside the training — quick enough to use, useful enough to matter.</p></div><div class="story" data-story="2"><span class="eyebrow">RECOVER</span><h2>THE WORK DOESN'T END<br><em>WHEN THE SET DOES.</em></h2><p>Recovery signals put readiness and fatigue beside the plan, so more is not always mistaken for better.</p></div><div class="story" data-story="3"><span class="eyebrow">PROGRESS</span><h2>PROOF.<br><em>NOT VIBES.</em></h2><p>Training, weight, consistency and performance in one view — enough context to know what is actually changing.</p></div></div><div class="device-stage"><div class="device-glow"></div><div class="device" id="device"><div class="device-top"><span>9:41</span><span class="island"></span><span>● ●</span></div>
@@ -615,7 +615,7 @@ window.STEEL_CONFIG = {
     <p>Once the 20 founding places are allocated, the lifetime Premium offer closes.</p>
     <div class="launch">Covers the core Premium features available at public launch. Separate future products or add-ons may be excluded.</div>
   </div>
-</div><div class="beta-actions reveal delay3"><a class="btn primary" href="#beta-form">Join the Private Beta ↓</a><a class="btn ghost" href="#faq">Read the useful questions ↓</a></div><form class="beta-form reveal" id="beta-form" data-beta-form data-source="beta"><label class="signup-email-field"><span>Email address</span><input type="email" required placeholder="you@example.com" autocomplete="email"></label><div class="turnstile-slot" data-turnstile-widget aria-label="Human verification"></div><button type="submit">Request access</button></form>
+</div><div class="beta-actions reveal delay3"><a class="btn primary" href="#beta-form">Join the Private Beta ↓</a><a class="btn ghost" href="#faq">Read the useful questions ↓</a></div><form class="beta-form reveal" id="beta-form" data-beta-form data-source="beta"><label class="signup-email-field"><span>Email address</span><input type="email" required placeholder="you@example.com" autocomplete="email"></label><div class="turnstile-slot" data-turnstile-widget aria-label="Human verification"></div><button type="submit">Request access</button><p class="hero-signup-note" data-form-note role="status" aria-live="polite">Complete the human check, then request access.</p></form>
 <div class="founding-counter reveal" id="founding-counter" data-capacity="20" data-claimed="" aria-busy="true" aria-label="Founding beta availability">
   <div class="founding-counter-top">
     <span>FOUNDING 20</span>
@@ -670,7 +670,14 @@ const steelClient=steelConfig.supabaseUrl&&steelConfig.supabasePublishableKey?cr
 const formNote=q('#form-note');
 const appUrl=steelConfig.appUrl||'https://pt-dash.pages.dev';
 const verificationScreen=q('#verification-screen'),verificationResultCopy=q('#verification-result-copy'),verificationContinue=q('#verification-continue'),verificationClose=q('#verification-close');
-function setFormMessage(message,kind=''){if(!formNote)return;formNote.className=`form-note${kind?' '+kind:''}`;formNote.innerHTML=message}
+function setFormMessage(formOrMessage,messageOrKind,kind=''){
+  const form=typeof formOrMessage==='string'?null:formOrMessage;
+  const message=form?messageOrKind:formOrMessage;
+  const messageKind=form?kind:messageOrKind;
+  const localNote=form?q('[data-form-note]',form):null;
+  if(localNote){localNote.className=`hero-signup-note${messageKind?' '+messageKind:''}`;localNote.textContent=message}
+  if(formNote){formNote.className=`form-note${messageKind?' '+messageKind:''}`;formNote.textContent=message}
+}
 function showVerificationScreen(data){
   if(!verificationScreen)return;
   const founder=Number(data?.foundingNumber);
@@ -717,27 +724,28 @@ function resetTurnstile(form){const slot=q('[data-turnstile-widget]',form);if(sl
 async function submitBetaForm(form,event){
   event.preventDefault();
   const input=q('input[type="email"]',form),button=q('button[type="submit"]',form),email=input?.value.trim()||'';
-  if(!steelClient){setFormMessage('Beta access is being connected. Please check back shortly.','error');return}
-  if(!steelConfig.turnstileSiteKey){setFormMessage('Human verification is being configured. Beta access will open as soon as that final public key is added.','error');return}
+  if(!steelClient){setFormMessage(form,'Beta access is being connected. Please check back shortly.','error');return}
+  if(!steelConfig.turnstileSiteKey){setFormMessage(form,'Human verification is being configured. Beta access will open as soon as that final public key is added.','error');return}
   mountTurnstile();
   const token=q('[data-turnstile-widget]',form)?.dataset.token||'';
-  if(!token){setFormMessage('Complete the human check, then request access again.','error');return}
+  if(!token){setFormMessage(form,'Complete the human check, then request access again.','error');return}
   if(button){button.disabled=true;button.textContent='Sending…'}
   try{
     const {data,error}=await steelClient.functions.invoke('beta-signup',{body:{email,turnstileToken:token,source:form.dataset.source||'marketing-site'}});
     if(error){let detail=null;try{detail=await error.context?.json()}catch{};const next=new Error(detail?.error||error.message||'Unable to request access.');next.code=detail?.code;next.retryAfterSeconds=detail?.retryAfterSeconds;throw next}
-    if(data?.code==='DUPLICATE_VERIFIED'){setFormMessage('You’re already on the list.','success')}
-    else if(data?.foundingFull){setFormMessage('Email sent. Don’t forget to check your inbox and spam/junk folder to verify your beta access. The Founding 20 may already be full; your Founder or waitlist result is confirmed after verification.','success')}
-    else setFormMessage('Email sent. Don’t forget to check your inbox and spam/junk folder to verify your place. The link expires after 24 hours.','success');
+    if(data?.code==='DUPLICATE_VERIFIED'){setFormMessage(form,'You’re already on the list.','success')}
+    else if(data?.foundingFull){setFormMessage(form,'Email sent. Don’t forget to check your inbox and spam/junk folder to verify your beta access. The Founding 20 may already be full; your Founder or waitlist result is confirmed after verification.','success')}
+    else setFormMessage(form,'Email sent. Don’t forget to check your inbox and spam/junk folder to verify your place. The link expires after 24 hours.','success');
     form.reset();resetTurnstile(form);
     if(form.id==='hero-signup')q('#beta-form')?.scrollIntoView({behavior:'smooth',block:'center'});
   }catch(error){
     const code=error.code;
-    if(code==='COOLDOWN'||code==='RATE_LIMITED')setFormMessage('We’ve already sent a verification email. Check your inbox, or try again shortly.','error');
-    else if(code==='DISPOSABLE_EMAIL')setFormMessage('Please use a regular email address for beta access.','error');
-    else if(code==='INVALID_EMAIL')setFormMessage('Enter a valid email address and try again.','error');
-    else if(code==='TURNSTILE_FAILED')setFormMessage('The human check expired or could not be verified. Please try again.','error');
-    else setFormMessage(error.message||'We could not send that email right now. Please try again later.','error');
+    if(code==='COOLDOWN')setFormMessage(form,'We’ve already sent a verification email. Check your inbox, or try again shortly.','error');
+    else if(code==='RATE_LIMITED')setFormMessage(form,'This address has reached today’s email safety limit. Please use the newest email already sent, or try again tomorrow.','error');
+    else if(code==='DISPOSABLE_EMAIL')setFormMessage(form,'Please use a regular email address for beta access.','error');
+    else if(code==='INVALID_EMAIL')setFormMessage(form,'Enter a valid email address and try again.','error');
+    else if(code==='TURNSTILE_FAILED')setFormMessage(form,'The human check expired or could not be verified. Please try again.','error');
+    else setFormMessage(form,error.message||'We could not send that email right now. Please try again later.','error');
     resetTurnstile(form);
   }finally{if(button){button.disabled=false;button.textContent='Request access'}}
 }

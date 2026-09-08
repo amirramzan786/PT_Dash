@@ -25,6 +25,13 @@ test('marketing bundle never paints a fake initial Founder count', async () => {
   assert.match(html, /Do not increment optimistically|paintCounter/) // source-level guard
 })
 
+test('both marketing access forms show their own live result, including a rate-limit explanation', async () => {
+  const html = await readFile(new URL('../../marketing-site/index.html', import.meta.url), 'utf8')
+  assert.equal((html.match(/data-form-note role/g) || []).length, 2)
+  assert.match(html, /setFormMessage\(form,'This address has reached today’s email safety limit/)
+  assert.match(html, /if\(form\.id==='hero-signup'\)q\('#beta-form'\)\?\.scrollIntoView/)
+})
+
 test('marketing verification shows a dedicated confirmation screen before the app handoff', async () => {
   const html = await readFile(new URL('../../marketing-site/index.html', import.meta.url), 'utf8')
   assert.match(html, /id="verification-screen"[^>]*hidden/)
