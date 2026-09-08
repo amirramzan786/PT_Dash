@@ -394,7 +394,7 @@
   .membership-title-badge small { font-size: .43rem; }
   .membership-detail-grid { grid-template-columns: 1fr; }
   .nutrition-meal-card { grid-template-columns: 36px minmax(0,1fr) auto; gap: 8px; }
-  .nutrition-view-switcher { display: grid; grid-template-columns: repeat(3,1fr); width: 100%; }
+  .nutrition-view-switcher { display: grid; grid-template-columns: repeat(2,1fr); width: 100%; }
   .nutrition-view-switcher button { width: 100%; }
   .nutrition-plan-summary { align-items: flex-start; flex-direction: column; }
   .nutrition-daily-summary { grid-template-columns: repeat(3, 1fr); }
