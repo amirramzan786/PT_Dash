@@ -61,6 +61,8 @@ test('beta callback preserves an explicit verification marker and app confirmati
   assert.match(authGate, /beta-verified-tick/)
   assert.match(authGate, /onCreateAccount=\{updatePassword\}/)
   assert.match(authGate, /How Steel works/)
+  assert.match(authGate, /url\.searchParams\.delete\('beta-verified'\)/)
+  assert.match(authGate, /url\.hash = 'Home'/)
   assert.doesNotMatch(authGate, /Try Guest Demo|Demo mode is isolated|GuestApp|guestMode/)
   assert.match(api, /functions\.invoke\('beta-verify'/)
 })

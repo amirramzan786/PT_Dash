@@ -92,7 +92,12 @@ export default function AuthGate() {
   }, [])
 
   function clearBetaVerification() {
-    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#Home`)
+    const url = new URL(window.location.href)
+    // The one-time verification intent must not survive account setup. Keeping
+    // it would replay this idempotent flow every time the member refreshes.
+    url.searchParams.delete('beta-verified')
+    url.hash = 'Home'
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`)
     setBetaVerification(null)
     setBetaVerificationError('')
   }
