@@ -48,7 +48,7 @@ async function verifyTurnstile(request: Request, token: string, secret: string) 
   }
 }
 
-function verificationRedirect(origin: string) {
+function verificationRedirect() {
   const configured = Deno.env.get('MARKETING_VERIFICATION_REDIRECT_URL')?.trim()
   const appUrl = Deno.env.get('STEEL_APP_URL')?.trim() || 'https://app.projectsteel.co.uk'
   // The verified session must be created on the app origin. A marketing-site
@@ -64,12 +64,14 @@ function verificationRedirect(origin: string) {
   }
   try {
     const url = new URL(redirect)
-    const marker = 'beta-verified=1'
-    const hash = url.hash.replace(/^#/, '')
-    if (!hash.includes('beta-verified')) url.hash = hash ? `${hash}&${marker}` : marker
+    // Supabase appends its session as a URL fragment. Keep Steel's intent
+    // marker in the query string so the finished callback is unambiguous:
+    // ?beta-verified=1#access_token=...
+    url.searchParams.set('beta-verified', '1')
+    url.hash = ''
     return url.toString()
   } catch {
-    return 'https://app.projectsteel.co.uk#beta-verified=1'
+    return 'https://app.projectsteel.co.uk/?beta-verified=1'
   }
 }
 
@@ -172,7 +174,7 @@ Deno.serve(async (request) => {
       email,
       options: {
         shouldCreateUser: true,
-        emailRedirectTo: verificationRedirect(origin),
+        emailRedirectTo: verificationRedirect(),
         data: { beta_signup: true },
       },
     })
