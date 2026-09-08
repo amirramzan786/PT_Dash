@@ -10,10 +10,35 @@ function hasBetaVerificationIntent() {
   return /beta-verified(?:[=&]|$)/i.test(`${window.location.hash}${window.location.search}`)
 }
 
-function BetaVerificationScreen({ result, error, busy, onRetry, onContinue }) {
+function BetaVerificationScreen({ result, error, busy, user, onRetry, onContinue, onCreateAccount }) {
   const founderNumber = Number(result?.foundingNumber)
   const isFounder = Number.isInteger(founderNumber) && founderNumber > 0
-  return <main className="auth-shell"><section className="auth-card beta-verification-card" aria-live="polite"><div className="auth-mark"><span aria-hidden="true">✓</span></div><div className="eyebrow">PROJECT STEEL · ACCESS CONFIRMED</div><h1>You’re <span>verified.</span></h1>{busy ? <><p>We’re securing your beta access now.</p><div className="beta-verification-loading"><Loader2 className="spin" size={20}/> Confirming your place…</div></> : error ? <><p>We couldn’t finish the beta access check yet.</p><p className="auth-message" role="alert">{error}</p><button className="primary" type="button" onClick={onRetry}>Try again</button></> : <><p>Your email ownership is confirmed and your next step is ready.</p><div className="beta-verification-result"><strong>{isFounder ? `FOUNDING MEMBER · #${String(founderNumber).padStart(2, '0')}` : 'BETA WAITLIST'}</strong><span>{isFounder ? 'Steel Premium free for life. No payment details required.' : 'You’re verified and on the Steel beta waitlist. We’ll contact you when more access becomes available.'}</span></div><button className="primary" type="button" onClick={onContinue}>Continue to Steel <span aria-hidden="true">→</span></button></>}</section></main>
+  const [setupStage, setSetupStage] = useState('verified')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [setupError, setSetupError] = useState('')
+  const [setupBusy, setSetupBusy] = useState(false)
+
+  useEffect(() => {
+    if (busy || error || !result) return undefined
+    const timer = window.setTimeout(() => setSetupStage('create'), 1500)
+    return () => window.clearTimeout(timer)
+  }, [busy, error, result])
+
+  async function submitAccountSetup(event) {
+    event.preventDefault()
+    setSetupError('')
+    if (password.length < 8) { setSetupError('Use at least 8 characters for your password.'); return }
+    if (password !== confirmPassword) { setSetupError('Passwords do not match.'); return }
+    setSetupBusy(true)
+    try { await onCreateAccount(password); onContinue() }
+    catch (setupIssue) { setSetupError(setupIssue.message || 'We could not finish account setup. Please try again.') }
+    finally { setSetupBusy(false) }
+  }
+
+  return <main className="auth-shell"><section className="auth-card beta-verification-card" aria-live="polite">
+    {busy ? <><div className="auth-mark"><Loader2 className="spin" size={30}/></div><div className="eyebrow">PROJECT STEEL · VERIFYING ACCESS</div><h1>Securing your <span>place.</span></h1><p>We’re confirming your email ownership and beta access.</p><div className="beta-verification-loading"><Loader2 className="spin" size={20}/> Confirming your place…</div></> : error ? <><div className="auth-mark"><span aria-hidden="true">!</span></div><div className="eyebrow">PROJECT STEEL · ACCESS CHECK</div><h1>We need to <span>try again.</span></h1><p>Your email link was received, but we couldn’t finish the access check yet.</p><p className="auth-message" role="alert">{error}</p><button className="primary" type="button" onClick={onRetry}>Try again</button></> : setupStage === 'verified' ? <div className="beta-verified-stage"><div className="auth-mark beta-verified-tick" aria-label="Email verified"><span aria-hidden="true">✓</span></div><div className="eyebrow">PROJECT STEEL · EMAIL VERIFIED</div><h1>You’re <span>verified.</span></h1><p>Your email ownership is confirmed. Next, create your Steel account.</p><div className="beta-verification-loading">Preparing your account setup…</div></div> : <><div className="auth-mark"><SteelMark size={30}/></div><div className="eyebrow">PROJECT STEEL · ACCOUNT SETUP</div><h1>Create your <span>Steel account.</span></h1><p>Set a password to finish setting up your verified beta access.</p><div className="beta-verification-result"><strong>{isFounder ? `FOUNDING MEMBER · #${String(founderNumber).padStart(2, '0')}` : 'BETA WAITLIST'}</strong><span>{isFounder ? 'Steel Premium free for life. No payment details required.' : 'You’re verified and on the Steel beta waitlist. We’ll contact you when more access becomes available.'}</span></div><details className="beta-quick-start"><summary>How Steel works</summary><p>Start with your daily direction, train from your programme, log meals in Fuel, and use Progress to review your trend. Your weekly check-in helps Steel adjust the plan around your real life.</p></details><form onSubmit={submitAccountSetup} className="auth-form beta-account-form"><label>Verified email<input type="email" value={user?.email || ''} readOnly /></label><label>Create password<input type="password" autoComplete="new-password" minLength="8" required value={password} onChange={(event) => setPassword(event.target.value)} /></label><label>Confirm password<input type="password" autoComplete="new-password" minLength="8" required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} /></label><button className="primary" disabled={setupBusy}>{setupBusy ? 'Creating account…' : 'Create account & continue'}</button></form>{setupError && <p className="auth-message" role="alert">{setupError}</p>}<div className="auth-private"><LockKeyhole size={15}/> Your verified email stays linked to your Steel account</div></>}
+  </section></main>
 }
 
 export default function AuthGate() {
@@ -114,7 +139,7 @@ export default function AuthGate() {
 
   if (user === undefined || (user && mfaGate === 'checking')) return <div className="auth-shell"><Loader2 className="spin" size={28}/><span>Opening Project Steel…</span></div>
 
-  if (user && (betaVerificationBusy || betaVerification || betaVerificationError)) return <BetaVerificationScreen result={betaVerification} error={betaVerificationError} busy={betaVerificationBusy} onRetry={retryBetaVerification} onContinue={clearBetaVerification} />
+  if (user && (betaVerificationBusy || betaVerification || betaVerificationError)) return <BetaVerificationScreen result={betaVerification} error={betaVerificationError} busy={betaVerificationBusy} user={user} onRetry={retryBetaVerification} onCreateAccount={updatePassword} onContinue={clearBetaVerification} />
 
   if (recoveryMode) return <main className="auth-shell"><section className="auth-card"><div className="auth-mark"><SteelMark size={30}/></div><div className="eyebrow">ACCOUNT SECURITY</div><h1>Set a new password</h1><p>Choose a strong password for your Project Steel account.</p><form onSubmit={submit} className="auth-form"><label>New password<input type="password" autoComplete="new-password" minLength="6" required value={recoveryPassword} onChange={(e)=>setRecoveryPassword(e.target.value)}/></label><label>Confirm new password<input type="password" autoComplete="new-password" minLength="6" required value={recoveryConfirm} onChange={(e)=>setRecoveryConfirm(e.target.value)}/></label><button className="primary" disabled={busy}>{busy?'Updating…':'Update password'}</button></form>{message&&<p className="auth-message">{message}</p>}</section></main>
 

@@ -50,10 +50,18 @@ async function verifyTurnstile(request: Request, token: string, secret: string) 
 
 function verificationRedirect(origin: string) {
   const configured = Deno.env.get('MARKETING_VERIFICATION_REDIRECT_URL')?.trim()
-  // Keep the fallback on Steel's public marketing origin. The configured
-  // secret remains authoritative, but a missing secret must never send a
-  // founder through the legacy Pages hostname.
-  const redirect = configured || `${origin || 'https://projectsteel.co.uk'}#beta-verified`
+  const appUrl = Deno.env.get('STEEL_APP_URL')?.trim() || 'https://app.projectsteel.co.uk'
+  // The verified session must be created on the app origin. A marketing-site
+  // redirect leaves the session on a different origin and cannot hand the
+  // authenticated user cleanly into account setup.
+  let redirect = appUrl
+  try {
+    const candidate = configured ? new URL(configured) : null
+    const appOrigin = new URL(appUrl).origin
+    if (candidate && candidate.origin === appOrigin) redirect = candidate.toString()
+  } catch {
+    redirect = appUrl
+  }
   try {
     const url = new URL(redirect)
     const marker = 'beta-verified=1'
@@ -61,7 +69,7 @@ function verificationRedirect(origin: string) {
     if (!hash.includes('beta-verified')) url.hash = hash ? `${hash}&${marker}` : marker
     return url.toString()
   } catch {
-    return `${origin || 'https://projectsteel.co.uk'}#beta-verified=1`
+    return 'https://app.projectsteel.co.uk#beta-verified=1'
   }
 }
 
