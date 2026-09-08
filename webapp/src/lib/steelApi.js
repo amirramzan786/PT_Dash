@@ -34,6 +34,19 @@ export async function getFounderStatus() {
   return data || { status: 'none', founder_number: null, has_lifetime_entitlement: false }
 }
 
+// Completes the server-side beta verification after Supabase has restored the
+// authenticated session from the email callback. Founder allocation and
+// entitlement decisions remain inside the Edge Function/RPC boundary.
+export async function completeBetaVerification() {
+  const { data, error } = await requireSupabase().functions.invoke('beta-verify', { body: {} })
+  if (error) {
+    let detail = null
+    try { detail = await error.context?.json?.() } catch { /* Use the SDK fallback message. */ }
+    throw new Error(detail?.error || error.message || 'We could not complete beta verification.')
+  }
+  return data
+}
+
 // This is deliberately read-only and RLS-scoped to the signed-in member. Plan
 // grants themselves remain a server/admin responsibility.
 export async function getMyMembershipEntitlement() {

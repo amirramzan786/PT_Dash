@@ -33,6 +33,17 @@ test('marketing verification shows a dedicated confirmation screen before the ap
   assert.match(html, /verificationContinue\.href=appUrl/)
 })
 
+test('beta callback preserves an explicit verification marker and app confirmation flow', async () => {
+  const signup = await readFile(new URL('../supabase/functions/beta-signup/index.ts', import.meta.url), 'utf8')
+  const authGate = await readFile(new URL('../src/AuthGate.jsx', import.meta.url), 'utf8')
+  const api = await readFile(new URL('../src/lib/steelApi.js', import.meta.url), 'utf8')
+  assert.match(signup, /beta-verified=1/)
+  assert.match(authGate, /hasBetaVerificationIntent/)
+  assert.match(authGate, /BetaVerificationScreen/)
+  assert.match(authGate, /completeBetaVerification()/)
+  assert.match(api, /functions\.invoke\('beta-verify'/)
+})
+
 test('migration contains the server-side allocation guardrails', async () => {
   const sql = await readFile(new URL('../supabase/migrations/20260904120000_founding20_beta_signups.sql', import.meta.url), 'utf8')
   assert.match(sql, /pg_advisory_xact_lock/)

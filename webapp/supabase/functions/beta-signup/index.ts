@@ -50,8 +50,16 @@ async function verifyTurnstile(request: Request, token: string, secret: string) 
 
 function verificationRedirect(origin: string) {
   const configured = Deno.env.get('MARKETING_VERIFICATION_REDIRECT_URL')?.trim()
-  if (configured) return configured
-  return `${origin || 'https://project-steel-sitepagesdev.u1165153.workers.dev'}#beta-verified`
+  const redirect = configured || `${origin || 'https://project-steel-sitepagesdev.u1165153.workers.dev'}#beta-verified`
+  try {
+    const url = new URL(redirect)
+    const marker = 'beta-verified=1'
+    const hash = url.hash.replace(/^#/, '')
+    if (!hash.includes('beta-verified')) url.hash = hash ? `${hash}&${marker}` : marker
+    return url.toString()
+  } catch {
+    return `${origin || 'https://project-steel-sitepagesdev.u1165153.workers.dev'}#beta-verified=1`
+  }
 }
 
 function publicStatus(admin: ReturnType<typeof createAdminClient>) {
