@@ -38,6 +38,8 @@ test('beta callback preserves an explicit verification marker and app confirmati
   const authGate = await readFile(new URL('../src/AuthGate.jsx', import.meta.url), 'utf8')
   const api = await readFile(new URL('../src/lib/steelApi.js', import.meta.url), 'utf8')
   assert.match(signup, /beta-verified=1/)
+  assert.match(signup, /https:\/\/projectsteel\.co\.uk/)
+  assert.doesNotMatch(signup, /pt-dash\.pages\.dev/)
   assert.match(authGate, /hasBetaVerificationIntent/)
   assert.match(authGate, /BetaVerificationScreen/)
   assert.match(authGate, /completeBetaVerification()/)

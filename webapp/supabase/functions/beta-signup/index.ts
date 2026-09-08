@@ -50,7 +50,10 @@ async function verifyTurnstile(request: Request, token: string, secret: string) 
 
 function verificationRedirect(origin: string) {
   const configured = Deno.env.get('MARKETING_VERIFICATION_REDIRECT_URL')?.trim()
-  const redirect = configured || `${origin || 'https://project-steel-sitepagesdev.u1165153.workers.dev'}#beta-verified`
+  // Keep the fallback on Steel's public marketing origin. The configured
+  // secret remains authoritative, but a missing secret must never send a
+  // founder through the legacy Pages hostname.
+  const redirect = configured || `${origin || 'https://projectsteel.co.uk'}#beta-verified`
   try {
     const url = new URL(redirect)
     const marker = 'beta-verified=1'
@@ -58,7 +61,7 @@ function verificationRedirect(origin: string) {
     if (!hash.includes('beta-verified')) url.hash = hash ? `${hash}&${marker}` : marker
     return url.toString()
   } catch {
-    return `${origin || 'https://project-steel-sitepagesdev.u1165153.workers.dev'}#beta-verified=1`
+    return `${origin || 'https://projectsteel.co.uk'}#beta-verified=1`
   }
 }
 

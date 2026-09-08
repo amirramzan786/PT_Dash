@@ -21,7 +21,7 @@ Set these Edge Function secrets in the Supabase dashboard or with the CLI. Never
 - `RATE_LIMIT_HASH_SALT` — a separate random secret used to key short-lived abuse-prevention hashes.
 - `MARKETING_ALLOWED_ORIGINS` — comma-separated exact origins, including `https://project-steel-sitepagesdev.u1165153.workers.dev` and any local dev origin used.
 - `TURNSTILE_ALLOWED_HOSTNAMES` — comma-separated hostnames configured on the Turnstile widget.
-- `MARKETING_VERIFICATION_REDIRECT_URL` — the exact marketing URL Supabase Auth should return to, for example `https://project-steel-sitepagesdev.u1165153.workers.dev/#beta-verified`.
+- `MARKETING_VERIFICATION_REDIRECT_URL` — the exact public marketing URL Supabase Auth should return to: `https://projectsteel.co.uk/#beta-verified`. Keep the Worker URL as a fallback/test origin only.
 - `RESEND_API_KEY` — server-only Resend API key for post-verification Founder/waitlist confirmation emails.
 - `TRANSACTIONAL_EMAIL_FROM` — a verified sender, for example `Project Steel <hello@projectsteel.co.uk>` once the domain is verified. Do not use an unverified address.
 - `TRANSACTIONAL_EMAIL_REPLY_TO` — support mailbox for replies, for example `support@projectsteel.co.uk`.
