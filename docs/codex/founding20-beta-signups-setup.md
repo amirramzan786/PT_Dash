@@ -33,11 +33,11 @@ In Supabase Auth URL Configuration, add the verification redirect URL and local 
 
 ## Cloudflare marketing site
 
-`marketing-site/index.html` is the currently deployed Steel page with its visual design preserved. `marketing-site/steel-public.js` contains only public browser configuration. Set `turnstileSiteKey` to the public site key for a widget whose hostname includes the production marketing hostname and local dev hosts. Do not put the Turnstile secret there. The deliberately neutral filename avoids browser privacy tooling blocking the configuration asset before the callback handler can run.
+`marketing-site/index.html` is the currently deployed Steel page with its visual design preserved. Its small inline `STEEL_CONFIG` block contains only public browser configuration. Set `turnstileSiteKey` to the public site key for a widget whose hostname includes the production marketing hostname and local dev hosts. Do not put the Turnstile secret there. The configuration is intentionally inline so browser privacy tooling cannot block the verification callback by filtering a standalone JavaScript asset.
 
 The page loads the pinned browser Supabase client from jsDelivr and calls only `beta-signup`, `beta-status` and `beta-verify`. The counter starts unknown and is painted only from the aggregate backend response; the browser never increments it.
 
-Upload the contents of `marketing-site/` to the existing Cloudflare Worker/Pages static deployment. If the deployment uses a build step, keep `steel-public.js` at the public root and ensure `_headers` is copied to the output.
+Upload the contents of `marketing-site/` to the existing Cloudflare Worker/Pages static deployment and ensure `_headers` is copied to the output.
 
 ## Account completion
 

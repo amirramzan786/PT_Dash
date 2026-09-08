@@ -7,7 +7,16 @@
 <title>Project Steel — Spartan mindset. Spartan strength. Every day.</title>
 <meta name="description" content="Project Steel brings training, fuel, recovery and progress into one disciplined performance system."/>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2305080c%22%2F%3E%3Cpath%20d%3D%22M24%207.5C14.7%2010.8%208.2%2019.6%208.2%2030c0%209.9%205.7%2018.9%2014.7%2023.2M40%207.5C49.3%2010.8%2055.8%2019.6%2055.8%2030c0%209.9-5.7%2018.9-14.7%2023.2%22%20fill%3D%22none%22%20stroke%3D%22%23e7ba61%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M32%203.5%2036.3%2011%2035%2027.5%2032%2032l-3-4.5L27.7%2011%2032%203.5ZM30.1%2015.5%2022.5%2018.8%2017.5%2027.8%2019.8%2043.8%2027.4%2052.7V34.6l-6.1-4.1h8.8V15.5ZM33.9%2015.5l7.6%203.3%205%209-2.3%2016-7.6%208.9V34.6l6.1-4.1h-8.8V15.5Z%22%20fill%3D%22%23e7ba61%22%2F%3E%3Cpath%20d%3D%22M28.9%2031.1h6.2L32%2037.6l-3.1-6.5Z%22%20fill%3D%22%2305080c%22%2F%3E%3C%2Fsvg%3E"/>
-<script src="./steel-public.js"></script>
+<script>
+// Public browser configuration only. Never put Supabase secret/service-role
+// keys or the Turnstile secret in this file.
+window.STEEL_CONFIG = {
+  supabaseUrl: 'https://devpjwpirhhctrwizzab.supabase.co',
+  supabasePublishableKey: 'sb_publishable_OMOuou7cTDMsEeBJtxKjtA_ky3a_SmL',
+  turnstileSiteKey: '0x4AAAAAAEpXXz4ouCGqwReO',
+  appUrl: 'https://app.projectsteel.co.uk',
+};
+</script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script>
 <style>
 :root{--bg:#05080c;--bg2:#0a1119;--panel:#0f1721;--line:#25313d;--text:#f5f7f8;--muted:#94a0ad;--gold:#d9ad55;--gold2:#f1c96e;--gold3:#7d6131;--green:#7bc894;--max:1240px}

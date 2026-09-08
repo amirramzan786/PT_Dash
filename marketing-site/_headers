@@ -3,6 +3,3 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Cache-Control: no-cache, no-store, must-revalidate
-
-/steel-public.js
-  Cache-Control: no-cache, no-store, must-revalidate
