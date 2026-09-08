@@ -727,8 +727,8 @@ async function submitBetaForm(form,event){
     const {data,error}=await steelClient.functions.invoke('beta-signup',{body:{email,turnstileToken:token,source:form.dataset.source||'marketing-site'}});
     if(error){let detail=null;try{detail=await error.context?.json()}catch{};const next=new Error(detail?.error||error.message||'Unable to request access.');next.code=detail?.code;next.retryAfterSeconds=detail?.retryAfterSeconds;throw next}
     if(data?.code==='DUPLICATE_VERIFIED'){setFormMessage('You’re already on the list.','success')}
-    else if(data?.foundingFull){setFormMessage('Request received. Check your email to verify your beta access. The Founding 20 may already be full; your Founder or waitlist result is confirmed after verification.','success')}
-    else setFormMessage('Check your email to verify your place. The link expires after 24 hours.','success');
+    else if(data?.foundingFull){setFormMessage('Email sent. Don’t forget to check your inbox and spam/junk folder to verify your beta access. The Founding 20 may already be full; your Founder or waitlist result is confirmed after verification.','success')}
+    else setFormMessage('Email sent. Don’t forget to check your inbox and spam/junk folder to verify your place. The link expires after 24 hours.','success');
     form.reset();resetTurnstile(form);
     if(form.id==='hero-signup')q('#beta-form')?.scrollIntoView({behavior:'smooth',block:'center'});
   }catch(error){
@@ -744,7 +744,7 @@ async function submitBetaForm(form,event){
 qa('[data-beta-form]').forEach(form=>form.addEventListener('submit',(event)=>submitBetaForm(form,event)));
 loadFoundingAvailability();
 
-let verificationIntent=/access_token=|type=magiclink|beta-verified/.test(`${location.hash}${location.search}`),verificationComplete=false;
+let verificationIntent=/(?:[&#?]|^)(?:access_token|code|type=(?:magiclink|signup)|beta-verified)(?:=|[&#?]|$)/i.test(`${location.hash}${location.search}`),verificationComplete=false;
 async function completeVerification(){
   if(!verificationIntent||verificationComplete||!steelClient)return;
   verificationComplete=true;

@@ -31,6 +31,8 @@ test('marketing verification shows a dedicated confirmation screen before the ap
   assert.match(html, /You’re <em>verified\.<\/em>/)
   assert.match(html, /showVerificationScreen\(data\)/)
   assert.match(html, /verificationContinue\.href=appUrl/)
+  assert.match(html, /spam\/junk folder/)
+  assert.match(html, /type=\(\?:magiclink\|signup\)/)
   assert.match(html, /window\.STEEL_CONFIG\s*=\s*\{/)
   assert.doesNotMatch(html, /steel-config\.js|steel-public\.js/)
   assert.doesNotMatch(html, /SERVICE_ROLE|service_role|TURNSTILE_SECRET|RESEND_API_KEY/i)
