@@ -552,7 +552,7 @@ Before inviting testers, an authorised operator must:
 2. Deploy `beta-signup`, `beta-status`, `beta-verify` and `beta-admin` Edge Functions from the reviewed commit.
 3. Set Edge Function secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `TURNSTILE_SECRET_KEY`, `TURNSTILE_ALLOWED_HOSTNAMES`, `MARKETING_ALLOWED_ORIGINS`, `MARKETING_VERIFICATION_REDIRECT_URL` and a unique `RATE_LIMIT_HASH_SALT`.
 4. Add the production marketing and app URLs to Supabase Auth redirect allow-list. Keep the redirect URL exact; do not add broad wildcards.
-5. Create a Cloudflare Turnstile widget for the final marketing hostname, put only its **site key** in `marketing-site/steel-config.js`, and keep the secret exclusively in Edge Function secrets.
+5. Create a Cloudflare Turnstile widget for the final marketing hostname, put only its **site key** in `marketing-site/steel-public.js`, and keep the secret exclusively in Edge Function secrets.
 6. Assign the Steel operator the existing `user_roles.role = 'admin'` role before using `beta-admin`; never expose that function or service-role credential to the browser.
 7. Configure the Supabase magic-link email sender/template with the approved Alpha 20 verification copy. The generic auth email is the delivery mechanism; the template is dashboard-owned.
 8. Complete one real end-to-end test: request access, email verify, authenticate into Steel, confirm Founder allocation and lifetime entitlement, submit feedback, and publish/read a What’s New update.

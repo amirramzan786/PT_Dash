@@ -27,10 +27,15 @@ test('marketing bundle never paints a fake initial Founder count', async () => {
 
 test('marketing verification shows a dedicated confirmation screen before the app handoff', async () => {
   const html = await readFile(new URL('../../marketing-site/index.html', import.meta.url), 'utf8')
+  const publicConfig = await readFile(new URL('../../marketing-site/steel-public.js', import.meta.url), 'utf8')
   assert.match(html, /id="verification-screen"[^>]*hidden/)
   assert.match(html, /You’re <em>verified\.<\/em>/)
   assert.match(html, /showVerificationScreen\(data\)/)
   assert.match(html, /verificationContinue\.href=appUrl/)
+  assert.match(html, /src="\.\/steel-public\.js"/)
+  assert.doesNotMatch(html, /steel-config\.js/)
+  assert.match(publicConfig, /window\.STEEL_CONFIG/)
+  assert.doesNotMatch(publicConfig, /SERVICE_ROLE|service_role|TURNSTILE_SECRET|RESEND_API_KEY/i)
 })
 
 test('beta callback preserves an explicit verification marker and app confirmation flow', async () => {
@@ -43,6 +48,7 @@ test('beta callback preserves an explicit verification marker and app confirmati
   assert.match(authGate, /hasBetaVerificationIntent/)
   assert.match(authGate, /BetaVerificationScreen/)
   assert.match(authGate, /completeBetaVerification()/)
+  assert.doesNotMatch(authGate, /Try Guest Demo|Demo mode is isolated|GuestApp|guestMode/)
   assert.match(api, /functions\.invoke\('beta-verify'/)
 })
 
