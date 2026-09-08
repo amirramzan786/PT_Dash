@@ -21,4 +21,3 @@ alter table public.beta_outcome_email_deliveries enable row level security;
 -- Delivery state and provider identifiers are operational data. Only the
 -- privileged Edge Function may access it; it is never a browser API.
 revoke all on table public.beta_outcome_email_deliveries from anon, authenticated;
-

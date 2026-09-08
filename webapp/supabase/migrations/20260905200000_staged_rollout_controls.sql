@@ -40,4 +40,3 @@ alter table public.rollout_controls enable row level security;
 -- The control plane has no browser-facing access.  A later, separately
 -- reviewed admin/server endpoint may change it only after the relevant gate.
 revoke all on table public.rollout_controls from anon, authenticated;
-
