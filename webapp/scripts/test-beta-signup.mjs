@@ -140,7 +140,9 @@ test('admin function keeps privileged promotion and publishing behind an authent
 test('browser-facing endpoints require an exact allowed Origin and analytics cannot block signup', async () => {
   const http = await readFile(new URL('../supabase/functions/_shared/http.ts', import.meta.url), 'utf8')
   const signup = await readFile(new URL('../supabase/functions/beta-signup/index.ts', import.meta.url), 'utf8')
+  const verify = await readFile(new URL('../supabase/functions/beta-verify/index.ts', import.meta.url), 'utf8')
   assert.match(http, /return origin && allowedOrigins\(\)\.has\(origin\) \? origin : null/)
+  assert.match(verify, /requestAppOrigin === 'https:\/\/app\.projectsteel\.co\.uk'/)
   assert.match(signup, /async function recordServerAnalytics/)
   assert.match(signup, /try \{[\s\S]*analytics_events[\s\S]*\} catch \{/)
   assert.match(signup, /beta_signup_attempted/)

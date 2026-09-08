@@ -3,7 +3,11 @@ import { jsonResponse, preflightResponse, requestOrigin } from '../_shared/http.
 import { sendBetaOutcomeEmail } from '../_shared/betaOutcomeEmail.ts'
 
 Deno.serve(async (request) => {
-  const origin = requestOrigin(request)
+  const requestAppOrigin = request.headers.get('origin')?.trim() || ''
+  // Verification completes on the app origin, where Supabase has established
+  // the magic-link session. Keep this exception exact rather than widening
+  // the configured marketing-origin boundary for any other browser endpoint.
+  const origin = requestOrigin(request) || (requestAppOrigin === 'https://app.projectsteel.co.uk' ? requestAppOrigin : null)
   if (origin === null) return new Response(JSON.stringify({ error: 'This origin is not allowed.' }), { status: 403 })
   if (request.method === 'OPTIONS') return preflightResponse(origin)
   if (request.method !== 'POST') return jsonResponse(origin, 405, { error: 'Use POST to complete verification.' })
