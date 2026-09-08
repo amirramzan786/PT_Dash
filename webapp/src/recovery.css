@@ -11,11 +11,13 @@
 .health-integrations-content, .reminder-form { padding: 0 16px 16px; display: grid; gap: 16px; }
 .health-integrations-content > p, .reminder-form > p, .reminder-form > small { color: var(--steel-muted); margin: 0; line-height: 1.5; }
 .health-integrations .health-provider-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); width: 100%; }
-.health-integrations .health-provider { min-width: 0; gap: 8px; }
+.health-integrations .health-provider { min-width: 0; gap: 8px; transition: transform .16s ease, border-color .16s ease, background .16s ease; }
+.health-integrations .health-provider:hover { transform: translateY(-1px); border-color: var(--steel-gold-dark); background: linear-gradient(145deg,#1a2028,#111923); }
 .health-integrations .health-provider strong, .health-integrations .health-provider span { overflow-wrap: anywhere; }
 .health-integrations .health-provider small { width: fit-content; max-width: 100%; white-space: normal; }
 .reminder-form { font-size: .85rem; }
 .reminder-permission { display: flex; gap: 10px; align-items: center; padding: 12px; border: 1px solid var(--steel-line); border-radius: 12px; background: #0e1720; color: var(--steel-text); text-align: left; }
+.reminder-permission:hover:not(:disabled) { border-color: var(--steel-gold-dark); background: #171b1d; }
 .reminder-row { padding: 14px; border: 1px solid var(--steel-line); border-radius: 12px; }
 .reminder-toggle { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 30px; }
 .reminder-toggle input { accent-color: var(--steel-gold); width: 22px; height: 22px; }
@@ -24,6 +26,7 @@
 .reminder-schedule input { color-scheme: dark; background: #0c141d; color: var(--steel-text); border: 1px solid var(--steel-line); border-radius: 8px; padding: 8px; font: inherit; }
 .reminder-days { display: flex; flex-wrap: wrap; gap: 6px; }
 .reminder-days button { min-width: 42px; min-height: 42px; background: transparent; color: var(--steel-muted); border: 1px solid var(--steel-line); border-radius: 9px; }
+.reminder-days button:hover:not(:disabled) { border-color: var(--steel-gold-dark); color: var(--steel-text); background: rgba(217,173,85,.06); }
 .reminder-days button[aria-pressed="true"] { color: var(--steel-gold-2); background: #29241a; border-color: var(--steel-gold-dark); }
 .manual-steps { display: grid; gap: 12px; margin-top: 16px; }
 .manual-steps > .text-link { display: flex; gap: 8px; align-items: center; justify-self: start; }
