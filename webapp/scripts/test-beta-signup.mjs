@@ -78,6 +78,25 @@ test('migration contains the server-side allocation guardrails', async () => {
   assert.match(sql, /interval '24 hours'/)
 })
 
+test('Founder entitlement compatibility keeps the permanent contract valid', async () => {
+  const sql = await readFile(new URL('../supabase/migrations/20260908210313_founder_entitlement_constraints.sql', import.meta.url), 'utf8')
+  assert.match(sql, /membership_entitlements_plan_key_check/)
+  assert.match(sql, /'steel-core-premium-founder-lifetime'/)
+  assert.match(sql, /'steel-premium-pt-sponsored'/)
+  assert.match(sql, /'active', 0,\s*28, false, true, true, 'manual'/)
+  assert.doesNotMatch(sql, /'active', 0,\s*0, false, true, true, 'manual'/)
+  assert.match(sql, /create or replace function public\.complete_beta_verification/i)
+  assert.match(sql, /create or replace function public\.reconcile_founder_entitlement/i)
+  assert.match(sql, /create or replace function public\.admin_promote_waitlisted_signup/i)
+  assert.match(sql, /revoke all on function public\.complete_beta_verification\(uuid, text\) from public, anon, authenticated/i)
+})
+
+test('internal Alpha trigger functions are not exposed as RPC endpoints', async () => {
+  const sql = await readFile(new URL('../supabase/migrations/20260908210753_restrict_internal_trigger_functions.sql', import.meta.url), 'utf8')
+  assert.match(sql, /revoke all on function public\.protect_founder_entitlement\(\) from public, anon, authenticated/i)
+  assert.match(sql, /revoke all on function public\.track_alpha_signup_event\(\) from public, anon, authenticated/i)
+})
+
 test('Alpha 20 migration keeps founder, feedback, updates and analytics private', async () => {
   const sql = await readFile(new URL('../supabase/migrations/20260905190000_alpha20_founder_experience.sql', import.meta.url), 'utf8')
   assert.match(sql, /create table if not exists public\.beta_feedback/i)
