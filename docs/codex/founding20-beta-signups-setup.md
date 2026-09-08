@@ -21,15 +21,15 @@ Set these Edge Function secrets in the Supabase dashboard or with the CLI. Never
 - `RATE_LIMIT_HASH_SALT` — a separate random secret used to key short-lived abuse-prevention hashes.
 - `MARKETING_ALLOWED_ORIGINS` — comma-separated exact origins, including `https://project-steel-sitepagesdev.u1165153.workers.dev` and any local dev origin used.
 - `TURNSTILE_ALLOWED_HOSTNAMES` — comma-separated hostnames configured on the Turnstile widget.
-- `MARKETING_VERIFICATION_REDIRECT_URL` — the exact public marketing URL Supabase Auth should return to: `https://projectsteel.co.uk/#beta-verified`. Keep the Worker URL as a fallback/test origin only.
+- `MARKETING_VERIFICATION_REDIRECT_URL` — the exact app callback URL: `https://app.projectsteel.co.uk/?beta-verified=1`. The function accepts this setting only when it has the same origin as `STEEL_APP_URL`; this prevents a verified browser session from being stranded on the marketing origin.
 - `RESEND_API_KEY` — server-only Resend API key for post-verification Founder/waitlist confirmation emails.
 - `TRANSACTIONAL_EMAIL_FROM` — a verified sender, for example `Project Steel <hello@projectsteel.co.uk>` once the domain is verified. Do not use an unverified address.
-- `TRANSACTIONAL_EMAIL_REPLY_TO` — support mailbox for replies, for example `support@projectsteel.co.uk`.
+- `TRANSACTIONAL_EMAIL_REPLY_TO` — a real support mailbox for replies, for example `support@projectsteel.co.uk`. Leave it unset until that inbox exists; an unmonitored reply-to address must not be configured.
 - `STEEL_APP_URL` — exact app URL used only by the post-verification email CTA.
 
 The functions use Supabase’s built-in `SUPABASE_URL`, publishable-key and secret-key environment values. No service-role key is read by browser code.
 
-In Supabase Auth URL Configuration, add the verification redirect URL and local equivalent. Ensure email confirmation is enabled and the Auth magic-link template links to `{{ .ConfirmationURL }}` and uses the approved verification copy. Turn off link tracking in the transactional sender for this template so the secure verification link is not rewritten.
+In Supabase Auth URL Configuration, add the exact app callback URL (`https://app.projectsteel.co.uk/?beta-verified=1`), the app origin, the marketing origin, and local equivalents. Ensure email confirmation is enabled and the Auth magic-link template links to `{{ .ConfirmationURL }}` and uses the approved verification copy. Turn off link tracking in the transactional sender for this template so the secure verification link is not rewritten.
 
 ## Cloudflare marketing site
 
@@ -41,7 +41,9 @@ Upload the contents of `marketing-site/` to the existing Cloudflare Worker/Pages
 
 ## Account completion
 
-The beta request uses Supabase Auth magic-link infrastructure, so the first verification creates or signs into the Supabase user associated with the email. The verification landing state shows the Founder/waitlist result and links to the existing Steel app. A user can use the app’s existing password-reset flow if they want a password for normal email/password sign-in.
+The beta request uses Supabase Auth magic-link infrastructure, so the first verification creates or signs into the Supabase user associated with the email. Supabase returns the verified session to `app.projectsteel.co.uk`, where Steel completes the server-side Founder/waitlist allocation, shows the verified result, and continues directly into account-password setup. The same email address must be used throughout; email providers such as Hotmail, Gmail and Outlook are supported.
+
+The sender address does not require a purchased inbox to send verified transactional mail. A live inbox is required only before setting `TRANSACTIONAL_EMAIL_REPLY_TO` or advertising support by email.
 
 After allocation, `beta-verify` sends the approved Founder or waitlist confirmation through Resend. The provider request has a stable 24-hour idempotency key and private delivery state, so a normal repeat callback does not resend it. If the provider is unavailable, allocation remains successful and the delivery row records the retryable failure; do not claim real delivery until a live external-email smoke test passes.
 

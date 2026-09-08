@@ -548,10 +548,10 @@ The objective is to learn fast enough that, by the time we consider users 21–5
 The Alpha code intentionally does not carry live credentials or deploy itself.
 Before inviting testers, an authorised operator must:
 
-1. Apply both Founding 20 migrations in chronological order, including `20260905190000_alpha20_founder_experience.sql`.
+1. Apply every version-controlled migration in `webapp/supabase/migrations/` in chronological order, including the Founder entitlement constraints and internal trigger-function privilege hardening migrations.
 2. Deploy `beta-signup`, `beta-status`, `beta-verify` and `beta-admin` Edge Functions from the reviewed commit.
-3. Set Edge Function secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `TURNSTILE_SECRET_KEY`, `TURNSTILE_ALLOWED_HOSTNAMES`, `MARKETING_ALLOWED_ORIGINS`, `MARKETING_VERIFICATION_REDIRECT_URL` and a unique `RATE_LIMIT_HASH_SALT`.
-4. Add the production marketing and app URLs to Supabase Auth redirect allow-list. Keep the redirect URL exact; do not add broad wildcards.
+3. Set Edge Function secrets: `SUPABASE_URL`, the server-only Supabase secret key made available to Edge Functions, `SUPABASE_PUBLISHABLE_KEY`, `TURNSTILE_SECRET_KEY`, `TURNSTILE_ALLOWED_HOSTNAMES`, `MARKETING_ALLOWED_ORIGINS`, `MARKETING_VERIFICATION_REDIRECT_URL`, `STEEL_APP_URL`, `RESEND_API_KEY`, `TRANSACTIONAL_EMAIL_FROM` and a unique `RATE_LIMIT_HASH_SALT`. Add `TRANSACTIONAL_EMAIL_REPLY_TO` only when a real inbox is monitored.
+4. Add the production marketing and app URLs plus the exact app callback `https://app.projectsteel.co.uk/?beta-verified=1` to the Supabase Auth redirect allow-list. Keep the redirect URL exact; do not add broad wildcards.
 5. Create a Cloudflare Turnstile widget for the final marketing hostname, put only its **site key** in the inline `STEEL_CONFIG` block in `marketing-site/index.html`, and keep the secret exclusively in Edge Function secrets.
 6. Assign the Steel operator the existing `user_roles.role = 'admin'` role before using `beta-admin`; never expose that function or service-role credential to the browser.
 7. Configure the Supabase magic-link email sender/template with the approved Alpha 20 verification copy. The generic auth email is the delivery mechanism; the template is dashboard-owned.

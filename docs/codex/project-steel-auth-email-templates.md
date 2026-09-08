@@ -64,8 +64,8 @@ confirmation template with the source-controlled subject and body.
 The Site URL and redirect allow-list must include:
 
 - `https://projectsteel.co.uk`
-- `https://projectsteel.co.uk/#beta-verified`
 - `https://app.projectsteel.co.uk`
+- `https://app.projectsteel.co.uk/?beta-verified=1`
 - `https://pt-dash.pages.dev`
 
 Do not disable email confirmation. Do not add tracking pixels or rewrite the
@@ -78,10 +78,9 @@ The intended user journey is:
 
 1. Request beta access on the marketing site.
 2. Receive the branded Project Steel confirmation email.
-3. Confirm the email and see the Project Steel Founder/waitlist result.
-4. Continue to the app and finish the Steel account using the same email.
+3. Confirm the email and land in the Project Steel app with the verified session.
+4. Steel completes the Founder/waitlist check, then asks the user to set an account password using the same email.
 5. Enter the onboarding flow.
 
 The account handoff must not create a second identity for an email that was
-already created by the beta verification flow. This remains a separate
-implementation item from the SMTP/template configuration.
+already created by the beta verification flow.
