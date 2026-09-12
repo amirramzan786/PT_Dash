@@ -33,10 +33,11 @@ The branch makes the right kind of changes for the Founder 20 flow:
 - `https://app.projectsteel.co.uk` loads and presents the Steel sign-in screen.
 - An approved test address passed the Cloudflare human check and the beta form
   confirmed that a verification email was sent with a 24-hour expiry.
+- The verified account completed the callback flow and received a Founder
+  allocation, confirming the live allocation path reached the app successfully.
 
-No account was created and the verification link has not yet been opened. These
-checks do **not** yet prove email arrival, verification, Founder/waitlist
-allocation, entitlement persistence, onboarding, or account recovery.
+These checks do **not** yet prove entitlement persistence across a fresh
+sign-out/sign-in, complete onboarding, or account recovery.
 
 ## Release status: HOLD
 
@@ -44,7 +45,7 @@ Do not merge or deploy this branch yet. Complete and record the following contro
 
 1. Confirm the two new Founder entitlement/security migrations are present in the intended Supabase project and in the expected order.
 2. Verify the deployed Edge Functions and environment allow-list use the app callback origin exactly as documented.
-3. Continue the Alpha 20 smoke flow with the approved test email: open and verify the email, complete account setup, confirm Founder/waitlist state, sign out/in, and confirm the entitlement persists.
+3. Continue the Alpha 20 smoke flow with the approved test email: sign out/in and confirm the Founder entitlement persists.
 4. Verify the restricted internal functions are not callable through the public Data API while the `beta-verify` server path still completes allocation.
 5. Check mobile and desktop signup/account setup, plus Home and Settings, on the deployed app.
 6. Update the related Plane work items with this audit, the production smoke result, and the explicit merge decision.
