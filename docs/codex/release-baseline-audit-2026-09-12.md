@@ -39,18 +39,56 @@ The branch makes the right kind of changes for the Founder 20 flow:
   confirming entitlement persistence for the approved test account.
 
 These checks do **not** yet prove full onboarding completion, account recovery,
-or the production status of every migration in the repository.
+or Home and Settings behaviour in an active authenticated session.
+
+## Production configuration review
+
+- The production Supabase project is `devpjwpirhhctrwizzab` on its `main`
+  production branch.
+- The two Founder entitlement/security migrations are present in the expected
+  order: `20260908210702_founder_entitlement_constraints` followed by
+  `20260908210824_restrict_internal_trigger_functions`.
+- The deployed function inventory includes `beta-signup`, `beta-status`,
+  `beta-verify` and `beta-admin`. The signup and verification functions were
+  updated within the recent release window; the live signup check recorded
+  above used that path without a 5xx response.
+- The Security Advisor reports zero errors, but seven warnings. They include a
+  public-listable avatars bucket, five intentionally callable
+  `SECURITY DEFINER` application functions, and disabled leaked-password
+  protection. These warnings require explicit review and dispositions before a
+  broader release claim.
+
+## Release blockers and follow-ups
+
+- Production migration history does **not** list
+  `20260906103400_membership_plan_change_and_pt_seats`. Do not infer that its
+  plan-change and trainer-seat controls are live merely because the later
+  Founder migrations are present. Reconcile this migration's intended schema
+  and function state before merging or deploying related membership/coach
+  work.
+- The app tab used for the live check was back at the sign-in screen when the
+  focused Home and Settings review was attempted. The prior sign-in persistence
+  check remains valid, but an authenticated desktop and mobile Home/Settings
+  pass is still required.
 
 ## Release status: HOLD
 
 Do not merge or deploy this branch yet. Complete and record the following controlled production checks first:
 
-1. Confirm the two new Founder entitlement/security migrations are present in the intended Supabase project and in the expected order.
-2. Verify the deployed Edge Functions and environment allow-list use the app callback origin exactly as documented.
-3. Verify the intended Supabase migration history and deployed-function versions before treating the branch as integrated.
-4. Verify the restricted internal functions are not callable through the public Data API while the `beta-verify` server path still completes allocation.
-5. Check mobile and desktop signup/account setup, plus Home and Settings, on the deployed app.
-6. Update the related Plane work items with this audit, the production smoke result, and the explicit merge decision.
+1. Reconcile the missing `20260906103400_membership_plan_change_and_pt_seats`
+   migration with production before any membership or coach release uses it.
+2. Verify the deployed Edge Function source and environment allow-list use the
+   app callback origin exactly as documented.
+3. Review and record a disposition for all seven Security Advisor warnings;
+   enable leaked-password protection unless there is a documented reason not
+   to.
+4. Verify the restricted internal functions are not callable through the
+   public Data API while the `beta-verify` server path still completes
+   allocation.
+5. Check mobile and desktop signup/account setup, plus authenticated Home and
+   Settings, on the deployed app.
+6. Update the related Plane work items with this audit, the production smoke
+   result, and the explicit merge decision.
 
 ## Plane note
 
