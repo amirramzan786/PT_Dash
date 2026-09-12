@@ -2,6 +2,7 @@
 
 ## Start every task here
 
+- Before commencing work, state the recommended effort level: **Light** for a focused lookup or small edit, **Standard** for normal implementation or investigation, and **Deep** for broad architecture, multi-system changes, or high-risk verification. Give a one-sentence reason.
 - Treat this repository as the canonical Project Steel codebase.
 - Read `PROJECT_REGISTER.md`, `ROADMAP.md`, and the relevant Plane work item before changing product behaviour.
 - Inspect the current Git branch, working tree, and recent history before editing. Do not overwrite unrelated or uncommitted work.
