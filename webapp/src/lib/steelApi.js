@@ -1,5 +1,5 @@
 import { supabase, supabaseConfigured } from './supabase'
-import { localDay, validateSteps, preferredSteps, dailyStepHistory } from './steps'
+import { localDay, validateDailyStepGoal, validateSteps, preferredSteps, dailyStepHistory } from './steps'
 import { normalizeReminders } from './reminders'
 
 function requireSupabase() {
@@ -7,9 +7,9 @@ function requireSupabase() {
   return supabase
 }
 
-function hasPendingSnackPreferenceMigration(error) {
+function hasPendingProfileExtensionMigration(error) {
   const detail = `${error?.message || ''} ${error?.details || ''}`.toLowerCase()
-  return error?.code === '42703' || (detail.includes('snacks_enabled') || detail.includes('snack_preferences'))
+  return error?.code === '42703' || (detail.includes('snacks_enabled') || detail.includes('snack_preferences') || detail.includes('daily_step_goal'))
 }
 
 export async function getCurrentUser() {
@@ -463,11 +463,12 @@ export async function saveWeight(userId, checkinDate, weightLb) {
 
 export async function getProfile(userId) {
   const client = requireSupabase()
-  const profileColumns = 'id,display_name,phone,goal,avatar_url,experience_level,available_equipment,training_days,checkin_day,units,limitations,onboarding_completed,dietary_preference,allergies,meals_per_day,notification_preferences,created_at,updated_at'
+  const profileColumns = 'id,display_name,phone,goal,avatar_url,experience_level,available_equipment,training_days,checkin_day,units,daily_step_goal,limitations,onboarding_completed,dietary_preference,allergies,meals_per_day,notification_preferences,created_at,updated_at'
   let { data, error } = await client.from('profiles').select(`${profileColumns},snacks_enabled,snack_preferences`).eq('id', userId).maybeSingle()
-  if (error && hasPendingSnackPreferenceMigration(error)) {
-    const legacy = await client.from('profiles').select(profileColumns).eq('id', userId).maybeSingle()
-    data = legacy.data ? { ...legacy.data, snacks_enabled: true, snack_preferences: [] } : null
+  if (error && hasPendingProfileExtensionMigration(error)) {
+    const legacyColumns = profileColumns.replace(',daily_step_goal', '')
+    const legacy = await client.from('profiles').select(legacyColumns).eq('id', userId).maybeSingle()
+    data = legacy.data ? { ...legacy.data, daily_step_goal: 10000, snacks_enabled: true, snack_preferences: [] } : null
     error = legacy.error
   }
   if (error) throw error
@@ -707,7 +708,7 @@ export async function uploadCheckinMedia({ userId, weekStart, file, mediaType = 
   return data
 }
 
-export async function saveProfile(userId, { displayName, phone, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, checkinDay, units, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay, snacksEnabled, snackPreferences }) {
+export async function saveProfile(userId, { displayName, phone, goal, avatarUrl, experienceLevel, availableEquipment, trainingDays, checkinDay, units, dailyStepGoal, limitations, onboardingCompleted, dietaryPreference, allergies, mealsPerDay, snacksEnabled, snackPreferences }) {
   const client = requireSupabase()
   const payload = { id: userId, display_name: displayName || null, goal: goal || 'Lose fat and gain muscle', updated_at: new Date().toISOString() }
   if (avatarUrl !== undefined) payload.avatar_url = avatarUrl || null
@@ -717,6 +718,7 @@ export async function saveProfile(userId, { displayName, phone, goal, avatarUrl,
   if (trainingDays !== undefined) payload.training_days = trainingDays
   if (checkinDay !== undefined) payload.checkin_day = checkinDay
   if (units !== undefined) payload.units = units
+  if (dailyStepGoal !== undefined) payload.daily_step_goal = validateDailyStepGoal(dailyStepGoal)
   if (limitations !== undefined) payload.limitations = limitations || null
   if (onboardingCompleted !== undefined) payload.onboarding_completed = onboardingCompleted
   if (dietaryPreference !== undefined) payload.dietary_preference = dietaryPreference
@@ -725,9 +727,10 @@ export async function saveProfile(userId, { displayName, phone, goal, avatarUrl,
   if (snacksEnabled !== undefined) payload.snacks_enabled = snacksEnabled === true
   if (snackPreferences !== undefined) payload.snack_preferences = Array.isArray(snackPreferences) ? snackPreferences : []
   let { data, error } = await client.from('profiles').upsert(payload, { onConflict: 'id' }).select().single()
-  if (error && hasPendingSnackPreferenceMigration(error)) {
+  if (error && hasPendingProfileExtensionMigration(error)) {
     delete payload.snacks_enabled
     delete payload.snack_preferences
+    delete payload.daily_step_goal
     ;({ data, error } = await client.from('profiles').upsert(payload, { onConflict: 'id' }).select().single())
   }
   if (error) throw error

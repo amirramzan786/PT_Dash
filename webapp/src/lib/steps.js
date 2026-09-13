@@ -9,6 +9,18 @@ export function validateSteps(value) {
   return steps
 }
 
+export function validateDailyStepGoal(value) {
+  const goal = Number(value)
+  if (!Number.isSafeInteger(goal) || goal < 1000 || goal > 100000) throw new Error('Choose a whole-number daily goal between 1,000 and 100,000 steps.')
+  return goal
+}
+
+export function stepGoalProgress(steps, goal = 10000) {
+  const safeGoal = validateDailyStepGoal(goal)
+  const safeSteps = Math.max(0, Number(steps) || 0)
+  return { goal: safeGoal, completed: Math.min(100, Math.round((safeSteps / safeGoal) * 100)), remaining: Math.max(0, safeGoal - safeSteps) }
+}
+
 export const activityMetrics = ['steps', 'distance_m', 'active_calories_kcal', 'workout_minutes']
 
 const sourcePriorities = {
@@ -86,4 +98,12 @@ export function dailyActivityHistory(rows = [], options = {}) {
 
 export function dailyStepHistory(rows = []) {
   return dailyActivityHistory(rows)
+}
+
+// Missing dates mean Steel has no total for that day, rather than zero activity.
+// The UI therefore labels this as a logged average and reports the sample size.
+export function sevenDayStepAverage(rows = []) {
+  const recent = dailyStepHistory(rows).slice(-7)
+  const total = recent.reduce((sum, row) => sum + Number(row.steps || 0), 0)
+  return { average: recent.length ? Math.round(total / recent.length) : 0, daysLogged: recent.length, total }
 }

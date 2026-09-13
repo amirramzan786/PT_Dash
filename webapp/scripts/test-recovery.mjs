@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { activitySourcePriority, dailyActivityHistory, localDay, normalizeActivityRecord, validateSteps, preferredActivity, preferredSteps, dailyStepHistory } from '../src/lib/steps.js'
+import { activitySourcePriority, dailyActivityHistory, localDay, normalizeActivityRecord, sevenDayStepAverage, stepGoalProgress, validateDailyStepGoal, validateSteps, preferredActivity, preferredSteps, dailyStepHistory } from '../src/lib/steps.js'
 import { normalizeReminders, dueReminders } from '../src/lib/reminders.js'
 
 test('steps accept zero but reject blank, fractions, negative and excessive totals', () => {
@@ -39,6 +39,13 @@ test('activity selection is deterministic and honours a chosen source', () => {
   assert.equal(preferredActivity(rows, { preferredSource: 'garmin' }).steps, 6200)
   assert.ok(activitySourcePriority('apple_health') > activitySourcePriority('manual'))
   assert.deepEqual(dailyActivityHistory(rows).map(row => row.steps), [6100])
+})
+
+test('step goals and seven-day averages make missing data explicit', () => {
+  assert.deepEqual(stepGoalProgress(6250, 10000), { goal: 10000, completed: 63, remaining: 3750 })
+  assert.throws(() => validateDailyStepGoal(999))
+  const average = sevenDayStepAverage([{ step_date: '2026-09-01', steps: 4000, source: 'manual' }, { step_date: '2026-09-02', steps: 6000, source: 'manual' }])
+  assert.deepEqual(average, { average: 5000, daysLogged: 2, total: 10000 })
 })
 
 test('date keys use the local calendar date near midnight', () => {

@@ -617,6 +617,9 @@ button { cursor: pointer; }
 .step-total small { color: var(--steel-muted); font-size: .64rem; }
 .movement-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 10px; border-top: 1px solid var(--steel-line); color: var(--steel-muted); font-size: .68rem; }
 .movement-card-meta strong { color: #edf0f3; }
+.movement-average { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; color: var(--steel-muted); font-size: .68rem; }
+.movement-average strong { color: #edf0f3; font-size: 1rem; }
+.movement-average span { text-align: right; }
 .movement-card.is-empty { gap: 8px; }
 .movement-card.is-empty .empty-chart { min-height: 42px; }
 .movement-empty-link { justify-self: start; display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--steel-gold-2); font-size: .7rem; font-weight: 850; padding: 3px 0 0; }
