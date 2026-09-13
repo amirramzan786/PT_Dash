@@ -75,6 +75,11 @@ and workout list.
   `admin_grant_trainer_premium`) are absent. Do not merge or deploy related
   membership/coach work until a reviewed, authorised forward application plan
   is agreed.
+- A read-only prerequisite check found the migration's declared dependencies
+  already present: `training_programmes`, `user_roles`, and
+  `trainer_client_assignments`, plus the two membership-entitlement limit
+  columns. This supports a controlled forward application, but does not
+  authorise one.
 - Mobile authenticated Home and Settings QA remains required.
 
 ## Release status: HOLD
