@@ -53,10 +53,13 @@ create table if not exists public.activity_connections (
 alter table public.activity_connections enable row level security;
 
 create policy "activity_connections_select_own" on public.activity_connections
-  for select using (auth.uid() = user_id);
+  for select to authenticated using ((select auth.uid()) = user_id);
 create policy "activity_connections_insert_own" on public.activity_connections
-  for insert with check (auth.uid() = user_id);
+  for insert to authenticated with check ((select auth.uid()) = user_id);
 create policy "activity_connections_update_own" on public.activity_connections
-  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for update to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 create policy "activity_connections_delete_own" on public.activity_connections
-  for delete using (auth.uid() = user_id);
+  for delete to authenticated using ((select auth.uid()) = user_id);
+
+-- Explicit API access is still constrained by the owner-only policies above.
+grant select, insert, update, delete on table public.activity_connections to authenticated;

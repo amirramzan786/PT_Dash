@@ -170,7 +170,7 @@ test('current-main Home, recovery and food-diary integration contracts remain pr
   const diary = await readFile(new URL('../src/components/FoodDiary.jsx', import.meta.url), 'utf8')
   assert.match(app, /<ManualSteps /)
   assert.match(app, /<ReminderSettings /)
-  assert.match(app, /<HealthIntegrations\s*\/>/)
+  assert.match(app, /<HealthIntegrations connections=\{activityConnections\} onDisconnect=\{onDisconnectActivityProvider\} onDeleteImportedData=\{onDeleteActivityProviderData\}\/>/)
   assert.match(app, /settings-admin-v5/)
   assert.match(app, /<FeedbackButton onClick=\{\(\) => openSupportPanel\('feedback'\)\}\/>[\s\S]*settings-support-footer/)
   assert.match(app, /<button type="button" onClick=\{\(\) => openSupportPanel\('feedback'\)\}><span><strong>Send feedback<\/strong>/)
@@ -185,6 +185,16 @@ test('current-main Home, recovery and food-diary integration contracts remain pr
   assert.match(app, /FoodDiary compact userId=/)
   assert.match(app, /recipeSaveError/)
   assert.match(app, /saveError: recipeSaveError/)
+})
+
+test('activity privacy migration preserves manual entries and does not use privileged execution', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20260913081625_activity_privacy_lifecycle.sql', import.meta.url), 'utf8')
+  assert.match(migration, /security invoker/)
+  assert.doesNotMatch(migration, /security definer/i)
+  assert.match(migration, /delete from public\.daily_steps[\s\S]*source = p_provider/)
+  assert.match(migration, /\(select auth\.uid\(\)\)/)
+  assert.match(migration, /revoke all on function public\.delete_activity_provider_data\(text\) from public/)
+  assert.match(migration, /grant execute on function public\.delete_activity_provider_data\(text\) to authenticated/)
 })
 
 test('food diary keeps every core logging route available from the compact diary flow', async () => {

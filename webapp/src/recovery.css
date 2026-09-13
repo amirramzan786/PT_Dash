@@ -19,8 +19,19 @@
 .tracker-status-guide strong { color: var(--steel-text); }
 .tracker-status-guide b { color: var(--steel-gold-2); font-weight: 800; }
 .health-integrations .health-provider em { color: var(--steel-muted); font-size: .62rem; font-style: normal; line-height: 1.35; }
+.tracker-status { border: 1px solid var(--steel-line); border-radius: 999px; padding: 4px 7px; color: var(--steel-muted); background: #0e1720; font-size: .65rem; font-weight: 800; letter-spacing: .02em; }
+.tracker-status-connected { color: #9cddaa; border-color: #31713d; background: #11271a; }
+.tracker-status-issue { color: #f0c36a; border-color: #76521e; background: #2b2110; }
+.tracker-status-disconnected { color: #d3c49d; border-color: #5d5545; background: #1d1b17; }
+.tracker-provider-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .tracker-connect-button { width: fit-content; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #514528; border-radius: 9px; padding: 7px 9px; background: #16130d; color: var(--steel-gold-2); font-size: .68rem; font-weight: 800; cursor: pointer; }
 .tracker-connect-button:hover { border-color: var(--steel-gold-dark); background: #201a10; }
+.tracker-disconnect-button, .tracker-delete-button { width: fit-content; display: inline-flex; align-items: center; gap: 6px; border-radius: 9px; padding: 7px 9px; font-size: .68rem; font-weight: 800; cursor: pointer; }
+.tracker-disconnect-button { border: 1px solid #625a4a; background: #171b1d; color: var(--steel-text); }
+.tracker-delete-button { border: 1px solid #733a35; background: #281513; color: #f4b5ac; }
+.tracker-disconnect-button:hover:not(:disabled) { border-color: #a69a80; background: #212629; }
+.tracker-delete-button:hover:not(:disabled) { border-color: #b65d52; background: #351a17; }
+.tracker-disconnect-button:disabled, .tracker-delete-button:disabled { cursor: wait; opacity: .68; }
 .tracker-connect-notice { margin: 0; padding: 10px 12px; border: 1px solid rgba(215,164,63,.35); border-radius: 10px; background: rgba(215,164,63,.08); color: #ead9ab !important; font-size: .78rem; }
 .reminder-form { font-size: .85rem; }
 .reminder-permission { display: flex; gap: 10px; align-items: center; padding: 12px; border: 1px solid var(--steel-line); border-radius: 12px; background: #0e1720; color: var(--steel-text); text-align: left; }

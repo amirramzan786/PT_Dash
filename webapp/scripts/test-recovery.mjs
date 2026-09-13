@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { activitySourcePriority, dailyActivityHistory, localDay, normalizeActivityRecord, sevenDayStepAverage, stepGoalProgress, validateDailyStepGoal, validateSteps, preferredActivity, preferredSteps, dailyStepHistory } from '../src/lib/steps.js'
 import { normalizeReminders, dueReminders } from '../src/lib/reminders.js'
+import { activityConnectionState, formatActivityTimestamp, isActivityProvider } from '../src/lib/activityConnections.js'
 
 test('steps accept zero but reject blank, fractions, negative and excessive totals', () => {
   assert.equal(validateSteps('0'), 0)
@@ -51,6 +52,17 @@ test('step goals and seven-day averages make missing data explicit', () => {
 test('date keys use the local calendar date near midnight', () => {
   const now = new Date(2026, 8, 5, 0, 1)
   assert.equal(localDay(now), '2026-09-05')
+})
+
+test('activity connection states are truthful and provider IDs are constrained', () => {
+  assert.deepEqual(activityConnectionState(null), { label: 'Not connected', tone: 'not-connected' })
+  assert.deepEqual(activityConnectionState({ status: 'connected' }), { label: 'Connected', tone: 'connected' })
+  assert.deepEqual(activityConnectionState({ status: 'sync_issue' }), { label: 'Sync issue', tone: 'issue' })
+  assert.deepEqual(activityConnectionState({ status: 'disconnected' }), { label: 'Disconnected', tone: 'disconnected' })
+  assert.equal(isActivityProvider('garmin'), true)
+  assert.equal(isActivityProvider('manual'), false)
+  assert.match(formatActivityTimestamp('2026-09-13T09:15:00Z'), /13 Sept 2026/)
+  assert.equal(formatActivityTimestamp('not-a-date'), null)
 })
 
 test('stored reminder preferences retain schedules and reject malformed fields', () => {

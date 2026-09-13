@@ -1,6 +1,7 @@
 import { supabase, supabaseConfigured } from './supabase'
 import { localDay, validateDailyStepGoal, validateSteps, preferredSteps, dailyStepHistory } from './steps'
 import { normalizeReminders } from './reminders'
+import { isActivityProvider } from './activityConnections'
 
 function requireSupabase() {
   if (!supabaseConfigured || !supabase) throw new Error('Supabase is not configured')
@@ -10,6 +11,11 @@ function requireSupabase() {
 function hasPendingProfileExtensionMigration(error) {
   const detail = `${error?.message || ''} ${error?.details || ''}`.toLowerCase()
   return error?.code === '42703' || (detail.includes('snacks_enabled') || detail.includes('snack_preferences') || detail.includes('daily_step_goal'))
+}
+
+function hasPendingActivityFoundationMigration(error) {
+  const detail = `${error?.message || ''} ${error?.details || ''}`.toLowerCase()
+  return error?.code === '42P01' || detail.includes('activity_connections') || detail.includes('delete_activity_provider_data')
 }
 
 export async function getCurrentUser() {
@@ -821,6 +827,34 @@ export async function saveManualSteps(userId, value) {
   const { data, error } = await client.from('daily_steps').upsert({ user_id: userId, step_date: localDay(now), steps, source: 'manual', synced_at: now.toISOString(), updated_at: now.toISOString() }, { onConflict: 'user_id,step_date,source' }).select('steps,source,synced_at').single()
   if (error) throw error
   return data
+}
+
+export async function getActivityConnections(userId) {
+  const client = requireSupabase()
+  const { data, error } = await client.from('activity_connections').select('provider,status,scopes,consented_at,consent_version,last_synced_at,last_error_at,last_error_code,disconnected_at,imported_data_deleted_at,updated_at').eq('user_id', userId).order('provider')
+  if (error && hasPendingActivityFoundationMigration(error)) return []
+  if (error) throw error
+  return data ?? []
+}
+
+export async function disconnectActivityProvider(userId, provider) {
+  if (!isActivityProvider(provider)) throw new Error('That activity provider is not supported.')
+  const now = new Date().toISOString()
+  const { data, error } = await requireSupabase().from('activity_connections')
+    .update({ status: 'disconnected', disconnected_at: now, updated_at: now })
+    .eq('user_id', userId)
+    .eq('provider', provider)
+    .select('provider,status,scopes,consented_at,consent_version,last_synced_at,last_error_at,last_error_code,disconnected_at,imported_data_deleted_at,updated_at')
+    .maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error('That activity connection was not found.')
+  return data
+}
+
+export async function deleteActivityProviderData(provider) {
+  if (!isActivityProvider(provider)) throw new Error('That activity provider is not supported.')
+  const { error } = await requireSupabase().rpc('delete_activity_provider_data', { p_provider: provider })
+  if (error) throw error
 }
 
 export async function saveNotificationPreferences(userId, preferences) {
