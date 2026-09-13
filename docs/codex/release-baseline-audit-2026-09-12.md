@@ -92,20 +92,21 @@ and workout list.
   untrusted origin, private tables deny anonymous and authenticated reads, and
   `complete_beta_verification` remains service-role-only.
 
-## Release status: HOLD
+## Release status: INTEGRATED — no deployment
 
-Do not merge or deploy this branch yet. Complete and record the following controlled production checks first:
+All controlled production checks passed. With user approval, the reconciliation
+history was fast-forwarded and published to `origin/main` at `200c9ee` on 13
+September. `STEEL-108` is closed. No deployment was performed.
 
-1. Keep the documented disposition for the seven remaining Security Advisor
-   warnings current. Revisit leaked-password protection when the project moves
-   to a Supabase plan that supports it.
-2. Update the related Plane work items with this audit, the production smoke
-   result, and the explicit merge decision.
+Keep the documented disposition for the seven remaining Security Advisor
+warnings current, and revisit leaked-password protection when the project moves
+to a Supabase plan that supports it.
 
 ## Plane note
 
 `STEEL-108 — Release gate — reconcile Founder 20 production baseline` is now
-open as a high-priority Todo item. It contains the release hold, test evidence,
+now completed. It contains the release hold, test evidence,
 acceptance criteria and production verification history. The authorised
 migration, internal-function hardening and avatar-listing restriction have
-been applied; no deployment or merge was performed.
+been applied; the reconciliation history was published to `origin/main` and no
+deployment was performed.

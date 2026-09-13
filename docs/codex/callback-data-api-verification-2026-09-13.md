@@ -35,6 +35,6 @@ Read-only production privilege checks confirmed:
 
 ## Result
 
-The final technical release gate passes. No deployment or merge was performed;
-the remaining action is the explicit merge decision for the reconciliation
-branch and closure of `STEEL-108` after that decision.
+The final technical release gate passed. The reconciliation history was
+published to `origin/main` at `200c9ee` on 13 September and `STEEL-108` was
+closed. No deployment was performed.

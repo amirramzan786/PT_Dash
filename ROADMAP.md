@@ -6,11 +6,10 @@ For the complete delivered/active/planned record and implementation traceability
 
 1. **Stabilise the current product and Git baseline.** The Founder 20 signup
    smoke flow, Founder security migrations and membership/coach baseline are
-   verified in production. Release remains on hold while the seven remaining
-   Supabase Security Advisor warnings are recorded with their reviewed
-   dispositions and the deployed beta-function callback/Data API boundaries
-   are verified. The remaining release action is the explicit merge decision
-   recorded in Plane.
+   verified in production. The reconciliation history was integrated and
+   published to `main` on 13 September without a deployment. Keep the seven
+   remaining Supabase Security Advisor warning dispositions current and revisit
+   leaked-password protection when the project moves to a supporting plan.
 2. **Finish the client activity foundation.** Complete the unified activity model, truthful tracker states, 7-day average and goal, consent/disconnect/deletion/last-sync behaviour, and cross-source deduplication design.
 3. **Run Steel Coach discovery (Sprint 05).** Work with one or two real coaches; confirm the painful jobs, role/permission model, data lifecycle, privacy controls, prototype, pricing hypothesis, and measurable pilot success criteria.
 4. **Build only the validated operations MVP (Sprints 06–07).** Deliver secure invitations, roster and progress overview, check-ins, messaging, programme control, missed-check-in automation, availability rules, education journeys, and explainable retention signals.
