@@ -87,7 +87,10 @@ Last reconciled: 13 September 2026. This is the durable product record alongside
 
 ## Active — Sprint 01: steps and activity foundation
 
-- [ ] Define a unified activity model: steps, distance, active calories, workout minutes, source, timestamp and confidence.
+- [~] Define a unified activity model: the additive daily-record and
+  connection/consent contract, deterministic source-selection policy, local
+  migration and helper tests are prepared. Remote migration application and
+  native-import implementation remain outstanding.
 - [ ] Make the Settings tracker area use truthful connection states: Not connected, Connect, Connected and Sync issue.
 - [~] Build the steps dashboard: Home now shows today, 30-day trend, source label and manual entry. Remaining: 7-day average and user-set daily goal.
 - [x] Add manual entry as the clear fallback and use the same data source on Home; deployed and verified by user.

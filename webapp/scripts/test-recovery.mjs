@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { localDay, validateSteps, preferredSteps, dailyStepHistory } from '../src/lib/steps.js'
+import { activitySourcePriority, dailyActivityHistory, localDay, normalizeActivityRecord, validateSteps, preferredActivity, preferredSteps, dailyStepHistory } from '../src/lib/steps.js'
 import { normalizeReminders, dueReminders } from '../src/lib/reminders.js'
 
 test('steps accept zero but reject blank, fractions, negative and excessive totals', () => {
@@ -19,6 +19,26 @@ test('overlapping providers contribute exactly one daily total, with manual fall
   assert.equal(preferredSteps(rows.slice(0, 3)).steps, 5000)
   assert.deepEqual(dailyStepHistory(rows).map(row => row.steps), [5000, 0])
   assert.equal(preferredSteps([]), null)
+})
+
+test('activity model retains optional metrics and validates confidence', () => {
+  assert.deepEqual(normalizeActivityRecord({ source: ' Apple_Health ', steps: '4200', distance_m: '3100', active_calories_kcal: null, workout_minutes: 45, confidence: '.9' }), {
+    source: 'apple_health', steps: 4200, distance_m: 3100, active_calories_kcal: null, workout_minutes: 45, confidence: 0.9,
+  })
+  assert.throws(() => normalizeActivityRecord({ steps: -1 }))
+  assert.throws(() => normalizeActivityRecord({ confidence: 1.1 }))
+})
+
+test('activity selection is deterministic and honours a chosen source', () => {
+  const rows = [
+    { step_date: '2026-09-06', steps: 4300, source: 'manual', synced_at: '2026-09-06T21:00:00Z' },
+    { step_date: '2026-09-06', steps: 6200, source: 'garmin', confidence: 0.8, observed_at: '2026-09-06T20:00:00Z' },
+    { step_date: '2026-09-06', steps: 6100, source: 'apple_health', confidence: 0.7, observed_at: '2026-09-06T19:00:00Z' },
+  ]
+  assert.equal(preferredActivity(rows).source, 'apple_health')
+  assert.equal(preferredActivity(rows, { preferredSource: 'garmin' }).steps, 6200)
+  assert.ok(activitySourcePriority('apple_health') > activitySourcePriority('manual'))
+  assert.deepEqual(dailyActivityHistory(rows).map(row => row.steps), [6100])
 })
 
 test('date keys use the local calendar date near midnight', () => {

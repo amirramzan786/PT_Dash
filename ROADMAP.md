@@ -27,7 +27,10 @@ For the complete delivered/active/planned record and implementation traceability
 
 ## Immediate priority — activity and steps
 
-- [ ] Define a single activity data model for steps, distance, active calories, workout minutes, source, timestamp and confidence.
+- [~] Define a single activity data model for steps, distance, active calories,
+  workout minutes, source, timestamp and confidence. The additive schema and
+  source-selection policy are prepared locally; applying the migration and
+  implementing imports remain separately controlled.
 - [ ] Add a **Connect activity tracker** area in Settings with clear statuses: Not connected, Connect, Connected and Sync issue.
 - [ ] Build the steps dashboard: today, 7-day average, weekly goal, trend and source label.
 - [x] Add manual step entry as a fallback; deployed and user-verified.
