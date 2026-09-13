@@ -35,6 +35,9 @@ Last reconciled: 13 September 2026. This is the durable product record alongside
 ## Delivered — home, navigation and personal data
 
 - [x] Responsive desktop/mobile app shell with collapsible desktop navigation, mobile navigation and More sheet.
+- [x] Authenticated mobile release QA for Home and Settings: mobile navigation,
+  Founder entitlement, truthful integration states and reminder controls passed
+  on the deployed app.
 - [x] Home dashboard, welcome/training metrics, daily steps and weight cards, plus progress/weight navigation.
 - [x] Consolidated Home steps and weight metrics to avoid duplicated summaries.
 - [x] Daily steps API/data field, authenticated manual fallback and source-aware Home/Progress selection (one authoritative daily record; no double-counting manual and future tracker data).

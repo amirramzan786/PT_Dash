@@ -82,7 +82,10 @@ and workout list.
   `20260913010000_prevent_avatar_bucket_listing`: public profile-image URLs
   remain available, but Storage API enumeration is no longer allowed. The
   Security Advisor warning count fell from eight to seven.
-- Mobile authenticated Home and Settings QA remains required.
+- Authenticated mobile Home and Settings QA passed on 13 September. The mobile
+  navigation and More sheet worked, Home loaded its daily summary, steps,
+  quick actions and programme list, and Settings correctly showed the Founder
+  entitlement, truthful tracker states and reminder controls.
 
 ## Release status: HOLD
 
@@ -96,9 +99,7 @@ Do not merge or deploy this branch yet. Complete and record the following contro
 3. Verify the restricted internal functions are not callable through the
    public Data API while the `beta-verify` server path still completes
    allocation.
-4. Check mobile signup/account setup and authenticated Home and Settings on
-   the deployed app; desktop Home and Settings has passed.
-5. Update the related Plane work items with this audit, the production smoke
+4. Update the related Plane work items with this audit, the production smoke
    result, and the explicit merge decision.
 
 ## Plane note

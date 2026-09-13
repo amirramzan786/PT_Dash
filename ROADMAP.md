@@ -8,8 +8,8 @@ For the complete delivered/active/planned record and implementation traceability
    smoke flow, Founder security migrations and membership/coach baseline are
    verified in production. Release remains on hold while the seven remaining
    Supabase Security Advisor warnings are recorded with their reviewed
-   dispositions, authenticated mobile Home/Settings QA completes, and the
-   merge-or-close decision is recorded in Plane.
+   dispositions, deployed beta-function callback/Data API boundaries are
+   verified, and the merge-or-close decision is recorded in Plane.
 2. **Finish the client activity foundation.** Complete the unified activity model, truthful tracker states, 7-day average and goal, consent/disconnect/deletion/last-sync behaviour, and cross-source deduplication design.
 3. **Run Steel Coach discovery (Sprint 05).** Work with one or two real coaches; confirm the painful jobs, role/permission model, data lifecycle, privacy controls, prototype, pricing hypothesis, and measurable pilot success criteria.
 4. **Build only the validated operations MVP (Sprints 06–07).** Deliver secure invitations, roster and progress overview, check-ins, messaging, programme control, missed-check-in automation, availability rules, education journeys, and explainable retention signals.
