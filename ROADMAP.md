@@ -5,11 +5,11 @@ For the complete delivered/active/planned record and implementation traceability
 ## Delivery sequence and gates
 
 1. **Stabilise the current product and Git baseline.** The Founder 20 signup
-   smoke flow and its two Founder security migrations are verified in
-   production, but release is on hold: reconcile the missing production
-   membership/coach migration (`20260906103400`), disposition the seven
-   Supabase Security Advisor warnings, complete authenticated Home/Settings
-   device QA, then record the merge-or-close decision in Plane.
+   smoke flow, Founder security migrations and membership/coach baseline are
+   verified in production. Release remains on hold while eight Supabase
+   Security Advisor warnings are dispositioned, authenticated mobile
+   Home/Settings QA completes, and the merge-or-close decision is recorded in
+   Plane.
 2. **Finish the client activity foundation.** Complete the unified activity model, truthful tracker states, 7-day average and goal, consent/disconnect/deletion/last-sync behaviour, and cross-source deduplication design.
 3. **Run Steel Coach discovery (Sprint 05).** Work with one or two real coaches; confirm the painful jobs, role/permission model, data lifecycle, privacy controls, prototype, pricing hypothesis, and measurable pilot success criteria.
 4. **Build only the validated operations MVP (Sprints 06–07).** Deliver secure invitations, roster and progress overview, check-ins, messaging, programme control, missed-check-in automation, availability rules, education journeys, and explainable retention signals.

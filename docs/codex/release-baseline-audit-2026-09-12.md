@@ -58,52 +58,50 @@ and workout list.
   `beta-verify` and `beta-admin`. The signup and verification functions were
   updated within the recent release window; the live signup check recorded
   above used that path without a 5xx response.
-- The Security Advisor reports zero errors, but seven warnings. They include a
+- The Security Advisor reports zero errors, but eight warnings. They include a
   public-listable avatars bucket, five intentionally callable
-  `SECURITY DEFINER` application functions, and disabled leaked-password
+  `SECURITY DEFINER` application functions, the authenticated
+  `get_my_plan_change_status` function, and disabled leaked-password
   protection. These warnings require explicit review and dispositions before a
   broader release claim.
 
 ## Release blockers and follow-ups
 
-- Production migration history does **not** list
-  `20260906103400_membership_plan_change_and_pt_seats`, and a read-only
-  production query confirms the gap: its three tables
-  (`plan_change_windows`, `trainer_premium_seat_pools`, and
-  `trainer_premium_grants`) and three functions
-  (`enforce_programme_change_window`, `get_my_plan_change_status`, and
-  `admin_grant_trainer_premium`) are absent. Do not merge or deploy related
-  membership/coach work until a reviewed, authorised forward application plan
-  is agreed.
-- A read-only prerequisite check found the migration's declared dependencies
-  already present: `training_programmes`, `user_roles`, and
-  `trainer_client_assignments`, plus the two membership-entitlement limit
-  columns. This supports a controlled forward application, but does not
-  authorise one.
+- The missing production migration
+  `20260906103400_membership_plan_change_and_pt_seats` was applied as an
+  authorised, single transaction on 13 September. Its migration-history row,
+  three tables, programme-change trigger and RLS controls are present.
+- Post-application validation confirmed `get_my_plan_change_status` is
+  available only to authenticated users and
+  `admin_grant_trainer_premium` only to `service_role`.
+- The initial migration exposed its internal `SECURITY DEFINER` trigger
+  function through PostgreSQL's default function grant. This was immediately
+  corrected with `20260913000000_restrict_programme_change_trigger_function`.
+  Anonymous and authenticated users now both lack execute access, while the
+  trigger remains installed.
 - Mobile authenticated Home and Settings QA remains required.
 
 ## Release status: HOLD
 
 Do not merge or deploy this branch yet. Complete and record the following controlled production checks first:
 
-1. Reconcile the missing `20260906103400_membership_plan_change_and_pt_seats`
-   migration with production before any membership or coach release uses it.
-2. Verify the deployed Edge Function source and environment allow-list use the
+1. Verify the deployed Edge Function source and environment allow-list use the
    app callback origin exactly as documented.
-3. Review and record a disposition for all seven Security Advisor warnings;
+2. Review and record a disposition for all eight Security Advisor warnings;
    enable leaked-password protection unless there is a documented reason not
    to.
-4. Verify the restricted internal functions are not callable through the
+3. Verify the restricted internal functions are not callable through the
    public Data API while the `beta-verify` server path still completes
    allocation.
-5. Check mobile signup/account setup and authenticated Home and Settings on
+4. Check mobile signup/account setup and authenticated Home and Settings on
    the deployed app; desktop Home and Settings has passed.
-6. Update the related Plane work items with this audit, the production smoke
+5. Update the related Plane work items with this audit, the production smoke
    result, and the explicit merge decision.
 
 ## Plane note
 
 `STEEL-108 — Release gate — reconcile Founder 20 production baseline` is now
 open as a high-priority Todo item. It contains the release hold, test evidence,
-acceptance criteria and confirmed migration gap. No production migration,
-deployment or merge was performed.
+acceptance criteria and production verification history. The authorised
+migration and security hotfix have been applied; no deployment or merge was
+performed.
