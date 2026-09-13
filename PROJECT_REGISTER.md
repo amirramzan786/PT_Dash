@@ -78,6 +78,9 @@ Last reconciled: 13 September 2026. This is the durable product record alongside
   Data-API callable, public avatar enumeration is blocked while public profile
   image URLs remain available, and the intentional signed-in function surface
   is documented and reviewed.
+- [x] Founder release callback and Data API boundary verification: production
+  Auth redirects, allowed browser origin and server-only database procedures
+  were checked against the live environment.
 - [x] Food catalogue and nutrition diary migrations deployed to Supabase.
 - [x] `food-catalog` Supabase Edge Function deployed.
 - [x] Live Steel production URL: `https://pt-dash.pages.dev/#Home`.

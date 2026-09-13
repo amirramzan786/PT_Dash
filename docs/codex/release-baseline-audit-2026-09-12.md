@@ -86,20 +86,20 @@ and workout list.
   navigation and More sheet worked, Home loaded its daily summary, steps,
   quick actions and programme list, and Settings correctly showed the Founder
   entitlement, truthful tracker states and reminder controls.
+- Production callback and Data API checks passed on 13 September: Auth permits
+  the `projectsteel.co.uk` marketing and `app.projectsteel.co.uk` application
+  origins, `beta-status` accepts the marketing origin and rejects an
+  untrusted origin, private tables deny anonymous and authenticated reads, and
+  `complete_beta_verification` remains service-role-only.
 
 ## Release status: HOLD
 
 Do not merge or deploy this branch yet. Complete and record the following controlled production checks first:
 
-1. Verify the deployed Edge Function source and environment allow-list use the
-   app callback origin exactly as documented.
-2. Keep the documented disposition for the seven remaining Security Advisor
+1. Keep the documented disposition for the seven remaining Security Advisor
    warnings current. Revisit leaked-password protection when the project moves
    to a Supabase plan that supports it.
-3. Verify the restricted internal functions are not callable through the
-   public Data API while the `beta-verify` server path still completes
-   allocation.
-4. Update the related Plane work items with this audit, the production smoke
+2. Update the related Plane work items with this audit, the production smoke
    result, and the explicit merge decision.
 
 ## Plane note
