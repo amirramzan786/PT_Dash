@@ -58,12 +58,11 @@ and workout list.
   `beta-verify` and `beta-admin`. The signup and verification functions were
   updated within the recent release window; the live signup check recorded
   above used that path without a 5xx response.
-- The Security Advisor reports zero errors, but eight warnings. They include a
-  public-listable avatars bucket, five intentionally callable
-  `SECURITY DEFINER` application functions, the authenticated
-  `get_my_plan_change_status` function, and disabled leaked-password
-  protection. These warnings require explicit review and dispositions before a
-  broader release claim.
+- The Security Advisor reports zero errors and seven reviewed warnings. Six
+  intentionally callable `SECURITY DEFINER` application functions remain
+  authenticated-only and protect their caller-sensitive operations internally.
+  The final warning is disabled leaked-password protection, which is not
+  available on this project’s current Supabase Free plan.
 
 ## Release blockers and follow-ups
 
@@ -79,6 +78,10 @@ and workout list.
   corrected with `20260913000000_restrict_programme_change_trigger_function`.
   Anonymous and authenticated users now both lack execute access, while the
   trigger remains installed.
+- The historical public `avatars` Storage policy was narrowed with
+  `20260913010000_prevent_avatar_bucket_listing`: public profile-image URLs
+  remain available, but Storage API enumeration is no longer allowed. The
+  Security Advisor warning count fell from eight to seven.
 - Mobile authenticated Home and Settings QA remains required.
 
 ## Release status: HOLD
@@ -87,9 +90,9 @@ Do not merge or deploy this branch yet. Complete and record the following contro
 
 1. Verify the deployed Edge Function source and environment allow-list use the
    app callback origin exactly as documented.
-2. Review and record a disposition for all eight Security Advisor warnings;
-   enable leaked-password protection unless there is a documented reason not
-   to.
+2. Keep the documented disposition for the seven remaining Security Advisor
+   warnings current. Revisit leaked-password protection when the project moves
+   to a Supabase plan that supports it.
 3. Verify the restricted internal functions are not callable through the
    public Data API while the `beta-verify` server path still completes
    allocation.
@@ -103,5 +106,5 @@ Do not merge or deploy this branch yet. Complete and record the following contro
 `STEEL-108 — Release gate — reconcile Founder 20 production baseline` is now
 open as a high-priority Todo item. It contains the release hold, test evidence,
 acceptance criteria and production verification history. The authorised
-migration and security hotfix have been applied; no deployment or merge was
-performed.
+migration, internal-function hardening and avatar-listing restriction have
+been applied; no deployment or merge was performed.

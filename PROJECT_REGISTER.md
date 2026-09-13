@@ -1,6 +1,6 @@
 # Project Steel — master project register
 
-Last reconciled: 12 September 2026. This is the durable product record alongside the live repository in this Project Steel folder and the operating roadmap in Plane.
+Last reconciled: 13 September 2026. This is the durable product record alongside the live repository in this Project Steel folder and the operating roadmap in Plane.
 
 ## Status key
 
@@ -71,6 +71,10 @@ Last reconciled: 12 September 2026. This is the durable product record alongside
 - [x] Cloudflare-ready startup/dependency compatibility and resilient client loading/retry states.
 - [x] Client-render blank-screen protection and production redeploy/recovery fixes.
 - [x] Supabase RLS hardening, private media storage, foreign-key indexes and plan-control grants.
+- [x] Founder release security hardening: internal trigger functions are not
+  Data-API callable, public avatar enumeration is blocked while public profile
+  image URLs remain available, and the intentional signed-in function surface
+  is documented and reviewed.
 - [x] Food catalogue and nutrition diary migrations deployed to Supabase.
 - [x] `food-catalog` Supabase Edge Function deployed.
 - [x] Live Steel production URL: `https://pt-dash.pages.dev/#Home`.
