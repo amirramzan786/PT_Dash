@@ -39,7 +39,13 @@ The branch makes the right kind of changes for the Founder 20 flow:
   confirming entitlement persistence for the approved test account.
 
 These checks do **not** yet prove full onboarding completion, account recovery,
-or Home and Settings behaviour in an active authenticated session.
+or mobile Home and Settings behaviour in an active authenticated session.
+
+Authenticated desktop QA subsequently passed for Founder #01: Settings showed
+the persistent Premium-for-life entitlement, truthful planned/unconnected
+health-provider states and reminder controls. Home showed the daily summary,
+quick actions, next-session state, movement history, manual-steps entry point
+and workout list.
 
 ## Production configuration review
 
@@ -61,15 +67,15 @@ or Home and Settings behaviour in an active authenticated session.
 ## Release blockers and follow-ups
 
 - Production migration history does **not** list
-  `20260906103400_membership_plan_change_and_pt_seats`. Do not infer that its
-  plan-change and trainer-seat controls are live merely because the later
-  Founder migrations are present. Reconcile this migration's intended schema
-  and function state before merging or deploying related membership/coach
-  work.
-- The app tab used for the live check was back at the sign-in screen when the
-  focused Home and Settings review was attempted. The prior sign-in persistence
-  check remains valid, but an authenticated desktop and mobile Home/Settings
-  pass is still required.
+  `20260906103400_membership_plan_change_and_pt_seats`, and a read-only
+  production query confirms the gap: its three tables
+  (`plan_change_windows`, `trainer_premium_seat_pools`, and
+  `trainer_premium_grants`) and three functions
+  (`enforce_programme_change_window`, `get_my_plan_change_status`, and
+  `admin_grant_trainer_premium`) are absent. Do not merge or deploy related
+  membership/coach work until a reviewed, authorised forward application plan
+  is agreed.
+- Mobile authenticated Home and Settings QA remains required.
 
 ## Release status: HOLD
 
@@ -85,11 +91,14 @@ Do not merge or deploy this branch yet. Complete and record the following contro
 4. Verify the restricted internal functions are not callable through the
    public Data API while the `beta-verify` server path still completes
    allocation.
-5. Check mobile and desktop signup/account setup, plus authenticated Home and
-   Settings, on the deployed app.
+5. Check mobile signup/account setup and authenticated Home and Settings on
+   the deployed app; desktop Home and Settings has passed.
 6. Update the related Plane work items with this audit, the production smoke
    result, and the explicit merge decision.
 
 ## Plane note
 
-The local Plane server was unavailable during this audit, so its task update is pending. No Plane state was changed.
+`STEEL-108 — Release gate — reconcile Founder 20 production baseline` is now
+open as a high-priority Todo item. It contains the release hold, test evidence,
+acceptance criteria and confirmed migration gap. No production migration,
+deployment or merge was performed.
