@@ -29,19 +29,20 @@ For the complete delivered/active/planned record and implementation traceability
 
 - [~] Define a single activity data model for steps, distance, active calories,
   workout minutes, source, timestamp and confidence. The additive schema and
-  source-selection policy are prepared locally; applying the migration and
-  implementing imports remain separately controlled.
+  source-selection policy were applied to production on 13 September;
+  implementing native imports remains separately controlled.
 - [~] Add a **Connect activity tracker** area in Settings with clear statuses:
   Not connected, Connected, Sync issue and Disconnected. The truthful local UI
   is ready; native provider connections remain planned.
 - [~] Build the steps dashboard: today, seven-day logged average, daily goal,
-  trend and source label are implemented locally. Profile migration application,
-  build validation and deployment remain separately controlled.
+  trend and source label are implemented locally. The profile migration was
+  applied to production on 13 September; build validation and deployment remain.
 - [x] Add manual step entry as a fallback; deployed and user-verified.
 - [x] Make the Home-page steps card use this same source of truth, with an authenticated manual fallback and tracker-source priority.
 - [~] Add consent, disconnect, imported-data deletion and last-sync status:
   locally implemented with explicit confirmation, manual-data preservation and
-  an owner-scoped, atomic deletion migration awaiting separate remote approval.
+  an owner-scoped, atomic deletion migration applied to production on
+  13 September. Web deployment remains separately controlled.
 - [ ] Build Apple Health integration for iPhone.
 - [ ] Build Android Health Connect integration for Android.
 - [~] Prevent duplicate counting across sources: manual versus future tracker priority is complete; native cross-device deduplication remains.

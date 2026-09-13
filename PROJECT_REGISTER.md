@@ -90,20 +90,21 @@ Last reconciled: 13 September 2026. This is the durable product record alongside
 - [~] Define a unified activity model: the additive daily-record and
   connection/consent contract, deterministic source-selection policy, local
   migrations and helper tests are prepared. Owner-only connection policies,
-  authenticated API grants and a non-privileged deletion function are included;
-  remote migration application and native-import implementation remain outstanding.
+  authenticated API grants and a non-privileged deletion function were applied
+  to production on 13 September; native-import implementation remains outstanding.
 - [~] Make the Settings tracker area use truthful connection states: Not connected,
   Connected, Sync issue and Disconnected are rendered locally, with no provider
   presented as connected before native consent and a real provider connection.
 - [~] Build the steps dashboard: Home now shows today, 30-day trend, source
   label and manual entry. The seven-day logged average, goal progress and
-  member-owned daily goal are implemented locally and await the separately
-  controlled profile migration, build validation and deployment.
+  member-owned daily goal are implemented locally. The profile migration was
+  applied to production on 13 September; build validation and deployment remain.
 - [x] Add manual entry as the clear fallback and use the same data source on Home; deployed and verified by user.
 - [~] Add consent, disconnect, imported-data deletion and last-sync status: local
   controls show connection state and last successful sync, keep imported data on
   disconnect, and separately confirm atomic deletion of a provider’s imported
-  records while preserving manual entries. The migration is not applied remotely.
+  records while preserving manual entries. The migration was applied to
+  production on 13 September; the web release remains local.
 - [~] Prevent double counting between sources: deterministic priority is live for manual vs future tracker records; cross-device deduplication remains for native integrations.
 - [ ] Plan native iPhone Apple Health implementation.
 - [ ] Plan native Android Health Connect implementation.
