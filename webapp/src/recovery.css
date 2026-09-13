@@ -15,6 +15,13 @@
 .health-integrations .health-provider:hover { transform: translateY(-1px); border-color: var(--steel-gold-dark); background: linear-gradient(145deg,#1a2028,#111923); }
 .health-integrations .health-provider strong, .health-integrations .health-provider span { overflow-wrap: anywhere; }
 .health-integrations .health-provider small { width: fit-content; max-width: 100%; white-space: normal; }
+.tracker-status-guide { display: grid; gap: 5px; padding: 12px; border: 1px solid var(--steel-line); border-radius: 12px; background: #0e1720; color: var(--steel-muted); font-size: .78rem; line-height: 1.45; }
+.tracker-status-guide strong { color: var(--steel-text); }
+.tracker-status-guide b { color: var(--steel-gold-2); font-weight: 800; }
+.health-integrations .health-provider em { color: var(--steel-muted); font-size: .62rem; font-style: normal; line-height: 1.35; }
+.tracker-connect-button { width: fit-content; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #514528; border-radius: 9px; padding: 7px 9px; background: #16130d; color: var(--steel-gold-2); font-size: .68rem; font-weight: 800; cursor: pointer; }
+.tracker-connect-button:hover { border-color: var(--steel-gold-dark); background: #201a10; }
+.tracker-connect-notice { margin: 0; padding: 10px 12px; border: 1px solid rgba(215,164,63,.35); border-radius: 10px; background: rgba(215,164,63,.08); color: #ead9ab !important; font-size: .78rem; }
 .reminder-form { font-size: .85rem; }
 .reminder-permission { display: flex; gap: 10px; align-items: center; padding: 12px; border: 1px solid var(--steel-line); border-radius: 12px; background: #0e1720; color: var(--steel-text); text-align: left; }
 .reminder-permission:hover:not(:disabled) { border-color: var(--steel-gold-dark); background: #171b1d; }
