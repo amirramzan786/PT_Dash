@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildDailySummary, buildTrainingRecommendation, dailyQuote } from '../src/lib/homeGuidance.js'
+import { buildAiCoachInsight, buildDailySummary, buildTrainingRecommendation, dailyQuote } from '../src/lib/homeGuidance.js'
 
 test('daily summary is time-aware and uses current training context', () => {
   const morning = buildDailySummary({ now: new Date(2026, 8, 4, 9), hasWorkout: true })
@@ -33,4 +33,13 @@ test('recommendation explains the signal and changes mode conservatively', () =>
 
   const partial = buildTrainingRecommendation({ checkin: { energy: null, sleep: null }, hasWorkout: true })
   assert.equal(partial.mode, 'TRAIN')
+})
+
+test('AI Coach insight is explainable, bounded and absent without an eligible signal', () => {
+  const insight = buildAiCoachInsight({ checkin: { energy: 2, sleep: 3, stress: 2, soreness: 2 }, hasWorkout: true })
+  assert.equal(insight.type, 'recovery_context')
+  assert.match(insight.observation, /energy 2\/5/)
+  assert.equal(insight.options.at(-1), 'Not now')
+  assert.equal(buildAiCoachInsight({ checkin: { energy: 4, sleep: 4 }, hasWorkout: true }), null)
+  assert.equal(buildAiCoachInsight({ checkin: null, hasWorkout: true }), null)
 })

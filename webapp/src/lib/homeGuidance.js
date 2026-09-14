@@ -62,3 +62,33 @@ export function buildTrainingRecommendation({ checkin = null, hasWorkout = false
   if (hasWorkout) return { mode: 'TRAIN', title: 'Start with the plan.', detail: 'No recent check-in is available, so Steel is using your active session as the starting point.', signals: ['active plan'] }
   return { mode: 'RECOVER', title: 'Build your starting point.', detail: 'No active session or recent check-in is available yet. Add a workout or weekly check-in to make this signal more useful.', signals: ['limited data'] }
 }
+
+export function buildAiCoachInsight({ checkin = null, hasWorkout = false }) {
+  if (!checkin) return null
+  const value = (input) => input == null || input === '' ? Number.NaN : Number(input)
+  const energy = value(checkin.energy)
+  const sleep = value(checkin.sleep)
+  const stress = value(checkin.stress)
+  const soreness = value(checkin.soreness)
+  const signals = []
+  if (Number.isFinite(energy)) signals.push(`energy ${energy}/5`)
+  if (Number.isFinite(sleep)) signals.push(`sleep ${sleep}/5`)
+  if (Number.isFinite(stress)) signals.push(`stress ${stress}/5`)
+  if (Number.isFinite(soreness)) signals.push(`soreness ${soreness}/5`)
+  if (!signals.length) return null
+
+  const recoveryLimited = (Number.isFinite(energy) && energy <= 2) || (Number.isFinite(sleep) && sleep <= 2)
+  const loadNeedsCare = (Number.isFinite(stress) && stress >= 4) || (Number.isFinite(soreness) && soreness >= 4)
+  if (!recoveryLimited && !loadNeedsCare) return null
+
+  return {
+    type: 'recovery_context',
+    confidence: 'Based on your latest weekly check-in',
+    title: 'Your recovery context has changed.',
+    observation: `Your latest check-in recorded ${signals.join(' · ')}.`,
+    uncertainty: 'I can’t tell from the log alone whether you need rest, a lighter session or simply a normal day.',
+    question: hasWorkout ? 'What feels most useful today?' : 'What would help you feel ready for your next session?',
+    options: ['Take a lighter session', 'Keep the plan', 'Not now'],
+    signals,
+  }
+}
