@@ -11,6 +11,18 @@ const config: CapacitorConfig = {
     // Keep the WebView on a secure scheme without relaxing mixed-content rules.
     scheme: 'https',
   },
+  plugins: {
+    SystemBars: {
+      // Capacitor injects the Android status/navigation insets as CSS
+      // variables so the app content never sits underneath the system bars.
+      insetsHandling: 'css',
+      initialViewportFitValueHint: 'cover',
+      // The Steel shell is dark and edge-to-edge, so keep the system-bar
+      // glyphs light enough to remain legible over the app background.
+      style: 'DARK',
+      hidden: false,
+    },
+  },
 }
 
 export default config
