@@ -41,6 +41,9 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
 - [x] Native Android safe-area handling now consumes Capacitor SystemBars insets
   for the top status bar and bottom navigation, preventing the app header from
   rendering underneath the emulator/device status bar.
+- [x] Android emulator WebView surfaces use an emulator-only software layer to
+  prevent stale composited tiles during SPA navigation; physical devices retain
+  hardware compositing.
 - [x] Home’s Today’s Direction card keeps its guidance copy and gold Start
   session action inside a visible, responsive panel on narrow Android screens.
 - [x] Home dashboard, welcome/training metrics, daily steps and weight cards, plus progress/weight navigation.
