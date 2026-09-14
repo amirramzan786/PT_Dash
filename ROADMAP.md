@@ -52,7 +52,9 @@ For the complete delivered/active/planned record and implementation traceability
   shell contains no health plugin or permission request; after local Xcode and
   Java/Android SDK setup, the app opened successfully in the iOS simulator and
   Android emulator on 14 September.
-- [ ] Design and build Apple Health integration for iPhone plus Android Health Connect (design tracked in Plane as STEEL-112).
+- [~] Design and build Apple Health integration for iPhone plus Android Health
+  Connect. STEEL-112 now records the read-only, foreground-only contract;
+  platform implementation remains gated on consent, RLS and fixture review.
 - [ ] Add Garmin after API partnership and commercial terms are approved.
 - [ ] Add WHOOP and Oura afterward, initially for activity/recovery data only.
 
