@@ -13,6 +13,7 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
 
 - Steel is evolving from a consumer fitness app into a broader platform. The existing app remains the client layer for Train, Fuel, Recover and Progress.
 - Steel Coach is the first paid platform product. Start with independent personal trainers and small coaching businesses, validate with one or two real coaches, and expand only after the core coach-client relationship proves useful and commercially viable.
+- Naming distinction: **Steel Coach** means the human PT/client relationship and consent-led coach workspace; **Atlas / Ask Atlas** is the current AI assistant; **Steel AI Coach** is the future paid, insight-first AI product and is not yet the human Coach workspace.
 - Coaches pay for operational leverage; invited clients keep ownership of their accounts and data.
 - Steel is an all-in-one home for training, meals, progress and future recovery data. It should learn from category-leading diary and coaching products, while keeping its own Project Steel experience, visual identity and implementation.
 - Mobile ease of use is a first-class acceptance criterion: planned meals should log quickly, food portions/ingredients stay editable, and manual work is a fallback rather than the default.
