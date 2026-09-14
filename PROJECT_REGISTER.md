@@ -41,6 +41,8 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
 - [x] Native Android safe-area handling now consumes Capacitor SystemBars insets
   for the top status bar and bottom navigation, preventing the app header from
   rendering underneath the emulator/device status bar.
+- [x] Home’s Today’s Direction card keeps its guidance copy and gold Start
+  session action inside a visible, responsive panel on narrow Android screens.
 - [x] Home dashboard, welcome/training metrics, daily steps and weight cards, plus progress/weight navigation.
 - [x] Consolidated Home steps and weight metrics to avoid duplicated summaries.
 - [x] Daily steps API/data field, authenticated manual fallback and source-aware Home/Progress selection (one authoritative daily record; no double-counting manual and future tracker data).

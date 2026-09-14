@@ -3,9 +3,10 @@ import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 
 test('mobile shell reserves the system status-bar safe area', async () => {
-  const [indexHtml, appCss, capacitorConfig] = await Promise.all([
+  const [indexHtml, appCss, appJsx, capacitorConfig] = await Promise.all([
     readFile(new URL('../index.html', import.meta.url), 'utf8'),
     readFile(new URL('../src/app-v2.css', import.meta.url), 'utf8'),
+    readFile(new URL('../src/AppV3.jsx', import.meta.url), 'utf8'),
     readFile(new URL('../capacitor.config.ts', import.meta.url), 'utf8'),
   ])
 
@@ -16,4 +17,17 @@ test('mobile shell reserves the system status-bar safe area', async () => {
   assert.match(capacitorConfig, /insetsHandling:\s*'css'/)
   assert.match(capacitorConfig, /initialViewportFitValueHint:\s*'cover'/)
   assert.match(capacitorConfig, /style:\s*'DARK'/)
+})
+
+test('home direction card stays visible on narrow screens', async () => {
+  const [appCss, appJsx] = await Promise.all([
+    readFile(new URL('../src/app-v2.css', import.meta.url), 'utf8'),
+    readFile(new URL('../src/AppV3.jsx', import.meta.url), 'utf8'),
+  ])
+
+  assert.match(appJsx, /className="home-direction-signal"/)
+  assert.match(appCss, /\.home-direction-card\s*\{[^}]*display:\s*grid/)
+  assert.match(appCss, /\.home-direction-card\s*\{[^}]*border:\s*1px solid rgba\(217,173,85,\.46\)/)
+  assert.match(appCss, /\.home-direction-actions\s*\{[^}]*justify-content:\s*flex-end/)
+  assert.match(appCss, /@media \(max-width: 520px\) \{[\s\S]*?\.home-direction-actions\s*\{[^}]*width:\s*100%/)
 })

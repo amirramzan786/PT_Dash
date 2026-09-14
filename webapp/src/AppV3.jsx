@@ -116,7 +116,7 @@ function PersonalisedJourneyCard({ workouts, preferences, navigateToTab, onStart
 }
 
 function HomeDirectionCard({ summary, recommendation, hasWorkout, onStartWorkout }) {
-  return <section className="home-direction-card"><div className="home-direction-header"><div><span className="eyebrow">TODAY’S DIRECTION</span><h3>{summary.title}</h3></div><span className={`direction-mode direction-${recommendation.mode.toLowerCase()}`}>{recommendation.mode}</span></div>{hasWorkout && recommendation.mode !== 'RECOVER' && <div className="home-direction-actions"><button type="button" className="gold-button" onClick={onStartWorkout}><Play size={16}/> Start session</button></div>}</section>
+  return <section className="home-direction-card"><div className="home-direction-header"><div><span className="eyebrow">TODAY’S DIRECTION</span><h3>{summary.title}</h3><p>{summary.detail}</p></div><span className={`direction-mode direction-${recommendation.mode.toLowerCase()}`}>{recommendation.mode}</span></div><div className="home-direction-signal"><div><span className="eyebrow">STEEL SIGNAL</span><strong>{recommendation.title}</strong><p>{recommendation.detail}</p></div></div>{hasWorkout && recommendation.mode !== 'RECOVER' && <div className="home-direction-actions"><button type="button" className="gold-button" onClick={onStartWorkout}><Play size={16}/> Start session</button></div>}</section>
 }
 
 function nextCheckinDate(checkinDay = 0, submittedAt) {
