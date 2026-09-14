@@ -58,6 +58,7 @@ test('native activity records are date-normalised, deduplicated and provider-sco
   })
   assert.deepEqual(buildImportedActivityRows([], 'apple_health'), [])
   assert.throws(() => normalizeImportedActivityRecord({ metric: 'sleep', value: 1, step_date: '2026-09-06' }, 'apple_health'), /unsupported metric/i)
+  assert.throws(() => normalizeImportedActivityRecord({ metric: 'steps', step_date: '2026-09-06' }, 'apple_health'), /value is required/i)
 })
 
 test('native activity dates honour the supplied IANA timezone across UTC boundaries', () => {

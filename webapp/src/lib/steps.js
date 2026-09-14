@@ -85,6 +85,7 @@ export function normalizeImportedActivityRecord(record = {}, provider) {
   const timeZone = String(record.time_zone || record.timezone || '').trim()
   const stepDate = String(record.step_date || record.local_day || record.day || '').trim() || datePartsForZone(record.start_at || record.observed_at, timeZone)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(stepDate)) throw new Error('Activity record has an invalid local date.')
+  if (normalized[metric] === null) throw new Error('Activity record value is required.')
   return {
     source,
     metric,
