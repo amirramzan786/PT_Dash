@@ -132,6 +132,10 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
 
 ## Planned — Sprint 03: training intelligence and product polish
 
+- [~] Design Steel AI Coach: a paid, evidence-led guidance layer that flags
+  explainable progress patterns, asks for context and offers member-approved
+  actions. It begins insight-only and remains non-diagnostic, transparent and
+  fully optional.
 - [ ] Session RPE, soreness and energy check-in.
 - [ ] Transparent recommendation states: train as planned, reduce volume, or consider recovery; PT-controlled.
 - [ ] Ensure every generated workout has an appropriate image instead of a generic custom-session fallback.

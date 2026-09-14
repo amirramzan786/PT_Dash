@@ -65,6 +65,9 @@ For the complete delivered/active/planned record and implementation traceability
 
 ## Training and nutrition intelligence
 
+- [~] Design Steel AI Coach as a paid, insight-first guidance layer: deterministic
+  signals, context questions, explicit member approval, audit trail, consent and
+  staged paid validation must precede adaptive plan changes.
 - [ ] Introduce workout-day and rest-day nutrition targets.
 - [ ] Add weekly calorie and macro adherence views.
 - [ ] Show weight rate-of-change rather than day-to-day judgement.
