@@ -137,9 +137,13 @@ support burden → limited paid trial → only then opt-in assisted changes.
 
 ## Work split after this design
 
-1. Define aggregate signal contracts and test fixtures.
+1. Define aggregate signal contracts and test fixtures. **In progress:** the
+   first owner-scoped `ai-coach-aggregate-v1` read model is drafted locally and
+   covers latest recovery context plus coarse recent activity counts; it does
+   not expose free text or write any insight state.
 2. Define consent, deletion, audit and entitlement schema.
-3. Build the server-side deterministic insight evaluator.
+3. Build the server-side deterministic insight evaluator on top of the approved
+   aggregate boundary.
 4. Build the member insight/check-in interface in insight-only mode.
 5. Add evaluation, safety review and staged feature flag.
 6. Consider approved action proposals only after the pilot meets reliability

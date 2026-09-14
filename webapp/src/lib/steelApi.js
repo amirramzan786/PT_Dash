@@ -530,6 +530,15 @@ export async function getLatestWeeklyCheckin(userId) {
   return data
 }
 
+// AI Coach reads a narrow, aggregate-only RPC. If the additive migration has
+// not reached an environment yet, callers can safely fall back to the normal
+// member-owned check-in read while the rest of the app remains usable.
+export async function getAiCoachAggregate() {
+  const { data, error } = await requireSupabase().rpc('get_my_ai_coach_aggregate')
+  if (error) throw error
+  return data || null
+}
+
 export async function getWeeklyCheckinHistory(userId, limit = 12) {
   const client = requireSupabase()
   const { data, error } = await client.from('weekly_checkins').select('id,week_start,energy,sleep,stress,soreness,weight_lb,waist_cm,chest_bust_cm,hips_cm,arm_cm,thigh_cm,workouts_completed,nutrition_days,pain_or_injury,wins,challenges,questions,submitted_at,created_at').eq('user_id', userId).order('week_start', { ascending: false }).limit(limit)

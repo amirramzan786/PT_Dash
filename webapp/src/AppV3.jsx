@@ -5,7 +5,7 @@ import {
   Send, ShieldCheck, Sparkles, Target, Trash2, UserRound, Watch, ListChecks, ClipboardCheck, X,
 } from 'lucide-react'
 import {
-  changePassword, deleteActivityProviderData, deleteMealLog, disconnectActivityProvider, getActivityConnections, getDashboardStats, getLatestWeeklyCheckin, getMealLogs, getProfile, getRecentSessions, getTodaySteps, getStepHistory, getWeightHistory, getWeeklyCheckinHistory, loadCoachRelationships,
+  changePassword, deleteActivityProviderData, deleteMealLog, disconnectActivityProvider, getActivityConnections, getAiCoachAggregate, getDashboardStats, getLatestWeeklyCheckin, getMealLogs, getProfile, getRecentSessions, getTodaySteps, getStepHistory, getWeightHistory, getWeeklyCheckinHistory, loadCoachRelationships,
   enrollAuthenticatorApp, getActiveGeneratedProgramme, getFounderStatus, getMfaFactors, getMyMembershipEntitlement, getMyPlanChangeStatus, getNutritionPlan, getProgrammeIntake, getProductUpdates, getWeeklyActivitySummary, loadExerciseCatalog, loadUserRole, loadWorkouts, markProductUpdatesRead, recordAlphaEvent, removeMfaFactor, replaceGeneratedProgramme, resetOnboarding, saveActivityConnection, saveImportedActivityRecords, saveCustomWorkout, saveMealLog, saveMealPlanItem, saveNutritionFoodEntry, saveNutritionMealComponents, saveProgrammeIntake, saveProfile, saveWeight, saveWeeklyCheckin as saveWeeklyCheckinRecord, saveWorkoutSession, sendOnboardingAiMessage, submitBetaFeedback, updateAccount, updateCustomWorkout, uploadAvatar, uploadCheckinMedia, verifyAuthenticatorApp,
 } from './lib/steelApi'
 import { buildGeneratedProgramme } from './lib/programmeGenerator'
@@ -878,6 +878,7 @@ export default function AppV3({ user, onSignOut }) {
   const [weights, setWeights] = useState([])
   const [sessions, setSessions] = useState([])
   const [weeklyCheckin, setWeeklyCheckin] = useState(null)
+  const [aiCoachAggregate, setAiCoachAggregate] = useState(null)
   const [weeklyActivity, setWeeklyActivity] = useState({ workoutsCompleted: 0, nutritionDays: 0 })
   const [checkinMedia, setCheckinMedia] = useState([])
   const [weeklyCheckinHistory, setWeeklyCheckinHistory] = useState([])
@@ -1009,11 +1010,11 @@ export default function AppV3({ user, onSignOut }) {
 
   async function refresh() {
     const { start, end } = currentWeekBounds()
-    const [programme, dashboard, todaySteps, stepHistoryRows, activityConnectionRows, history, recent, profileRow, intakeRow, latestCheckin, activitySummary, checkinHistory, role, activeGeneratedProgramme] = await Promise.all([
+    const [programme, dashboard, todaySteps, stepHistoryRows, activityConnectionRows, history, recent, profileRow, intakeRow, latestCheckin, activitySummary, checkinHistory, role, activeGeneratedProgramme, coachAggregate] = await Promise.all([
       loadWorkouts(user.id), getDashboardStats(user.id), getTodaySteps(user.id),
       getStepHistory(user.id, 30),
       getActivityConnections(user.id),
-      getWeightHistory(user.id, 30), getRecentSessions(user.id, 8), getProfile(user.id), getProgrammeIntake(user.id), getLatestWeeklyCheckin(user.id), getWeeklyActivitySummary(user.id, start, end), getWeeklyCheckinHistory(user.id), loadUserRole(user.id).catch(() => 'user'), getActiveGeneratedProgramme(user.id),
+      getWeightHistory(user.id, 30), getRecentSessions(user.id, 8), getProfile(user.id), getProgrammeIntake(user.id), getLatestWeeklyCheckin(user.id), getWeeklyActivitySummary(user.id, start, end), getWeeklyCheckinHistory(user.id), loadUserRole(user.id).catch(() => 'user'), getActiveGeneratedProgramme(user.id), getAiCoachAggregate().catch(() => null),
     ])
     const resolvedPreferences = { goal: profileRow?.goal || 'Lose fat and gain muscle', experienceLevel: profileRow?.experience_level || 'Intermediate', availableEquipment: profileRow?.available_equipment?.length ? profileRow.available_equipment : ['Machines'], trainingDays: Number(profileRow?.training_days || 3), checkinDay: Number(profileRow?.checkin_day ?? 0), units: profileRow?.units || 'lb', dailyStepGoal: Number(profileRow?.daily_step_goal || 10000), limitations: profileRow?.limitations || '', dietaryPreference: profileRow?.dietary_preference || 'No preference', allergies: profileRow?.allergies || '', mealsPerDay: Number(profileRow?.meals_per_day || 3), snacksEnabled: profileRow?.snacks_enabled !== false, snackPreferences: Array.isArray(profileRow?.snack_preferences) ? profileRow.snack_preferences : [], goalTimeframeWeeks: Number(intakeRow?.goal_timeframe_weeks || 12), sessionDurationMin: Number(intakeRow?.session_duration_min || 45), trainingLocation: intakeRow?.training_location || 'Gym', currentTrainingDays: intakeRow?.current_training_days ?? '', dailyActivityLevel: intakeRow?.daily_activity_level || '', sleepQuality: intakeRow?.sleep_quality ?? '', trainingStyles: intakeRow?.training_styles || [], exercisePreferences: intakeRow?.exercise_preferences || '', exerciseAvoidances: intakeRow?.exercise_avoidances || '', cardioPreference: intakeRow?.cardio_preference || 'No preference', cardioExperience: intakeRow?.cardio_experience || 'Beginner', cardioSessions: Number(intakeRow?.cardio_sessions || 0), cookingTime: intakeRow?.cooking_time || '', preferredFoods: intakeRow?.preferred_foods || '' }
     let visibleProgramme = programme
@@ -1027,7 +1028,7 @@ export default function AppV3({ user, onSignOut }) {
         console.warn('Personalised programme was not generated', error)
       }
     }
-    setWorkouts(visibleProgramme); setStats(dashboard); setSteps(todaySteps); setStepHistory(stepHistoryRows); setActivityConnections(activityConnectionRows); setWeights(history); setSessions(recent); setWeeklyCheckin(latestCheckin); setWeeklyCheckinHistory(checkinHistory); setWeeklyActivity(activitySummary); setProfile(profileRow); setUserRole(role)
+    setWorkouts(visibleProgramme); setStats(dashboard); setSteps(todaySteps); setStepHistory(stepHistoryRows); setActivityConnections(activityConnectionRows); setWeights(history); setSessions(recent); setWeeklyCheckin(latestCheckin); setAiCoachAggregate(coachAggregate); setWeeklyCheckinHistory(checkinHistory); setWeeklyActivity(activitySummary); setProfile(profileRow); setUserRole(role)
     setPreferences(resolvedPreferences)
     const fallbackName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Account'
     setProfileName(profileRow?.display_name || fallbackName)
@@ -1076,7 +1077,8 @@ export default function AppV3({ user, onSignOut }) {
   const nextCheckin = nextCheckinDate(preferences.checkinDay, weeklyCheckin?.submitted_at)
   const dailySummary = useMemo(() => buildDailySummary({ todaySteps, latestSessionDate: stats.latestSession?.session_date, hasWorkout: workouts.length > 0 }), [stats.latestSession?.session_date, todaySteps, workouts.length])
   const trainingRecommendation = useMemo(() => buildTrainingRecommendation({ checkin: weeklyCheckin, hasWorkout: workouts.length > 0 }), [weeklyCheckin, workouts.length])
-  const aiCoachInsight = useMemo(() => buildAiCoachInsight({ checkin: weeklyCheckin, hasWorkout: workouts.length > 0 }), [weeklyCheckin, workouts.length])
+  const aiCoachCheckin = aiCoachAggregate?.latest_checkin || weeklyCheckin
+  const aiCoachInsight = useMemo(() => buildAiCoachInsight({ checkin: aiCoachCheckin, hasWorkout: workouts.length > 0 }), [aiCoachCheckin, workouts.length])
 
   async function refreshSteps() {
     const [today, history] = await Promise.all([getTodaySteps(user.id), getStepHistory(user.id)])

@@ -170,6 +170,11 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
   insight-only recovery-context card reads the latest weekly check-in, explains
   the evidence and uncertainty, asks one bounded question and records no plan
   change until a later approved action workflow exists.
+- [~] AI Coach aggregate read-model boundary is drafted locally: an
+  owner-scoped, read-only RPC exposes only recovery metrics and coarse recent
+  training, nutrition and weight counts. It is not applied to the remote
+  Supabase project yet; the browser falls back safely until that migration is
+  reviewed and approved.
 - [ ] Session RPE, soreness and energy check-in.
 - [ ] Transparent recommendation states: train as planned, reduce volume, or consider recovery; PT-controlled.
 - [ ] Ensure every generated workout has an appropriate image instead of a generic custom-session fallback.

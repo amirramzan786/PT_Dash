@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test scripts/test-beta-signup.mjs scripts/test-coach-relationship.mjs scripts/test-coach-ui.mjs scripts/test-home-guidance.mjs scripts/test-mobile-shell.mjs scripts/test-native-bridge.mjs scripts/test-programme-generator.mjs scripts/test-recovery.mjs scripts/test-snack-choices.mjs",
+    "test": "node --test scripts/test-ai-coach-aggregate.mjs scripts/test-beta-signup.mjs scripts/test-coach-relationship.mjs scripts/test-coach-ui.mjs scripts/test-home-guidance.mjs scripts/test-mobile-shell.mjs scripts/test-native-bridge.mjs scripts/test-programme-generator.mjs scripts/test-recovery.mjs scripts/test-snack-choices.mjs",
     "native:build": "npm run build",
     "native:sync": "npm run native:build && cap sync",
     "native:ios": "npm run native:sync && cap open ios",
