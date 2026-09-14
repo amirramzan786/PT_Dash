@@ -837,6 +837,25 @@ export async function getActivityConnections(userId) {
   return data ?? []
 }
 
+export async function saveActivityConnection(userId, { provider, status = 'connected', scopes = [], consentedAt = new Date().toISOString(), lastSyncedAt = new Date().toISOString(), lastErrorAt = null, lastErrorCode = null }) {
+  if (!isActivityProvider(provider)) throw new Error('That activity provider is not supported.')
+  const { data, error } = await requireSupabase().from('activity_connections').upsert({
+    user_id: userId,
+    provider,
+    status,
+    scopes: [...new Set(scopes.map((scope) => String(scope).trim().toLowerCase()).filter(Boolean))],
+    consented_at: consentedAt,
+    consent_version: 'native-activity-v1',
+    last_synced_at: lastSyncedAt,
+    last_error_at: lastErrorAt,
+    last_error_code: lastErrorCode,
+    disconnected_at: null,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'user_id,provider' }).select('provider,status,scopes,consented_at,consent_version,last_synced_at,last_error_at,last_error_code,disconnected_at,imported_data_deleted_at,updated_at').single()
+  if (error) throw error
+  return data
+}
+
 export async function disconnectActivityProvider(userId, provider) {
   if (!isActivityProvider(provider)) throw new Error('That activity provider is not supported.')
   const now = new Date().toISOString()

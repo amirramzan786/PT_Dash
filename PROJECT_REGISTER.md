@@ -123,8 +123,10 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
   (STEEL-112). The first contract is read-only steps and workout minutes with
   foreground-only consent. The design is approved for implementation, and
   STEEL-113 now contains the compiling iOS HealthKit bridge plus its fixture and
-  web contract test; the build has launched successfully in the iPhone 17 Pro
-  simulator, while permission/revocation QA remains pending the product UI.
+  web contract test; STEEL-116 adds the native consent panel, bounded seven-day
+  activity read, owner-scoped connection persistence, and settings recovery.
+  The build launches successfully in the iPhone 17 Pro simulator, while real
+  permission/revocation QA and authenticated record ingest remain pending.
   The execution
   breakdown is tracked in STEEL-113 (iOS bridge), STEEL-114 (Android bridge),
   STEEL-115 (authenticated ingest/RLS tests), and STEEL-116 (native consent UI
