@@ -187,7 +187,10 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
   It covers invitation, acceptance, consent, active, pause, switching,
   revocation and expiry; idempotency and one-active-Coach rules; durable client
   ownership; and RLS/lifecycle test cases. Pilot review and the eventual
-  relationship migration remain pending.
+  relationship migration remain pending. A local additive migration now
+  defines the relationship table, consent-gated transition RPCs, fail-closed
+  `private.is_trainer_for` enforcement and a sanitised relationship read
+  function; it has not been applied remotely.
 - **Sprint 06 — Coach-client operations MVP:** onboarding, secure invitations, client roster, useful check-ins, messaging, programme assignment and controlled revisions.
 - **Sprint 07 — Retention, communication and education:** missed-check-in automation, availability and local-time rules, progressive education, retention-risk signals and communication audit history.
 - **Sprint 08 — Bookings, subscriptions and paid pilot:** diary/availability, consultations, packages, sponsored seats, payment boundaries, support runbook and paid-pilot evaluation.
