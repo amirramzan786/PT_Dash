@@ -18,7 +18,7 @@ button, input, select { font: inherit; }
 button { cursor: pointer; }
 
 .steel-app { min-height: 100vh; max-width: 760px; margin: 0 auto; padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
-.steel-screen { padding: 15px 14px 28px; }
+.steel-screen { padding: calc(15px + env(safe-area-inset-top, 0px)) 14px 28px; }
 .page-stack { display: grid; gap: 12px; }
 .eyebrow { color: var(--steel-muted); font-size: .68rem; font-weight: 850; letter-spacing: .14em; }
 .gold-kicker { color: var(--steel-gold-2); font-size: .72rem; font-weight: 900; letter-spacing: .13em; }
@@ -744,7 +744,7 @@ button { cursor: pointer; }
 }
 
 @media (min-width: 700px) {
-  .steel-screen { padding: 24px 22px 42px; }
+  .steel-screen { padding: calc(24px + env(safe-area-inset-top, 0px)) 22px 42px; }
   .hero-panel { grid-template-columns: 1fr 160px; }
   .plan-block { display: grid; grid-template-columns: 180px 1fr; }
   .plan-image { min-height: 100%; align-items: center; flex-direction: column; justify-content: center; gap: 14px; }
