@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import {
   changePassword, deleteActivityProviderData, deleteMealLog, disconnectActivityProvider, getActivityConnections, getDashboardStats, getLatestWeeklyCheckin, getMealLogs, getProfile, getRecentSessions, getTodaySteps, getStepHistory, getWeightHistory, getWeeklyCheckinHistory,
-  enrollAuthenticatorApp, getActiveGeneratedProgramme, getFounderStatus, getMfaFactors, getMyMembershipEntitlement, getMyPlanChangeStatus, getNutritionPlan, getProgrammeIntake, getProductUpdates, getWeeklyActivitySummary, loadExerciseCatalog, loadUserRole, loadWorkouts, markProductUpdatesRead, recordAlphaEvent, removeMfaFactor, replaceGeneratedProgramme, resetOnboarding, saveActivityConnection, saveCustomWorkout, saveMealLog, saveMealPlanItem, saveNutritionFoodEntry, saveNutritionMealComponents, saveProgrammeIntake, saveProfile, saveWeight, saveWeeklyCheckin as saveWeeklyCheckinRecord, saveWorkoutSession, sendOnboardingAiMessage, submitBetaFeedback, updateAccount, updateCustomWorkout, uploadAvatar, uploadCheckinMedia, verifyAuthenticatorApp,
+  enrollAuthenticatorApp, getActiveGeneratedProgramme, getFounderStatus, getMfaFactors, getMyMembershipEntitlement, getMyPlanChangeStatus, getNutritionPlan, getProgrammeIntake, getProductUpdates, getWeeklyActivitySummary, loadExerciseCatalog, loadUserRole, loadWorkouts, markProductUpdatesRead, recordAlphaEvent, removeMfaFactor, replaceGeneratedProgramme, resetOnboarding, saveActivityConnection, saveImportedActivityRecords, saveCustomWorkout, saveMealLog, saveMealPlanItem, saveNutritionFoodEntry, saveNutritionMealComponents, saveProgrammeIntake, saveProfile, saveWeight, saveWeeklyCheckin as saveWeeklyCheckinRecord, saveWorkoutSession, sendOnboardingAiMessage, submitBetaFeedback, updateAccount, updateCustomWorkout, uploadAvatar, uploadCheckinMedia, verifyAuthenticatorApp,
 } from './lib/steelApi'
 import { buildGeneratedProgramme } from './lib/programmeGenerator'
 import { buildDailySummary, buildTrainingRecommendation, dailyQuote } from './lib/homeGuidance'
@@ -1065,8 +1065,9 @@ export default function AppV3({ user, onSignOut }) {
     setActivityConnections(await getActivityConnections(user.id))
   }
 
-  async function handleConnectActivityProvider({ provider, status, scopes }) {
-    const connection = await saveActivityConnection(user.id, { provider, status, scopes })
+  async function handleConnectActivityProvider({ provider, status, scopes, records }) {
+    const imported = await saveImportedActivityRecords(user.id, provider, records || [])
+    const connection = await saveActivityConnection(user.id, { provider, status, scopes, lastSyncedAt: imported.length ? new Date().toISOString() : null })
     setActivityConnections((current) => [...current.filter((item) => item.provider !== provider), connection])
     return connection
   }

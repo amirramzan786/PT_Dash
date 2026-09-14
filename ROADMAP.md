@@ -56,9 +56,11 @@ For the complete delivered/active/planned record and implementation traceability
   Connect. STEEL-112 records the read-only, foreground-only contract, STEEL-113
   has the compiling iOS HealthKit bridge, and STEEL-116 now provides the native
   consent panel, bounded seven-day activity read, connection persistence and
-  settings recovery. The build launches successfully in the iPhone 17 Pro
-  simulator; real permission/revocation QA and authenticated record ingest remain
-  pending. Delivery is split into STEEL-113
+  settings recovery. STEEL-115 now normalizes and deduplicates native records
+  into owner-scoped daily rows and includes a reviewed RLS-hardening migration
+  that is not yet applied remotely. The build launches successfully in the
+  iPhone 17 Pro simulator; real permission/revocation QA and remote migration
+  review remain pending. Delivery is split into STEEL-113
   (iOS bridge), STEEL-114 (Android bridge), STEEL-115 (authenticated ingest/RLS
   tests), and STEEL-116 (consent UI and revocation recovery), all in Sprint 04.
 - [ ] Add Garmin after API partnership and commercial terms are approved.

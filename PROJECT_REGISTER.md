@@ -125,8 +125,11 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
   STEEL-113 now contains the compiling iOS HealthKit bridge plus its fixture and
   web contract test; STEEL-116 adds the native consent panel, bounded seven-day
   activity read, owner-scoped connection persistence, and settings recovery.
-  The build launches successfully in the iPhone 17 Pro simulator, while real
-  permission/revocation QA and authenticated record ingest remain pending.
+  STEEL-115 now normalizes and deduplicates provider records into owner-scoped
+  daily rows, preserves manual rows, and includes a reviewed RLS-hardening
+  migration that is not yet applied remotely. The build launches successfully
+  in the iPhone 17 Pro simulator, while real permission/revocation QA and
+  remote migration review remain pending.
   The execution
   breakdown is tracked in STEEL-113 (iOS bridge), STEEL-114 (Android bridge),
   STEEL-115 (authenticated ingest/RLS tests), and STEEL-116 (native consent UI

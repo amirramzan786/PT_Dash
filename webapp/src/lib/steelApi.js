@@ -1,5 +1,5 @@
 import { supabase, supabaseConfigured } from './supabase'
-import { localDay, validateDailyStepGoal, validateSteps, preferredSteps, dailyStepHistory } from './steps'
+import { buildImportedActivityRows, localDay, validateDailyStepGoal, validateSteps, preferredSteps, dailyStepHistory } from './steps'
 import { normalizeReminders } from './reminders'
 import { isActivityProvider } from './activityConnections'
 
@@ -826,6 +826,55 @@ export async function saveManualSteps(userId, value) {
   const now = new Date()
   const { data, error } = await client.from('daily_steps').upsert({ user_id: userId, step_date: localDay(now), steps, source: 'manual', synced_at: now.toISOString(), updated_at: now.toISOString() }, { onConflict: 'user_id,step_date,source' }).select('steps,source,synced_at').single()
   if (error) throw error
+  return data
+}
+
+/**
+ * Persist provider-neutral native activity as owner-scoped daily summaries.
+ * The browser only uses the publishable Supabase client; RLS remains the
+ * final authority for user ownership. One row per provider/day preserves the
+ * existing source-selection and manual fallback model while stable daily IDs
+ * make retries safe.
+ */
+export async function saveImportedActivityRecords(userId, provider, records) {
+  if (!userId) throw new Error('An authenticated user is required.')
+  if (!isActivityProvider(provider)) throw new Error('That activity provider is not supported.')
+  const rows = buildImportedActivityRows(records, provider)
+  if (!rows.length) return []
+
+  const client = requireSupabase()
+  const dates = rows.map(({ step_date: stepDate }) => stepDate)
+  const { data: existing, error: existingError } = await client.from('daily_steps')
+    .select('step_date,steps,source,distance_m,active_calories_kcal,workout_minutes,observed_at,source_record_id,timezone,confidence')
+    .eq('user_id', userId)
+    .eq('source', provider)
+    .in('step_date', dates)
+  if (existingError) throw existingError
+
+  const existingByDate = new Map((existing || []).map((row) => [row.step_date, row]))
+  const syncedAt = new Date().toISOString()
+  const payload = rows.map((row) => {
+    const previous = existingByDate.get(row.step_date)
+    return {
+      user_id: userId,
+      step_date: row.step_date,
+      source: provider,
+      steps: row.steps ?? previous?.steps ?? 0,
+      distance_m: row.distance_m ?? previous?.distance_m ?? null,
+      active_calories_kcal: row.active_calories_kcal ?? previous?.active_calories_kcal ?? null,
+      workout_minutes: row.workout_minutes ?? previous?.workout_minutes ?? null,
+      observed_at: row.observed_at || previous?.observed_at || null,
+      source_record_id: row.source_record_id,
+      timezone: row.timezone || previous?.timezone || null,
+      confidence: row.confidence ?? previous?.confidence ?? null,
+      synced_at: syncedAt,
+      updated_at: syncedAt,
+    }
+  })
+  const { data, error } = await client.from('daily_steps').upsert(payload, { onConflict: 'user_id,step_date,source' })
+    .select('step_date,steps,source,distance_m,active_calories_kcal,workout_minutes,observed_at,source_record_id,timezone,confidence,synced_at,updated_at')
+  if (error) throw error
+  if (!Array.isArray(data) || data.length !== payload.length) throw new Error('Activity sync returned an incomplete result.')
   return data
 }
 

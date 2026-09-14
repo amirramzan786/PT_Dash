@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import test from 'node:test'
-import { activitySourcePriority, dailyActivityHistory, localDay, normalizeActivityRecord, sevenDayStepAverage, stepGoalProgress, validateDailyStepGoal, validateSteps, preferredActivity, preferredSteps, dailyStepHistory } from '../src/lib/steps.js'
+import { activitySourcePriority, buildImportedActivityRows, dailyActivityHistory, localDay, normalizeActivityRecord, normalizeImportedActivityRecord, sevenDayStepAverage, stepGoalProgress, validateDailyStepGoal, validateSteps, preferredActivity, preferredSteps, dailyStepHistory } from '../src/lib/steps.js'
 import { normalizeReminders, dueReminders } from '../src/lib/reminders.js'
 import { activityConnectionState, formatActivityTimestamp, isActivityProvider } from '../src/lib/activityConnections.js'
 
@@ -40,6 +41,36 @@ test('activity selection is deterministic and honours a chosen source', () => {
   assert.equal(preferredActivity(rows, { preferredSource: 'garmin' }).steps, 6200)
   assert.ok(activitySourcePriority('apple_health') > activitySourcePriority('manual'))
   assert.deepEqual(dailyActivityHistory(rows).map(row => row.steps), [6100])
+})
+
+test('native activity records are date-normalised, deduplicated and provider-scoped', () => {
+  const rows = buildImportedActivityRows([
+    { metric: 'steps', value: 4100, start_at: '2026-09-05T23:30:00Z', observed_at: '2026-09-06T00:00:00Z', time_zone: 'Europe/London', source_record_id: 'apple_health:2026-09-06:steps:v1', confidence: 0.9 },
+    { metric: 'steps', value: 4100, start_at: '2026-09-05T23:30:00Z', observed_at: '2026-09-06T00:00:00Z', time_zone: 'Europe/London', source_record_id: 'apple_health:2026-09-06:steps:v1', confidence: 0.9 },
+    { metric: 'workout_minutes', value: 45, start_at: '2026-09-06T12:00:00Z', observed_at: '2026-09-06T13:00:00Z', time_zone: 'Europe/London', source_record_id: 'apple_health:2026-09-06:workout_minutes:v1', confidence: 0.9 },
+  ], 'apple_health')
+  assert.equal(rows.length, 1)
+  assert.deepEqual(rows[0], {
+    step_date: '2026-09-06', source: 'apple_health', steps: 4100, distance_m: null, active_calories_kcal: null, workout_minutes: 45,
+    observed_at: '2026-09-06T13:00:00Z', timezone: 'Europe/London', confidence: 0.9,
+    source_record_id: 'apple_health:2026-09-06:daily:v1',
+    source_record_ids: ['apple_health:2026-09-06:steps:v1', 'apple_health:2026-09-06:workout_minutes:v1'],
+  })
+  assert.deepEqual(buildImportedActivityRows([], 'apple_health'), [])
+  assert.throws(() => normalizeImportedActivityRecord({ metric: 'sleep', value: 1, step_date: '2026-09-06' }, 'apple_health'), /unsupported metric/i)
+})
+
+test('native activity dates honour the supplied IANA timezone across UTC boundaries', () => {
+  const [row] = buildImportedActivityRows([{ metric: 'steps', value: 100, start_at: '2026-11-01T04:30:00Z', observed_at: '2026-11-01T05:00:00Z', time_zone: 'America/New_York' }], 'apple_health')
+  assert.equal(row.step_date, '2026-11-01')
+})
+
+test('activity ingest migration closes the source vocabulary and scopes RLS to authenticated owners', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20260914090000_activity_ingest_hardening.sql', import.meta.url), 'utf8')
+  assert.match(migration, /daily_steps_source_allowed/)
+  assert.match(migration, /for select to authenticated using \(\(select auth\.uid\(\)\) = user_id\)/)
+  assert.match(migration, /for update to authenticated[\s\S]*with check \(\(select auth\.uid\(\)\) = user_id\)/)
+  assert.doesNotMatch(migration, /security definer/i)
 })
 
 test('step goals and seven-day averages make missing data explicit', () => {
