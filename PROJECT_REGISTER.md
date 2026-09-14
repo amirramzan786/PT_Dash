@@ -113,6 +113,10 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
   the existing React/Vite client, with narrow first-party HealthKit (Swift) and
   Health Connect (Kotlin) bridges. The decision preserves explicit consent,
   manual-data protection and a foreground-only first pilot.
+- [~] Establish the Capacitor mobile-shell foundation: iOS and Android shells,
+  shared build/sync commands and an inert native bridge boundary are in the
+  repository. Health permissions, device data, production package registration
+  and mobile-auth redirects remain deliberately out of scope.
 - [ ] Plan native iPhone Apple Health implementation.
 - [ ] Plan native Android Health Connect implementation.
 
