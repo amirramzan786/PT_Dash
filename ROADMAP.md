@@ -104,7 +104,10 @@ bookings or insight data.
 - [ ] Build sleep dashboard: duration, stages, consistency, HRV and resting heart rate.
 - [ ] Build Steel Readiness with a transparent explanation of its inputs.
 - [ ] Offer deload suggestions from trends, never injury predictions.
-- [ ] Deliver closed-app notifications and scheduled background sync.
+- [~] Deliver native local notifications from saved reminder preferences while
+  the iOS and Android shells are backgrounded or closed. Server push and
+  scheduled background sync remain deferred until demand and platform gates
+  justify them; STEEL-119 still needs real trigger QA and exact-alarm review.
 
 ## Existing platform work still required
 

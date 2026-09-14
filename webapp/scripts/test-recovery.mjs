@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 import { activitySourcePriority, buildImportedActivityRows, dailyActivityHistory, localDay, normalizeActivityRecord, normalizeImportedActivityRecord, sevenDayStepAverage, stepGoalProgress, validateDailyStepGoal, validateSteps, preferredActivity, preferredSteps, dailyStepHistory } from '../src/lib/steps.js'
-import { normalizeReminders, dueReminders } from '../src/lib/reminders.js'
+import { buildNativeReminderSchedules, nativeReminderIds, normalizeReminders, dueReminders } from '../src/lib/reminders.js'
 import { activityConnectionState, formatActivityTimestamp, isActivityProvider } from '../src/lib/activityConnections.js'
 
 test('steps accept zero but reject blank, fractions, negative and excessive totals', () => {
@@ -112,4 +112,17 @@ test('reminders respect selected days and deduplicate all three on the same day'
   assert.deepEqual(dueReminders(settings, now, sent), [])
   assert.deepEqual(dueReminders(settings, new Date(2026, 8, 8, 18, 0)), ['meal', 'motivation'])
   assert.deepEqual(dueReminders(settings, new Date(2026, 8, 7, 18, 1)), [])
+})
+
+test('native reminder schedules use stable IDs and device-local weekday semantics', () => {
+  const schedules = buildNativeReminderSchedules({
+    workout: { enabled: true, time: '07:05', days: [0, 2] },
+    meal: { enabled: true, time: '20:30' },
+    motivation: { enabled: false },
+  })
+  assert.deepEqual(schedules.slice(0, 2).map(({ id }) => id), [1100, 1102])
+  assert.deepEqual(schedules[0].schedule, { on: { weekday: 1, hour: 7, minute: 5 }, allowWhileIdle: true })
+  assert.equal(schedules.filter(({ extra }) => extra.reminder === 'meal').length, 7)
+  assert.equal(new Set(nativeReminderIds()).size, nativeReminderIds().length)
+  assert.equal(nativeReminderIds().length, 21)
 })

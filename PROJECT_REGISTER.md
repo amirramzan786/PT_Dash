@@ -54,10 +54,11 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
 - [x] Settings accordions for personal profile, training preferences, step integrations and reminders.
 - [x] Desktop collapsed-navigation hover tooltips.
 - [~] Configurable reminder preferences: workout, meal-completion and motivation
-  reminders with enable/disable and time controls are saved. Browser alerts
-  work only while Steel is open; native scheduled delivery for the iOS and
-  Android shells is tracked separately in the active S03 task and is not yet
-  implemented.
+  reminders with enable/disable and time controls are saved. The web fallback
+  uses browser alerts while Steel is open; the Capacitor iOS and Android shells
+  now schedule device-local weekly reminders with OS permission handling,
+  stable IDs and cancellation when preferences change. Real notification-trigger
+  QA and Android exact-alarm settings remain an explicit device gate in STEEL-119.
 
 ## Delivered — training, workout logging and exercise library
 
@@ -191,7 +192,9 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
 - [ ] Sleep dashboard: duration, stages, consistency, HRV and resting heart rate.
 - [ ] Steel Readiness with transparent inputs and no diagnostic/medical claims.
 - [ ] Deload suggestions from long-term trends, never injury predictions.
-- [ ] Closed-app notifications and scheduled background sync.
+- [~] Native local reminders now schedule while the iOS and Android shells are
+  backgrounded or closed. Server push and scheduled background sync remain
+  deferred until a later product decision.
 - [ ] Garmin Health integration — requires commercial partnership/API approval.
 - [ ] WHOOP integration — OAuth/data scopes and production access approval.
 - [ ] Oura integration — OAuth, webhook handling and production access approval.

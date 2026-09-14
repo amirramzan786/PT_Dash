@@ -1,15 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Bell, ChevronDown, Save } from 'lucide-react'
-import { normalizeReminders, dueReminders } from '../lib/reminders'
+import { normalizeReminders, dueReminders, reminderCopy } from '../lib/reminders'
+import { getNativeReminderPermission, isNativeReminderRuntime, requestNativeReminderPermission, syncNativeReminders } from '../lib/nativeNotifications'
 import { localDay } from '../lib/steps'
 import { saveNotificationPreferences } from '../lib/steelApi'
 
-const labels = { workout: 'Workout reminder', meal: 'Meal completion reminder', motivation: 'Morning motivation' }
-const bodies = { workout: 'Your Project Steel workout is ready when you are.', meal: 'Review what you ate and keep your diary current.', motivation: 'Small steps today build a stronger you.' }
+const labels = Object.fromEntries(Object.entries(reminderCopy).map(([key, copy]) => [key, copy.title]))
+const bodies = Object.fromEntries(Object.entries(reminderCopy).map(([key, copy]) => [key, copy.body]))
 
 export function useSteelReminders(userId, preferences) {
   useEffect(() => {
-    if (!userId || typeof Notification === 'undefined') return
+    if (!userId) return
+    if (isNativeReminderRuntime()) {
+      syncNativeReminders(preferences).catch(() => {})
+      return
+    }
+    if (typeof Notification === 'undefined') return
     const storageKey = `steel-reminders:${userId}`
     let sent = {}
     try { sent = JSON.parse(localStorage.getItem(storageKey) || '{}') || {} } catch { /* Use in-memory deduplication when storage is unavailable. */ }
@@ -33,18 +39,40 @@ export function useSteelReminders(userId, preferences) {
 
 export default function ReminderSettings({ userId, initialPreferences, onSaved }) {
   const [values, setValues] = useState(() => normalizeReminders(initialPreferences))
-  const [permission, setPermission] = useState(() => typeof Notification === 'undefined' ? 'unsupported' : Notification.permission)
+  const nativeRuntime = isNativeReminderRuntime()
+  const [permission, setPermission] = useState(() => nativeRuntime ? 'prompt' : typeof Notification === 'undefined' ? 'unsupported' : Notification.permission)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   useEffect(() => setValues(normalizeReminders(initialPreferences)), [initialPreferences])
+  useEffect(() => {
+    if (!nativeRuntime) return
+    let active = true
+    getNativeReminderPermission().then(next => { if (active) setPermission(next) })
+    return () => { active = false }
+  }, [nativeRuntime])
   function update(key, patch) { setValues(current => ({ ...current, [key]: { ...current[key], ...patch } })) }
   async function enableNotifications() {
+    if (nativeRuntime) {
+      const next = await requestNativeReminderPermission()
+      setPermission(next)
+      if (next === 'granted') {
+        const result = await syncNativeReminders(values)
+        if (result.status === 'error') setMessage('Device permission is enabled, but reminders could not be scheduled yet.')
+      } else if (next === 'denied') setMessage('Notifications are blocked. Enable them in the device settings, then try again.')
+      return
+    }
     try { setPermission(await Notification.requestPermission()) }
     catch { setMessage('This browser cannot enable alerts here. Your reminder preferences can still be saved.') }
   }
   async function save(event) {
     event.preventDefault(); setBusy(true); setMessage('')
-    try { const profile = await saveNotificationPreferences(userId, values); onSaved(profile); setMessage('Reminder preferences saved.') }
+    try {
+      const profile = await saveNotificationPreferences(userId, values)
+      const nativeResult = nativeRuntime ? await syncNativeReminders(values) : null
+      onSaved(profile)
+      const needsNativePermission = nativeResult && Object.values(values).some(value => value.enabled) && ['prompt', 'prompt-with-rationale', 'denied'].includes(nativeResult.status)
+      setMessage(needsNativePermission ? 'Preferences saved. Enable device notifications to receive reminders.' : nativeResult?.status === 'error' ? 'Preferences saved, but reminders could not be scheduled yet.' : 'Reminder preferences saved.')
+    }
     catch (error) { setMessage(error.message || 'Could not save reminders. Please try again.') }
     finally { setBusy(false) }
   }
@@ -52,14 +80,14 @@ export default function ReminderSettings({ userId, initialPreferences, onSaved }
     <summary><span className="settings-disclosure-label"><span className="settings-security-icon"><Bell size={19}/></span><span><span className="eyebrow">NOTIFICATIONS & REMINDERS</span><strong>Stay on track</strong></span></span><ChevronDown size={18}/></summary>
     <form className="reminder-form" onSubmit={save}>
       <p>Choose what Steel should prompt you to do and when.</p>
-      <button type="button" className="reminder-permission" onClick={enableNotifications} disabled={permission === 'granted' || permission === 'unsupported' || permission === 'denied'}><Bell size={17}/>{permission === 'granted' ? 'Browser notifications enabled' : permission === 'denied' ? 'Notifications blocked — enable them in browser settings' : permission === 'unsupported' ? 'Browser notifications unavailable' : 'Enable browser notifications'}</button>
+      <button type="button" className="reminder-permission" onClick={enableNotifications} disabled={permission === 'granted' || permission === 'unsupported' || permission === 'denied'}><Bell size={17}/>{nativeRuntime ? permission === 'granted' ? 'Device notifications enabled' : permission === 'denied' ? 'Notifications blocked — enable them in device settings' : permission === 'unsupported' ? 'Device notifications unavailable' : 'Enable device notifications' : permission === 'granted' ? 'Browser notifications enabled' : permission === 'denied' ? 'Notifications blocked — enable them in browser settings' : permission === 'unsupported' ? 'Browser notifications unavailable' : 'Enable browser notifications'}</button>
       {Object.entries(values).map(([key, value]) => <section className="reminder-row" key={key}>
         <label className="reminder-toggle"><strong>{labels[key]}</strong><input type="checkbox" checked={value.enabled} disabled={busy} onChange={event => update(key, { enabled: event.target.checked })}/></label>
         {value.enabled && <div className="reminder-schedule"><label>Notify at <input type="time" required value={value.time} disabled={busy} onChange={event => update(key, { time: event.target.value })}/></label>
           {key === 'workout' && <div className="reminder-days" role="group" aria-label="Workout reminder days">{['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => <button key={day} type="button" aria-pressed={value.days.includes(index)} disabled={busy} onClick={() => update(key, { days: value.days.includes(index) ? value.days.filter(item => item !== index) : [...value.days, index].sort() })}>{day}</button>)}</div>}
         </div>}
       </section>)}
-      <small>Times follow this device’s local time. Browser alerts work while Steel is open on supported desktop browsers. Notifications with the app closed require a future push integration.</small>
+      <small>{nativeRuntime ? 'Times follow this device’s local time. Device reminders remain scheduled when Steel is backgrounded or closed. If permission is revoked, re-enable notifications in device settings.' : 'Times follow this device’s local time. Browser alerts work while Steel is open on supported desktop browsers. Notifications with the app closed require the native Steel app.'}</small>
       {message && <p role="status">{message}</p>}
       <button className="gold-button" disabled={busy}><Save size={17}/>{busy ? 'Saving…' : 'Save reminders'}</button>
     </form>

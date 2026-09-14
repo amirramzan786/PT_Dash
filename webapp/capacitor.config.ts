@@ -12,6 +12,9 @@ const config: CapacitorConfig = {
     scheme: 'https',
   },
   plugins: {
+    LocalNotifications: {
+      presentationOptions: ['badge', 'sound', 'banner', 'list'],
+    },
     SystemBars: {
       // Capacitor injects the Android status/navigation insets as CSS
       // variables so the app content never sits underneath the system bars.
