@@ -36,13 +36,14 @@ For the complete delivered/active/planned record and implementation traceability
   is ready; native provider connections remain planned.
 - [~] Build the steps dashboard: today, seven-day logged average, daily goal,
   trend and source label are implemented locally. The profile migration was
-  applied to production on 13 September; build validation and deployment remain.
+  applied to production on 13 September; the verified web build was deployed on
+  14 September.
 - [x] Add manual step entry as a fallback; deployed and user-verified.
 - [x] Make the Home-page steps card use this same source of truth, with an authenticated manual fallback and tracker-source priority.
 - [~] Add consent, disconnect, imported-data deletion and last-sync status:
   locally implemented with explicit confirmation, manual-data preservation and
   an owner-scoped, atomic deletion migration applied to production on
-  13 September. Web deployment remains separately controlled.
+  13 September. The verified web controls were deployed on 14 September.
 - [ ] Build Apple Health integration for iPhone.
 - [ ] Build Android Health Connect integration for Android.
 - [~] Prevent duplicate counting across sources: manual versus future tracker priority is complete; native cross-device deduplication remains.
