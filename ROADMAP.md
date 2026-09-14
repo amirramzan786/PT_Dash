@@ -113,5 +113,8 @@ bookings or insight data.
 - [ ] Add meal-plan week scheduling, swaps, adherence and carry-over.
 - [ ] Build PT review, approval and controlled plan-revision workflow.
 - [ ] Enforce subscriptions, plan-change limits and payment entitlements.
+- [ ] Link Coach bookings to a verified Calendly-style or Google Calendar
+  appointment destination after the Coach pilot validates availability,
+  cancellation, timezone and notification requirements (STEEL-120).
 - [ ] Ensure every generated workout has an appropriate image.
 - [ ] Split the large JavaScript bundle to improve mobile loading.

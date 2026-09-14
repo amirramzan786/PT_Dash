@@ -222,8 +222,11 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
 - [~] **STEEL-74 — Coach information architecture and prototype:** the live
   app now includes a mobile-first Steel Coach workspace shell with role-aware
   overview/client/message/insight states, explicit consent guardrails and a
-  client-owned access view. Invitations, messaging, bookings and insight data
-  remain intentionally disabled until the pilot workflow is validated.
+  client-owned access view. The client surface now presents a compact Coach
+  profile with a display-portrait fallback, removes the redundant messages
+  tile, and reserves one clear booking entry point. Invitations, messaging and
+  bookings remain intentionally disabled until the pilot workflow is validated;
+  calendar linking is tracked in deferred STEEL-120.
 - **Sprint 06 — Coach-client operations MVP:** onboarding, secure invitations, client roster, useful check-ins, messaging, programme assignment and controlled revisions.
 - **Sprint 07 — Retention, communication and education:** missed-check-in automation, availability and local-time rules, progressive education, retention-risk signals and communication audit history.
 - **Sprint 08 — Bookings, subscriptions and paid pilot:** diary/availability, consultations, packages, sponsored seats, payment boundaries, support runbook and paid-pilot evaluation.
