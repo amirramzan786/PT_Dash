@@ -53,7 +53,11 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
 - [x] Welcome dashboard card and movement/step-ring visual refinements.
 - [x] Settings accordions for personal profile, training preferences, step integrations and reminders.
 - [x] Desktop collapsed-navigation hover tooltips.
-- [x] Configurable reminder preferences: workout, meal-completion and motivation reminders; enable/disable and time controls.
+- [~] Configurable reminder preferences: workout, meal-completion and motivation
+  reminders with enable/disable and time controls are saved. Browser alerts
+  work only while Steel is open; native scheduled delivery for the iOS and
+  Android shells is tracked separately in the active S03 task and is not yet
+  implemented.
 
 ## Delivered — training, workout logging and exercise library
 
