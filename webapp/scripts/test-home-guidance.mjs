@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildAiCoachInsight, buildDailySummary, buildTrainingRecommendation, dailyQuote } from '../src/lib/homeGuidance.js'
+import { buildAiCoachInsight, buildDailySummary, buildExerciseDropoffInsight, buildNutritionConsistencyInsight, buildTrainingConsistencyInsight, buildTrainingRecommendation, dailyQuote } from '../src/lib/homeGuidance.js'
 
 test('daily summary is time-aware and uses current training context', () => {
   const morning = buildDailySummary({ now: new Date(2026, 8, 4, 9), hasWorkout: true })
@@ -42,4 +42,19 @@ test('AI Coach insight is explainable, bounded and absent without an eligible si
   assert.equal(insight.options.at(-1), 'Not now')
   assert.equal(buildAiCoachInsight({ checkin: { energy: 4, sleep: 4 }, hasWorkout: true }), null)
   assert.equal(buildAiCoachInsight({ checkin: null, hasWorkout: true }), null)
+})
+
+test('AI Coach signal contracts stay conservative with sparse data', () => {
+  const missed = buildTrainingConsistencyInsight({ plannedSessions: [{ logged: false }, { logged: true }, { logged: false }] })
+  assert.equal(missed.type, 'training_consistency')
+  assert.match(missed.uncertainty, /can’t tell/i)
+  assert.equal(buildTrainingConsistencyInsight({ plannedSessions: [{ logged: false }] }), null)
+
+  const skipped = buildExerciseDropoffInsight({ exerciseName: 'Barbell row', appearances: [true, false, false] })
+  assert.equal(skipped.type, 'exercise_dropoff')
+  assert.equal(buildExerciseDropoffInsight({ appearances: [false, false] }), null)
+
+  const nutrition = buildNutritionConsistencyInsight({ recentDays: 3, baselineDays: 6 })
+  assert.equal(nutrition, null)
+  assert.equal(buildNutritionConsistencyInsight({ recentDays: 4, baselineDays: 8 }).type, 'nutrition_consistency')
 })

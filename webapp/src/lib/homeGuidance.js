@@ -92,3 +92,44 @@ export function buildAiCoachInsight({ checkin = null, hasWorkout = false }) {
     signals,
   }
 }
+
+export function buildTrainingConsistencyInsight({ plannedSessions = [] } = {}) {
+  const missed = plannedSessions.filter((session) => session && session.logged === false)
+  if (missed.length < 2) return null
+  return {
+    type: 'training_consistency',
+    confidence: 'Based on planned sessions in the last 14 days',
+    title: 'Two planned sessions were missed recently.',
+    observation: `${missed.length} planned sessions were not logged.`,
+    uncertainty: 'I can’t tell from the log whether time, energy, pain or the plan itself was the main barrier.',
+    question: 'What was the main barrier this time?',
+    options: ['Time or schedule', 'Energy or recovery', 'The plan needs changing', 'Not now'],
+  }
+}
+
+export function buildExerciseDropoffInsight({ exerciseName = 'This exercise', appearances = [] } = {}) {
+  const recent = appearances.slice(-3)
+  if (recent.length < 3 || recent.filter((logged) => logged === false).length < 2) return null
+  return {
+    type: 'exercise_dropoff',
+    confidence: 'Based on the last three scheduled appearances',
+    title: `${exerciseName} has been skipped twice recently.`,
+    observation: `${exerciseName} was not logged in two of its last three scheduled appearances.`,
+    uncertainty: 'I can’t tell whether this reflects equipment, discomfort, preference or a missed session.',
+    question: 'What would make this movement work better?',
+    options: ['Keep it', 'Find an approved swap', 'Flag for review', 'Not now'],
+  }
+}
+
+export function buildNutritionConsistencyInsight({ recentDays = 0, baselineDays = 0 } = {}) {
+  if (baselineDays < 7 || recentDays >= baselineDays) return null
+  return {
+    type: 'nutrition_consistency',
+    confidence: 'Based on your recent meal-logging pattern',
+    title: 'Meal logging has become less consistent.',
+    observation: `You logged meals on ${recentDays} recent days compared with ${baselineDays} baseline days.`,
+    uncertainty: 'I can’t tell whether this reflects routine, appetite, access or a preference for simpler tracking.',
+    question: 'What would make logging easier this week?',
+    options: ['Use simpler logging', 'Review planned meals', 'Talk it through', 'Not now'],
+  }
+}
