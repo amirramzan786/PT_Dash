@@ -175,6 +175,12 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
 ## Planned platform expansion — Steel Coach
 
 - **Sprint 05 — Foundation and pilot design:** validate with one or two coaches; define roles, relationship lifecycle, consent, information architecture, pilot offer and success metrics.
+- [~] **STEEL-69 — Role and permission matrix:** the least-privilege matrix is
+  drafted in [docs/codex/steel-coach-role-permission-matrix-2026-09-14.md](docs/codex/steel-coach-role-permission-matrix-2026-09-14.md).
+  It distinguishes members, linked clients, coaches and administrators; makes
+  client consent a prerequisite for Coach reads; and drafts the RLS,
+  export/revocation and audit test cases. Relationship-state migration and
+  real-coach review remain before implementation.
 - **Sprint 06 — Coach-client operations MVP:** onboarding, secure invitations, client roster, useful check-ins, messaging, programme assignment and controlled revisions.
 - **Sprint 07 — Retention, communication and education:** missed-check-in automation, availability and local-time rules, progressive education, retention-risk signals and communication audit history.
 - **Sprint 08 — Bookings, subscriptions and paid pilot:** diary/availability, consultations, packages, sponsored seats, payment boundaries, support runbook and paid-pilot evaluation.

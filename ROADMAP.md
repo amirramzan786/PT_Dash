@@ -16,6 +16,12 @@ For the complete delivered/active/planned record and implementation traceability
 5. **Prove willingness to pay (Sprint 08).** Add booking and subscription essentials, define payment and support boundaries, run a small paid pilot, and make an evidence-based continue/pivot/stop decision.
 6. **Unlock expansion only after the pilot gates pass.** Steel Growth (Sprint 09), marketplace/integrations (Sprint 10), and business/white-label/intelligence (Sprint 11) stay deferred until activation, retention, coach time saved, client outcomes, safety, and unit economics support investment.
 
+Sprint 05 has started with STEEL-69. The least-privilege role, relationship,
+export and revocation baseline is drafted in
+[docs/codex/steel-coach-role-permission-matrix-2026-09-14.md](docs/codex/steel-coach-role-permission-matrix-2026-09-14.md).
+The next gate is review with one or two real coaches and clients before a
+relationship-state migration or Coach dashboard implementation.
+
 ## Pilot success gates
 
 - Coaches activate without founder-led setup and successfully invite real clients.
