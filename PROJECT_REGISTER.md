@@ -119,8 +119,7 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
   simulator and Android emulator on 14 September. Health permissions, device
   data, production package registration and mobile-auth redirects remain
   deliberately out of scope.
-- [ ] Plan native iPhone Apple Health implementation.
-- [ ] Plan native Android Health Connect implementation.
+- [ ] Plan native iPhone Apple Health and Android Health Connect implementation (tracked in Plane as STEEL-112).
 
 ## Planned — Sprint 02: diary, meal-plan completion and QA
 
