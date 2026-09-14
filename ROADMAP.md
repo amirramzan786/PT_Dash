@@ -19,6 +19,9 @@ For the complete delivered/active/planned record and implementation traceability
 Sprint 05 has started with STEEL-69. The least-privilege role, relationship,
 export and revocation baseline is drafted in
 [docs/codex/steel-coach-role-permission-matrix-2026-09-14.md](docs/codex/steel-coach-role-permission-matrix-2026-09-14.md).
+STEEL-71 now drafts the relationship state machine and durable data-ownership
+rules in
+[docs/codex/steel-coach-relationship-lifecycle-2026-09-14.md](docs/codex/steel-coach-relationship-lifecycle-2026-09-14.md).
 The next gate is review with one or two real coaches and clients before a
 relationship-state migration or Coach dashboard implementation.
 

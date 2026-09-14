@@ -181,6 +181,13 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
   client consent a prerequisite for Coach reads; and drafts the RLS,
   export/revocation and audit test cases. Relationship-state migration and
   real-coach review remain before implementation.
+- [~] **STEEL-71 — Relationship and data-ownership lifecycle:** the state
+  machine and transition contract is drafted in
+  [docs/codex/steel-coach-relationship-lifecycle-2026-09-14.md](docs/codex/steel-coach-relationship-lifecycle-2026-09-14.md).
+  It covers invitation, acceptance, consent, active, pause, switching,
+  revocation and expiry; idempotency and one-active-Coach rules; durable client
+  ownership; and RLS/lifecycle test cases. Pilot review and the eventual
+  relationship migration remain pending.
 - **Sprint 06 — Coach-client operations MVP:** onboarding, secure invitations, client roster, useful check-ins, messaging, programme assignment and controlled revisions.
 - **Sprint 07 — Retention, communication and education:** missed-check-in automation, availability and local-time rules, progressive education, retention-risk signals and communication audit history.
 - **Sprint 08 — Bookings, subscriptions and paid pilot:** diary/availability, consultations, packages, sponsored seats, payment boundaries, support runbook and paid-pilot evaluation.
