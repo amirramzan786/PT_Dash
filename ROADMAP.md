@@ -55,8 +55,9 @@ For the complete delivered/active/planned record and implementation traceability
 - [~] Design and build Apple Health integration for iPhone plus Android Health
   Connect. STEEL-112 records the read-only, foreground-only contract, and
   STEEL-113 now has a compiling iOS HealthKit bridge with deterministic fixture
-  coverage. Simulator permission, revocation and settings-recovery QA remain
-  before the bridge can be marked complete. Delivery is split into STEEL-113
+  coverage, and the build launches successfully in the iPhone 17 Pro simulator.
+  Simulator permission, revocation and settings-recovery QA remain pending the
+  product UI before the bridge can be marked complete. Delivery is split into STEEL-113
   (iOS bridge), STEEL-114 (Android bridge), STEEL-115 (authenticated ingest/RLS
   tests), and STEEL-116 (consent UI and revocation recovery), all in Sprint 04.
 - [ ] Add Garmin after API partnership and commercial terms are approved.
