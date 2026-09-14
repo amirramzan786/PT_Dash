@@ -48,9 +48,10 @@ For the complete delivered/active/planned record and implementation traceability
 - [x] Decide the native architecture: use Capacitor around the existing React/Vite
   client, with narrow native bridges for Apple Health and Health Connect; the
   first pilot is explicit-consent, foreground-only activity import.
-- [~] Establish the Capacitor iOS/Android shell and shared sync workflow. The
-  shell contains no health plugin or permission request; device validation
-  awaits local Xcode and Java/Android SDK availability.
+- [x] Establish the Capacitor iOS/Android shell and shared sync workflow. The
+  shell contains no health plugin or permission request; after local Xcode and
+  Java/Android SDK setup, the app opened successfully in the iOS simulator and
+  Android emulator on 14 September.
 - [ ] Build Apple Health integration for iPhone.
 - [ ] Build Android Health Connect integration for Android.
 - [ ] Add Garmin after API partnership and commercial terms are approved.
