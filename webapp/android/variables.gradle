@@ -1,5 +1,8 @@
 ext {
-    minSdkVersion = 24
+    // Health Connect's current client requires API 26; the native bridge is
+    // unavailable on older Android versions and the web/manual fallback stays
+    // available there.
+    minSdkVersion = 26
     compileSdkVersion = 36
     targetSdkVersion = 36
     androidxActivityVersion = '1.11.0'

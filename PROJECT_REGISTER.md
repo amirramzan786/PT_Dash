@@ -132,8 +132,11 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
   remote migration review remain pending.
   The execution
   breakdown is tracked in STEEL-113 (iOS bridge), STEEL-114 (Android bridge),
-  STEEL-115 (authenticated ingest/RLS tests), and STEEL-116 (native consent UI
-  and revocation recovery), all in Sprint 04.
+  STEEL-114 now contains a read-only Android Health Connect bridge for steps
+  and exercise sessions (API 26+), while STEEL-115 covers authenticated ingest
+  and RLS tests and STEEL-116 covers native consent UI and revocation recovery.
+  All remain in Sprint 04 pending device permission QA and remote migration
+  review.
 
 ## Planned — Sprint 02: diary, meal-plan completion and QA
 

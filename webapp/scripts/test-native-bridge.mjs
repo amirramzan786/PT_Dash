@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
-import { SteelHealthKit, getNativeRuntime, isNativeShell } from '../src/lib/nativeBridge.js'
+import { SteelHealthConnect, SteelHealthKit, getNativeRuntime, isNativeShell } from '../src/lib/nativeBridge.js'
 
 test('the native bridge is an inert, inspectable boundary on the web', () => {
   const runtime = getNativeRuntime()
@@ -9,6 +9,7 @@ test('the native bridge is an inert, inspectable boundary on the web', () => {
   assert.equal(runtime.platform, 'web')
   assert.equal(runtime.isNative, false)
   assert.equal(runtime.healthBridgeAvailable, false)
+  assert.equal(runtime.healthConnectBridgeAvailable, false)
   assert.match(runtime.reason, /mobile shell/i)
   assert.equal(isNativeShell(), false)
 })
@@ -18,6 +19,13 @@ test('the web HealthKit fallback is explicit and never reads device data', async
 
   assert.equal(availability.available, false)
   await assert.rejects(() => SteelHealthKit.readActivity({}), /native iOS app/i)
+})
+
+test('the web Health Connect fallback is explicit and never reads device data', async () => {
+  const availability = await SteelHealthConnect.isAvailable()
+
+  assert.equal(availability.available, false)
+  await assert.rejects(() => SteelHealthConnect.readActivity({}), /native Android app/i)
 })
 
 test('the native activity fixture matches the provider-neutral ingest contract', async () => {
@@ -38,4 +46,13 @@ test('the native activity fixture matches the provider-neutral ingest contract',
     assert.match(record.observed_at, /^\d{4}-\d{2}-\d{2}T/)
     assert.equal(typeof record.value, 'number')
   }
+})
+
+test('the Android bridge stays read-only and limited to the approved activity scopes', async () => {
+  const bridge = await readFile(new URL('../android/app/src/main/java/uk/co/projectsteel/mobile/SteelHealthConnectPlugin.java', import.meta.url), 'utf8')
+  assert.match(bridge, /READ_STEPS/)
+  assert.match(bridge, /READ_EXERCISE/)
+  assert.match(bridge, /source_record_id/)
+  assert.match(bridge, /time_zone/)
+  assert.doesNotMatch(bridge, /WRITE_STEPS|WRITE_EXERCISE|READ_SLEEP|READ_HEART_RATE|READ_HEART_RATE_VARIABILITY/)
 })

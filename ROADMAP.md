@@ -61,8 +61,10 @@ For the complete delivered/active/planned record and implementation traceability
   that is not yet applied remotely. The build launches successfully in the
   iPhone 17 Pro simulator; real permission/revocation QA and remote migration
   review remain pending. Delivery is split into STEEL-113
-  (iOS bridge), STEEL-114 (Android bridge), STEEL-115 (authenticated ingest/RLS
-  tests), and STEEL-116 (consent UI and revocation recovery), all in Sprint 04.
+  (iOS bridge), STEEL-114 (Android bridge, now compile-tested for API 26+),
+  STEEL-115 (authenticated ingest/RLS tests), and STEEL-116 (consent UI and
+  revocation recovery), all in Sprint 04. Device permission QA and remote
+  migration review remain explicit gates.
 - [ ] Add Garmin after API partnership and commercial terms are approved.
 - [ ] Add WHOOP and Oura afterward, initially for activity/recovery data only.
 
