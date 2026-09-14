@@ -44,9 +44,12 @@ For the complete delivered/active/planned record and implementation traceability
   locally implemented with explicit confirmation, manual-data preservation and
   an owner-scoped, atomic deletion migration applied to production on
   13 September. The verified web controls were deployed on 14 September.
+- [~] Prevent duplicate counting across sources: manual versus future tracker priority is complete; native cross-device deduplication remains.
+- [x] Decide the native architecture: use Capacitor around the existing React/Vite
+  client, with narrow native bridges for Apple Health and Health Connect; the
+  first pilot is explicit-consent, foreground-only activity import.
 - [ ] Build Apple Health integration for iPhone.
 - [ ] Build Android Health Connect integration for Android.
-- [~] Prevent duplicate counting across sources: manual versus future tracker priority is complete; native cross-device deduplication remains.
 - [ ] Add Garmin after API partnership and commercial terms are approved.
 - [ ] Add WHOOP and Oura afterward, initially for activity/recovery data only.
 

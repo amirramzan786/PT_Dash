@@ -109,6 +109,10 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
   production on 13 September and the verified web controls were deployed on
   14 September.
 - [~] Prevent double counting between sources: deterministic priority is live for manual vs future tracker records; cross-device deduplication remains for native integrations.
+- [x] Decide native mobile architecture for health data: Capacitor will contain
+  the existing React/Vite client, with narrow first-party HealthKit (Swift) and
+  Health Connect (Kotlin) bridges. The decision preserves explicit consent,
+  manual-data protection and a foreground-only first pilot.
 - [ ] Plan native iPhone Apple Health implementation.
 - [ ] Plan native Android Health Connect implementation.
 
