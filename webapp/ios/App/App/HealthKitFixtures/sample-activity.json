@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "source": "apple_health",
+  "time_zone": "Europe/London",
+  "records": [
+    {
+      "source": "apple_health",
+      "metric": "steps",
+      "value": 8420,
+      "start_at": "2026-09-13T06:40:00.000Z",
+      "end_at": "2026-09-13T21:10:00.000Z",
+      "time_zone": "Europe/London",
+      "source_record_id": "apple_health:2026-09-13:steps:v1",
+      "observed_at": "2026-09-14T00:00:00.000Z",
+      "confidence": 0.9
+    },
+    {
+      "source": "apple_health",
+      "metric": "workout_minutes",
+      "value": 52,
+      "start_at": "2026-09-13T08:00:00.000Z",
+      "end_at": "2026-09-13T08:52:00.000Z",
+      "time_zone": "Europe/London",
+      "source_record_id": "apple_health:2026-09-13:workout_minutes:v1",
+      "observed_at": "2026-09-14T00:00:00.000Z",
+      "confidence": 0.9
+    }
+  ]
+}
