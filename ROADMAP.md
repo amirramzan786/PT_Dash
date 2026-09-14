@@ -22,11 +22,12 @@ export and revocation baseline is drafted in
 STEEL-71 now drafts the relationship state machine and durable data-ownership
 rules in
 [docs/codex/steel-coach-relationship-lifecycle-2026-09-14.md](docs/codex/steel-coach-relationship-lifecycle-2026-09-14.md).
-The local implementation adds a consent-gated relationship table, transition
-RPCs and fail-closed Coach visibility helper with static contract tests; the
-migration is intentionally not applied remotely.
-The next gate is review with one or two real coaches and clients before a
-relationship-state migration or Coach dashboard implementation.
+The implementation adds a consent-gated relationship table, transition RPCs and
+fail-closed Coach visibility helper with static contract tests. The migration is
+now applied to the hosted Supabase project with no existing relationships, and
+the web app has a role-aware Coach workspace foundation. The next gate is review
+with one or two real coaches and clients before enabling invitations, messaging,
+bookings or insight data.
 
 ## Pilot success gates
 

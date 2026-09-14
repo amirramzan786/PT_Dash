@@ -5,7 +5,7 @@ import {
   Send, ShieldCheck, Sparkles, Target, Trash2, UserRound, Watch, ListChecks, ClipboardCheck, X,
 } from 'lucide-react'
 import {
-  changePassword, deleteActivityProviderData, deleteMealLog, disconnectActivityProvider, getActivityConnections, getDashboardStats, getLatestWeeklyCheckin, getMealLogs, getProfile, getRecentSessions, getTodaySteps, getStepHistory, getWeightHistory, getWeeklyCheckinHistory,
+  changePassword, deleteActivityProviderData, deleteMealLog, disconnectActivityProvider, getActivityConnections, getDashboardStats, getLatestWeeklyCheckin, getMealLogs, getProfile, getRecentSessions, getTodaySteps, getStepHistory, getWeightHistory, getWeeklyCheckinHistory, loadCoachRelationships,
   enrollAuthenticatorApp, getActiveGeneratedProgramme, getFounderStatus, getMfaFactors, getMyMembershipEntitlement, getMyPlanChangeStatus, getNutritionPlan, getProgrammeIntake, getProductUpdates, getWeeklyActivitySummary, loadExerciseCatalog, loadUserRole, loadWorkouts, markProductUpdatesRead, recordAlphaEvent, removeMfaFactor, replaceGeneratedProgramme, resetOnboarding, saveActivityConnection, saveImportedActivityRecords, saveCustomWorkout, saveMealLog, saveMealPlanItem, saveNutritionFoodEntry, saveNutritionMealComponents, saveProgrammeIntake, saveProfile, saveWeight, saveWeeklyCheckin as saveWeeklyCheckinRecord, saveWorkoutSession, sendOnboardingAiMessage, submitBetaFeedback, updateAccount, updateCustomWorkout, uploadAvatar, uploadCheckinMedia, verifyAuthenticatorApp,
 } from './lib/steelApi'
 import { buildGeneratedProgramme } from './lib/programmeGenerator'
@@ -17,10 +17,12 @@ import './v3.css'
 import SteelMark from './components/SteelMark'
 import ManualSteps from './components/ManualSteps'
 import HealthIntegrations from './components/HealthIntegrations'
+import CoachWorkspace from './components/CoachWorkspace'
 import ReminderSettings, { useSteelReminders } from './components/ReminderSettings'
 import FoodDiary from './components/FoodDiary'
 import { buildSnackChoices, snackTasteOptions } from './lib/snackChoices'
 import './recovery.css'
+import './coach.css'
 
 const tabs = [
   { id: 'Home', label: 'Home', icon: Home },
@@ -31,6 +33,7 @@ const tabs = [
   { id: 'MealPlan', label: 'Meal plan', icon: Salad },
   { id: 'Library', label: 'Exercise library', icon: ListChecks },
   { id: 'Checkin', label: 'Weekly check-in', icon: ClipboardCheck },
+  { id: 'Coach', label: 'Steel Coach', icon: Sparkles },
 ]
 
 const mobileTabs = [
@@ -911,6 +914,8 @@ export default function AppV3({ user, onSignOut }) {
   const [planChangeStatus, setPlanChangeStatus] = useState(null)
   const [productUpdates, setProductUpdates] = useState([])
   const [updatesLoading, setUpdatesLoading] = useState(false)
+  const [coachRelationships, setCoachRelationships] = useState([])
+  const [coachLoading, setCoachLoading] = useState(false)
 
   useEffect(() => {
     function syncTabFromUrl() {
@@ -940,6 +945,12 @@ export default function AppV3({ user, onSignOut }) {
       const unreadIds = updates.filter((update) => !update.read).map((update) => update.id)
       if (unreadIds.length) await markProductUpdatesRead(user.id, unreadIds)
     }).catch(() => setProductUpdates([])).finally(() => setUpdatesLoading(false))
+  }, [tab, user.id])
+
+  useEffect(() => {
+    if (tab !== 'Coach') return
+    setCoachLoading(true)
+    loadCoachRelationships().then(setCoachRelationships).catch(() => setCoachRelationships([])).finally(() => setCoachLoading(false))
   }, [tab, user.id])
 
   useEffect(() => {
@@ -983,6 +994,11 @@ export default function AppV3({ user, onSignOut }) {
   function refreshWeeklyActivity() {
     const { start, end } = currentWeekBounds()
     getWeeklyActivitySummary(user.id, start, end).then(setWeeklyActivity).catch(() => {})
+  }
+
+  function refreshCoachRelationships() {
+    setCoachLoading(true)
+    loadCoachRelationships().then(setCoachRelationships).catch(() => setCoachRelationships([])).finally(() => setCoachLoading(false))
   }
 
   async function refresh() {
@@ -1312,6 +1328,8 @@ export default function AppV3({ user, onSignOut }) {
       {tab === 'Train' && draft && atFinisher && <SessionNotesField value={sessionNotes} onChange={setSessionNotes} completedSets={completedSets}/>}
       {tab === 'Progress' && <ProgressPage stats={stats} sessions={sessions} weights={weights} stepHistory={stepHistory} totalSteps={totalSteps}/>}
 
+      {tab === 'Coach' && <CoachWorkspace userRole={userRole} relationships={coachRelationships} loading={coachLoading} onRefresh={refreshCoachRelationships}/>}
+
       {tab === 'Checkin' && <WeeklyCheckinPage checkin={weeklyCheckin} checkinDay={preferences.checkinDay} activitySummary={weeklyActivity} mediaItems={checkinMedia} historyItems={weeklyCheckinHistory} onSave={submitWeeklyCheckin} onUploadMedia={submitCheckinMedia} saving={saving} mediaBusy={mediaBusy} />}
 
       {tab === 'Weight' && <WeightPage latestWeight={latestWeight} weightDelta={weightDelta} weights={weights} weightInput={weightInput} setWeightInput={setWeightInput} submitWeight={submitWeight} saving={saving}/>}
@@ -1322,7 +1340,7 @@ export default function AppV3({ user, onSignOut }) {
       {supportPanel && <div className="support-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeSupportPanel() }}><section className="support-dialog" role="dialog" aria-modal="true" aria-labelledby="support-dialog-title"><button className="support-dialog-close" type="button" aria-label="Close support panel" onClick={closeSupportPanel}>×</button>{supportPanel === 'help' && <><div className="support-dialog-icon"><HelpCircle size={22}/></div><span className="eyebrow">STEEL HELP</span><h2 id="support-dialog-title">Train with confidence</h2><p>Choose a workout from Home or Workouts, complete each set, then save the session at the end. Your logged sessions, weight and steps feed the Progress view.</p><div className="support-help-list"><div><strong>Can’t see your steps?</strong><span>Open Settings and connect a supported health provider when integrations are enabled.</span></div><div><strong>Need to change your plan?</strong><span>Start with your goal and equipment preferences; personalised journeys are coming next.</span></div><div><strong>Something went wrong?</strong><span>Refresh once, then check that you are signed in to the correct Steel account.</span></div></div></>}{supportPanel === 'about' && <><div className="support-dialog-icon"><Info size={22}/></div><span className="eyebrow">ABOUT PROJECT STEEL</span><h2 id="support-dialog-title">Your training homebase</h2><p>Project Steel is a private, mobile-first training space for workouts, progress, body-weight check-ins and daily movement.</p><div className="support-about-points"><span>Private account data protected by Supabase authentication and row-level security.</span><span>Spartan-inspired guidance designed to make consistent training feel clear and achievable.</span><span>AI trainer, meal planning and connected fitness journeys are part of the wider roadmap.</span></div></>}{supportPanel === 'feedback' && <><div className="support-dialog-icon"><MessageSquare size={22}/></div><span className="eyebrow">SUPPORT &amp; FEEDBACK</span><h2 id="support-dialog-title">Help shape Steel</h2><p>Tell us what happened, what felt difficult, or what would make the product more useful.</p>{feedbackSaved ? <div className="support-feedback-success"><strong>Feedback received. Thank you for helping build Steel.</strong><button className="gold-button" type="button" onClick={() => setFeedbackSaved(false)}>Add more feedback</button></div> : <FeedbackForm category={feedbackCategory} setCategory={setFeedbackCategory} feedbackText={feedbackText} setFeedbackText={setFeedbackText} feedbackSaved={feedbackSaved} feedbackSaving={feedbackSaving} onSubmit={saveFeedback}/>}</>}{supportPanel !== 'feedback' && <button className="gold-button support-dialog-action" type="button" onClick={closeSupportPanel}>Back to Settings</button>}</section></div>}
       <small className="steel-build">Steel · Build {import.meta.env.VITE_BUILD_SHA || "development"}</small>
     </main>
-    {moreOpen && <div className={`more-sheet-backdrop ${moreClosing ? 'is-closing' : ''}`} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeMore() }}><section className="more-sheet" role="dialog" aria-modal="true" aria-labelledby="more-sheet-title"><div className="more-sheet-handle"/><div className="more-sheet-heading"><div><span className="eyebrow">PROJECT STEEL</span><h2 id="more-sheet-title">More</h2></div><button type="button" className="more-sheet-close" aria-label="Close more menu" onClick={closeMore}>×</button></div><div className="more-sheet-grid"><button onClick={() => navigateToTab('Plan')}><Dumbbell/><span>Workouts</span></button><button onClick={() => navigateToTab('Library')}><ListChecks/><span>Exercise library</span></button><button onClick={() => navigateToTab('Checkin')}><ClipboardCheck/><span>Weekly check-in</span></button><button onClick={() => navigateToTab('Weight')}><Scale/><span>Weight</span></button><button onClick={openSettings}><Settings/><span>Settings</span></button></div></section></div>}
+    {moreOpen && <div className={`more-sheet-backdrop ${moreClosing ? 'is-closing' : ''}`} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeMore() }}><section className="more-sheet" role="dialog" aria-modal="true" aria-labelledby="more-sheet-title"><div className="more-sheet-handle"/><div className="more-sheet-heading"><div><span className="eyebrow">PROJECT STEEL</span><h2 id="more-sheet-title">More</h2></div><button type="button" className="more-sheet-close" aria-label="Close more menu" onClick={closeMore}>×</button></div><div className="more-sheet-grid"><button onClick={() => navigateToTab('Coach')}><Sparkles/><span>Steel Coach</span></button><button onClick={() => navigateToTab('Plan')}><Dumbbell/><span>Workouts</span></button><button onClick={() => navigateToTab('Library')}><ListChecks/><span>Exercise library</span></button><button onClick={() => navigateToTab('Checkin')}><ClipboardCheck/><span>Weekly check-in</span></button><button onClick={() => navigateToTab('Weight')}><Scale/><span>Weight</span></button><button onClick={openSettings}><Settings/><span>Settings</span></button></div></section></div>}
     <nav className="v2-bottom-nav" aria-label="Project Steel navigation">{mobileTabs.map(({id,label,icon:Icon})=><button key={id} className={tab===id?'active':''} onClick={()=>navigateToTab(id)}><Icon size={19}/><span>{label}</span></button>)}<button className={moreOpen || !mobileTabs.some(({id})=>id===tab) ? 'active' : ''} aria-expanded={moreOpen} onClick={toggleMore}><Circle size={17}/><span>More</span></button></nav>
     <nav className={`v4-desktop-nav ${desktopNavCollapsed ? 'is-collapsed' : ''}`} aria-label="Project Steel desktop navigation"><div className="v4-desktop-brand"><div className="brand-emblem"><SteelMark size={22}/></div><strong>PROJECT STEEL</strong></div><button type="button" className="desktop-nav-toggle" onClick={() => setDesktopNavCollapsed((collapsed) => !collapsed)} aria-label={desktopNavCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={desktopNavCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-expanded={!desktopNavCollapsed}><ChevronRight size={20}/><span>{desktopNavCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}</span></button>{tabs.filter(({id})=>id!=='Train').map(({id,label,icon:Icon})=><button key={id} className={tab===id?'active':''} onClick={()=>navigateToTab(id)} aria-label={label} title={desktopNavCollapsed ? undefined : label}><Icon size={20}/><span>{label}</span></button>)}<button className={tab==='Settings'?'active':''} onClick={openSettings} aria-label="Settings" title={desktopNavCollapsed ? undefined : "Settings"}><Settings size={20}/><span>Settings</span></button><div className="v4-desktop-support"><span className="eyebrow">SUPPORT</span><button onClick={openSettings}>Help &amp; Support <ChevronRight size={15}/></button><button onClick={openSettings}>About Steel <ChevronRight size={15}/></button></div></nav>
   </div>

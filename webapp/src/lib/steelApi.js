@@ -32,6 +32,15 @@ export async function loadUserRole(userId) {
   return data?.role || 'user'
 }
 
+// Coach relationships are intentionally read through the sanitised RPC. The
+// underlying relationship table is closed to direct browser access so this
+// boundary cannot accidentally widen Coach visibility.
+export async function loadCoachRelationships() {
+  const { data, error } = await requireSupabase().rpc('get_my_coach_relationships')
+  if (error) throw error
+  return Array.isArray(data) ? data : []
+}
+
 // Alpha 20 data crosses narrow database boundaries: users never receive raw
 // signup, entitlement, feedback-triage or analytics tables.
 export async function getFounderStatus() {

@@ -84,6 +84,9 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
 - [x] Food catalogue and nutrition diary migrations deployed to Supabase.
 - [x] `food-catalog` Supabase Edge Function deployed.
 - [x] Live Steel production URL: `https://pt-dash.pages.dev/#Home`.
+- [x] Hosted Coach relationship boundary: consent-gated `coach_client_relationships`
+  table, fail-closed visibility helper and sanitised relationship RPCs applied to
+  Supabase project `devpjwpirhhctrwizzab`; the migration created no records.
 
 ## Active — Sprint 01: steps and activity foundation
 
@@ -190,7 +193,15 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
   relationship migration remain pending. A local additive migration now
   defines the relationship table, consent-gated transition RPCs, fail-closed
   `private.is_trainer_for` enforcement and a sanitised relationship read
-  function; it has not been applied remotely.
+  function. The reviewed migration is now applied to production with RLS
+  enabled and no existing relationships changed; the Supabase advisor's
+  intentional closed-table/no-policy and authenticated security-definer notices
+  remain recorded for follow-up.
+- [~] **STEEL-74 — Coach information architecture and prototype:** the live
+  app now includes a mobile-first Steel Coach workspace shell with role-aware
+  overview/client/message/insight states, explicit consent guardrails and a
+  client-owned access view. Invitations, messaging, bookings and insight data
+  remain intentionally disabled until the pilot workflow is validated.
 - **Sprint 06 — Coach-client operations MVP:** onboarding, secure invitations, client roster, useful check-ins, messaging, programme assignment and controlled revisions.
 - **Sprint 07 — Retention, communication and education:** missed-check-in automation, availability and local-time rules, progressive education, retention-risk signals and communication audit history.
 - **Sprint 08 — Bookings, subscriptions and paid pilot:** diary/availability, consultations, packages, sponsored seats, payment boundaries, support runbook and paid-pilot evaluation.
