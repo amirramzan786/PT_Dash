@@ -55,6 +55,9 @@ For the complete delivered/active/planned record and implementation traceability
 - [~] Design and build Apple Health integration for iPhone plus Android Health
   Connect. STEEL-112 now records the read-only, foreground-only contract;
   platform implementation remains gated on consent, RLS and fixture review.
+  Delivery is split into STEEL-113 (iOS bridge), STEEL-114 (Android bridge),
+  STEEL-115 (authenticated ingest/RLS tests), and STEEL-116 (consent UI and
+  revocation recovery), all in Sprint 04.
 - [ ] Add Garmin after API partnership and commercial terms are approved.
 - [ ] Add WHOOP and Oura afterward, initially for activity/recovery data only.
 

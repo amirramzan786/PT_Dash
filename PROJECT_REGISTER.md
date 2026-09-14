@@ -122,6 +122,9 @@ Last reconciled: 14 September 2026. This is the durable product record alongside
 - [~] Design native iPhone Apple Health and Android Health Connect implementation
   (STEEL-112). The first contract is read-only steps and workout minutes with
   foreground-only consent; implementation remains gated on the design review.
+  The execution breakdown is tracked in STEEL-113 (iOS bridge), STEEL-114
+  (Android bridge), STEEL-115 (authenticated ingest/RLS tests), and STEEL-116
+  (native consent UI and revocation recovery), all in Sprint 04.
 
 ## Planned — Sprint 02: diary, meal-plan completion and QA
 
