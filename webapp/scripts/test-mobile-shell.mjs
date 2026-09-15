@@ -31,3 +31,9 @@ test('home direction card stays visible on narrow screens', async () => {
   assert.match(appCss, /\.home-direction-actions\s*\{[^}]*justify-content:\s*flex-end/)
   assert.match(appCss, /@media \(max-width: 520px\) \{[\s\S]*?\.home-direction-actions\s*\{[^}]*width:\s*100%/)
 })
+
+test('authenticated product surface is lazy-loaded after the auth shell', async () => {
+  const authGate = await readFile(new URL('../src/AuthGate.jsx', import.meta.url), 'utf8')
+  assert.match(authGate, /const AppV3 = lazy\(\(\) => import\('\.\/AppV3'\)\)/)
+  assert.match(authGate, /<Suspense fallback=/)
+})
