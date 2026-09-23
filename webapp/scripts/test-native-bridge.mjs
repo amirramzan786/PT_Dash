@@ -56,3 +56,8 @@ test('the Android bridge stays read-only and limited to the approved activity sc
   assert.match(bridge, /time_zone/)
   assert.doesNotMatch(bridge, /WRITE_STEPS|WRITE_EXERCISE|READ_SLEEP|READ_HEART_RATE|READ_HEART_RATE_VARIABILITY/)
 })
+
+test('a completed provider sync refreshes the visible activity totals immediately', async () => {
+  const app = await readFile(new URL('../src/AppV3.jsx', import.meta.url), 'utf8')
+  assert.match(app, /async function handleConnectActivityProvider\(\{ provider, status, scopes, records \}\) \{[\s\S]*saveImportedActivityRecords\(user\.id, provider, records \|\| \[\]\)[\s\S]*await refreshSteps\(\)[\s\S]*setActivityConnections/s)
+})
