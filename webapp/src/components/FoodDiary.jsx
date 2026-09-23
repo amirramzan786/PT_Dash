@@ -20,7 +20,25 @@ function BarcodeCamera({ onDetected, onClose }) {
         videoRef.current.srcObject = stream; await videoRef.current.play()
         const detector = new globalThis.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] })
         setMessage('Hold the barcode inside the frame.')
-        timer = window.setInterval(async () => {\n          if (detecting || detectedRef.current || !active || !videoRef.current) return\n          detecting = true\n          try {\n            const codes = await detector.detect(videoRef.current)\n            const value = codes[0]?.rawValue\n            if (value && !detectedRef.current) {\n              detectedRef.current = true\n              if (timer) window.clearInterval(timer)\n              stream?.getTracks().forEach((track) => track.stop())\n              setMessage('Barcode found. Looking it up…')\n              onDetected(value)\n            }\n          } catch {\n            /* Keep the camera open while a frame cannot be decoded. */\n          } finally {\n            detecting = false\n          }\n        }, 450)
+        timer = window.setInterval(async () => {
+          if (detecting || detectedRef.current || !active || !videoRef.current) return
+          detecting = true
+          try {
+            const codes = await detector.detect(videoRef.current)
+            const value = codes[0]?.rawValue
+            if (value && !detectedRef.current) {
+              detectedRef.current = true
+              if (timer) window.clearInterval(timer)
+              stream?.getTracks().forEach((track) => track.stop())
+              setMessage('Barcode found. Looking it up…')
+              onDetected(value)
+            }
+          } catch {
+            /* Keep the camera open while a frame cannot be decoded. */
+          } finally {
+            detecting = false
+          }
+        }, 450)
       } catch { setMessage('Camera access was not available. Enter the barcode number instead.') }
     }
     start()
