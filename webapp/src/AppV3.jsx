@@ -1118,6 +1118,7 @@ export default function AppV3({ user, onSignOut }) {
   async function handleConnectActivityProvider({ provider, status, scopes, records }) {
     const imported = await saveImportedActivityRecords(user.id, provider, records || [])
     const connection = await saveActivityConnection(user.id, { provider, status, scopes, lastSyncedAt: imported.length ? new Date().toISOString() : null })
+    await refreshSteps()
     setActivityConnections((current) => [...current.filter((item) => item.provider !== provider), connection])
     return connection
   }
