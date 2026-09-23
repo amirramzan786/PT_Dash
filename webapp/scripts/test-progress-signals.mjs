@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildWeeklyNutritionAdherence, buildWeightTrend, startOfWeek } from '../src/lib/progressSignals.js'
+import { buildWeeklyNutritionAdherence, buildWeightTrend, nutritionTargetForDate, startOfWeek } from '../src/lib/progressSignals.js'
 
 test('weekly nutrition summary scores completed days only and leaves today in progress', () => {
   const summary = buildWeeklyNutritionAdherence([
@@ -49,4 +49,27 @@ test('weight trend returns a weekly rate only when check-ins cover seven days', 
   ])
   assert.equal(short.ready, false)
   assert.match(short.reason, /seven days/i)
+})
+
+test('trainer-assigned training and rest targets follow the Monday-first schedule', () => {
+  const target = {
+    calories: 2000,
+    protein_g: 160,
+    training_day_indices: [0, 2, 4],
+    training_calories: 2300,
+    training_protein_g: 180,
+    rest_calories: 1900,
+    rest_protein_g: 160,
+  }
+
+  assert.deepEqual(nutritionTargetForDate(target, '2026-09-21'), { kind: 'training', calories: 2300, protein_g: 180 })
+  assert.deepEqual(nutritionTargetForDate(target, '2026-09-22'), { kind: 'rest', calories: 1900, protein_g: 160 })
+
+  const summary = buildWeeklyNutritionAdherence([
+    { meal_date: '2026-09-21', calories: 2300, protein_g: 180 },
+    { meal_date: '2026-09-22', calories: 1900, protein_g: 160 },
+  ], target, '2026-09-23')
+  assert.equal(summary.onTargetDays, 2)
+  assert.equal(summary.days[0].target.kind, 'training')
+  assert.equal(summary.days[1].target.kind, 'rest')
 })
