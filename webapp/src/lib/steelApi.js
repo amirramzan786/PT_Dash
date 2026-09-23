@@ -500,7 +500,7 @@ export async function getProgrammeIntake(userId) {
 export async function getNutritionPlan(userId) {
   const client = requireSupabase()
   const [targetResult, mealsResult] = await Promise.all([
-    client.from('nutrition_targets').select('calories,protein_g').eq('user_id', userId).eq('active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    client.from('nutrition_targets').select('calories,protein_g,training_day_indices,training_calories,training_protein_g,rest_calories,rest_protein_g').eq('user_id', userId).eq('active', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     client.from('meal_plan_items').select('id,meal_type,title,description,ingredients,instructions,option_key,option_number,calories,protein_g,carbs_g,fat_g,serving_g,sort_order').eq('user_id', userId).eq('active', true).order('sort_order').order('option_number').order('created_at'),
   ])
   if (targetResult.error) throw targetResult.error
