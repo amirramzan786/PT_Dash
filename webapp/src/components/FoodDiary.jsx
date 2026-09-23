@@ -8,9 +8,10 @@ function portionTotals(food, grams) { const multiplier = Math.max(0, Number(gram
 
 function BarcodeCamera({ onDetected, onClose }) {
   const videoRef = useRef(null)
+  const detectedRef = useRef(false)
   const [message, setMessage] = useState('Opening camera…')
   useEffect(() => {
-    let stream; let timer; let active = true
+    let stream; let timer; let active = true; let detecting = false
     async function start() {
       if (!globalThis.BarcodeDetector || !navigator.mediaDevices?.getUserMedia) { setMessage('Camera barcode scanning is not supported in this browser. Enter the barcode number instead.'); return }
       try {
@@ -19,7 +20,7 @@ function BarcodeCamera({ onDetected, onClose }) {
         videoRef.current.srcObject = stream; await videoRef.current.play()
         const detector = new globalThis.BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] })
         setMessage('Hold the barcode inside the frame.')
-        timer = window.setInterval(async () => { try { const codes = await detector.detect(videoRef.current); if (codes[0]?.rawValue) onDetected(codes[0].rawValue) } catch { /* Keep the camera open while a frame cannot be decoded. */ } }, 450)
+        timer = window.setInterval(async () => {\n          if (detecting || detectedRef.current || !active || !videoRef.current) return\n          detecting = true\n          try {\n            const codes = await detector.detect(videoRef.current)\n            const value = codes[0]?.rawValue\n            if (value && !detectedRef.current) {\n              detectedRef.current = true\n              if (timer) window.clearInterval(timer)\n              stream?.getTracks().forEach((track) => track.stop())\n              setMessage('Barcode found. Looking it up…')\n              onDetected(value)\n            }\n          } catch {\n            /* Keep the camera open while a frame cannot be decoded. */\n          } finally {\n            detecting = false\n          }\n        }, 450)
       } catch { setMessage('Camera access was not available. Enter the barcode number instead.') }
     }
     start()
