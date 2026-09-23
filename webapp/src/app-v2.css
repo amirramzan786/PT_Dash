@@ -941,3 +941,26 @@ button { cursor: pointer; }
   .workout-tile { grid-template-columns: 66px minmax(0,1fr) 32px; }
   .exercise-focus-card { grid-template-columns: 74px minmax(0,1fr); }
 }
+
+
+/* Week-to-date fuel insight: informative without judging a partially logged day. */
+.nutrition-weekly-insight { display: grid; gap: 12px; padding: 14px; border-color: rgba(224,175,72,.32); background: linear-gradient(145deg,rgba(29,27,19,.96),rgba(13,20,29,.98)); }
+.nutrition-weekly-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.nutrition-weekly-heading h3 { margin: 3px 0 0; font-size: .98rem; }
+.nutrition-weekly-heading > span { flex: 0 0 auto; padding: 6px 8px; border: 1px solid rgba(224,175,72,.28); border-radius: 999px; color: var(--steel-gold-2); font-size: .66rem; font-weight: 800; }
+.nutrition-weekly-insight > p { margin: 0; color: var(--steel-muted); font-size: .73rem; line-height: 1.45; }
+.nutrition-weekly-insight > small { color: #a7afbd; font-size: .61rem; line-height: 1.45; }
+.nutrition-weekly-days { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 6px; }
+.nutrition-weekly-day { display: grid; justify-items: center; gap: 6px; padding: 7px 3px; border: 1px solid rgba(180,192,210,.13); border-radius: 9px; color: #8c96a7; background: rgba(255,255,255,.015); }
+.nutrition-weekly-day b { font-size: .6rem; line-height: 1; }
+.nutrition-weekly-day i { display: block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .52; }
+.nutrition-weekly-day.is-on-target { border-color: rgba(115,206,142,.42); color: #86d899; background: rgba(62,132,82,.13); }
+.nutrition-weekly-day.is-logged:not(.is-on-target), .nutrition-weekly-day.is-in-progress { border-color: rgba(224,175,72,.38); color: var(--steel-gold-2); background: rgba(224,175,72,.08); }
+.nutrition-weekly-day.is-missing { color: #c28e87; }
+.nutrition-weekly-day.is-today { border-style: dashed; color: #b6bdc8; }
+.nutrition-weekly-day.is-upcoming { opacity: .42; }
+
+@media (max-width: 430px) {
+  .nutrition-weekly-heading { display: grid; gap: 8px; }
+  .nutrition-weekly-heading > span { justify-self: start; }
+}
