@@ -26,6 +26,36 @@ export function startOfWeek(dateKey = toLocalDateKey()) {
   return toLocalDateKey(date)
 }
 
+function nutritionDayIndex(dateKey) {
+  return (fromDateKey(dateKey).getDay() + 6) % 7
+}
+
+function assignedNumber(value, fallback) {
+  const number = Number(value)
+  return Number.isFinite(number) && number > 0 ? number : Number(fallback || 0)
+}
+
+export function nutritionTargetForDate(target, dateKey = toLocalDateKey()) {
+  const trainingDays = [...new Set((Array.isArray(target?.training_day_indices) ? target.training_day_indices : [])
+    .map(Number)
+    .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6))]
+  const hasSplit = trainingDays.length > 0
+    && Number(target?.training_calories) > 0
+    && Number(target?.training_protein_g) > 0
+    && Number(target?.rest_calories) > 0
+    && Number(target?.rest_protein_g) > 0
+  if (!hasSplit) return {
+    kind: 'standard',
+    calories: assignedNumber(target?.calories, 0),
+    protein_g: assignedNumber(target?.protein_g, 0),
+  }
+
+  const kind = trainingDays.includes(nutritionDayIndex(dateKey)) ? 'training' : 'rest'
+  return kind === 'training'
+    ? { kind, calories: assignedNumber(target?.training_calories, target?.calories), protein_g: assignedNumber(target?.training_protein_g, target?.protein_g) }
+    : { kind, calories: assignedNumber(target?.rest_calories, target?.calories), protein_g: assignedNumber(target?.rest_protein_g, target?.protein_g) }
+}
+
 export function buildWeeklyNutritionAdherence(entries, target, todayKey = toLocalDateKey()) {
   const start = startOfWeek(todayKey)
   const days = Array.from({ length: 7 }, (_, index) => {
@@ -33,15 +63,17 @@ export function buildWeeklyNutritionAdherence(entries, target, todayKey = toLoca
     const logs = (entries || []).filter((entry) => String(entry.meal_date || '').slice(0, 10) === date)
     const calories = logs.reduce((total, entry) => total + Number(entry.calories || 0), 0)
     const protein = logs.reduce((total, entry) => total + Number(entry.protein_g || 0), 0)
+    const assignedTarget = nutritionTargetForDate(target, date)
     const state = date > todayKey ? 'upcoming' : date === todayKey ? (logs.length ? 'in-progress' : 'today') : (logs.length ? 'logged' : 'missing')
-    const calorieOnTarget = calories >= Number(target?.calories || 0) * 0.9 && calories <= Number(target?.calories || 0) * 1.1
-    const proteinOnTarget = protein >= Number(target?.protein_g || 0) * 0.9
+    const calorieOnTarget = calories >= assignedTarget.calories * 0.9 && calories <= assignedTarget.calories * 1.1
+    const proteinOnTarget = protein >= assignedTarget.protein_g * 0.9
     return {
       date,
       shortLabel: fromDateKey(date).toLocaleDateString('en-GB', { weekday: 'narrow' }),
       logs: logs.length,
       calories,
       protein,
+      target: assignedTarget,
       state,
       onTarget: state === 'logged' && calorieOnTarget && proteinOnTarget,
     }
@@ -61,7 +93,7 @@ export function buildWeeklyNutritionAdherence(entries, target, todayKey = toLoca
     onTargetDays: onTargetDays.length,
     scoredDays,
     adherencePercent,
-    target: { calories: Number(target?.calories || 0), protein: Number(target?.protein_g || 0) },
+    target: nutritionTargetForDate(target, todayKey),
   }
 }
 
