@@ -10,7 +10,7 @@ const coachAdmin = fs.readFileSync(new URL('../supabase/functions/coach-admin/in
 
 test('Coach is a protected platform, not a member-app tab', () => {
   assert.match(app, /\['\/coach', '\/coach\/', '\/coach\/login', '\/coach-console'\]/)
-  assert.match(app, /PROTECTED COACH PLATFORM/)
+  assert.match(app, /CoachWorkspace userRole=/)
   assert.match(auth, /\/coach\/login/)
   assert.match(auth, /STEEL COACH · PROTECTED WORKSPACE/)
   assert.doesNotMatch(app, /id:\s*['"]Coach['"]/)
@@ -23,12 +23,14 @@ test('Coach review refresh does not return a Promise as React cleanup', () => {
   assert.doesNotMatch(component, /useEffect\(\(\)\s*=>\s*refresh\(\)/)
 })
 
-test('Coach workspace uses consent-led relationships and private onboarding APIs', () => {
-  assert.match(component, /consent-led operating space/)
+test('Coach workspace restores the full Steel navigation, human Coach and AI surfaces', () => {
+  assert.match(component, /coach-sidebar-nav/)
+  assert.match(component, /Coach settings/)
+  assert.match(component, /CHECK-IN COMMAND CENTRE/)
+  assert.match(component, /INTERNAL AI COACH TESTING/)
   assert.match(component, /Coach applications/)
-  assert.match(component, /Build your professional profile/)
   assert.match(api, /rpc\('get_my_coach_relationships'\)/)
-  assert.match(api, /from\('coach_profiles'\)/)
+  assert.match(api, /get_coach_client_record_workflow/)
   assert.match(api, /from\('coach_applications'\)/)
   assert.match(api, /functions\.invoke\('coach-admin'/)
 })

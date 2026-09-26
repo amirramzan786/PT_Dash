@@ -18,6 +18,11 @@ function hasPendingActivityFoundationMigration(error) {
   return error?.code === '42P01' || detail.includes('activity_connections') || detail.includes('delete_activity_provider_data')
 }
 
+function isMissingCoachWorkflowRpc(error) {
+  const detail = `${error?.message || ''} ${error?.details || ''}`.toLowerCase()
+  return error?.code === '42883' || error?.code === 'PGRST202' || detail.includes('coach_client_record_workflow') || detail.includes('coach_checkin_review') || detail.includes('coach_private_note')
+}
+
 export async function getCurrentUser() {
   const client = requireSupabase()
   const { data, error } = await client.auth.getUser()
@@ -109,6 +114,39 @@ export async function activateCoachApplication(applicationId) {
   }
   if (!data?.ok) throw new Error(data?.error || 'Coach activation could not be completed.')
   return data
+}
+
+// The detailed human-Coach workspace is additive: when an environment has not
+// received these read-model RPCs, it stays usable and simply hides that detail.
+export async function loadCoachClientWorkflow(relationshipId) {
+  if (!relationshipId) return null
+  const { data, error } = await requireSupabase().rpc('get_coach_client_record_workflow', { p_relationship_id: relationshipId })
+  if (!error) return data && typeof data === 'object' ? data : null
+  if (isMissingCoachWorkflowRpc(error)) return null
+  throw error
+}
+
+export async function saveCoachCheckinReview({ relationshipId, weekStart, reviewed }) {
+  if (!relationshipId || !weekStart) return null
+  const { data, error } = await requireSupabase().rpc('set_coach_checkin_review', {
+    p_relationship_id: relationshipId,
+    p_week_start: weekStart,
+    p_reviewed: reviewed === true,
+  })
+  if (!error) return data && typeof data === 'object' ? data : {}
+  if (isMissingCoachWorkflowRpc(error)) return null
+  throw error
+}
+
+export async function saveCoachPrivateNote({ relationshipId, body }) {
+  if (!relationshipId) return null
+  const { data, error } = await requireSupabase().rpc('save_coach_private_note', {
+    p_relationship_id: relationshipId,
+    p_body: String(body || '').trim().slice(0, 2400),
+  })
+  if (!error) return data && typeof data === 'object' ? data : {}
+  if (isMissingCoachWorkflowRpc(error)) return null
+  throw error
 }
 
 // Alpha 20 data crosses narrow database boundaries: users never receive raw
