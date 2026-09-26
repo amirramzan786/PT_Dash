@@ -41,6 +41,76 @@ export async function loadCoachRelationships() {
   return Array.isArray(data) ? data : []
 }
 
+export async function loadCoachProfile() {
+  const { data, error } = await requireSupabase().from('coach_profiles')
+    .select('state,display_name,headline,bio,specialties,coaching_style,ideal_client,service_boundaries,timezone,availability_note,qualification_status,insurance_status,safeguarding_acknowledged,privacy_ai_agreement_acknowledged,submitted_at,review_note')
+    .maybeSingle()
+  if (error) throw error
+  return data || null
+}
+
+export async function saveCoachProfile(profile) {
+  const client = requireSupabase()
+  const { data: identity, error: identityError } = await client.auth.getUser()
+  if (identityError || !identity.user) throw identityError || new Error('Please sign in again.')
+  const next = {
+    ...profile,
+    user_id: identity.user.id,
+    updated_at: new Date().toISOString(),
+    specialties: (profile.specialties || []).map((item) => item.trim()).filter(Boolean).slice(0, 6),
+  }
+  if (next.state === 'submitted') next.submitted_at = new Date().toISOString()
+  const { data, error } = await client.from('coach_profiles')
+    .upsert(next, { onConflict: 'user_id' })
+    .select('state,display_name,headline,bio,specialties,coaching_style,ideal_client,service_boundaries,timezone,availability_note,qualification_status,insurance_status,safeguarding_acknowledged,privacy_ai_agreement_acknowledged,submitted_at,review_note')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function loadCoachApplications() {
+  const { data, error } = await requireSupabase().from('coach_applications')
+    .select('id,state,full_name,email,location,headline,bio,specialties,coaching_style,ideal_client,availability_note,created_at,reviewer_note')
+    .in('state', ['submitted', 'in_review', 'returned', 'approved'])
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+export async function reviewCoachApplication({ id, state, note = '' }) {
+  const client = requireSupabase()
+  const { data: identity, error: identityError } = await client.auth.getUser()
+  if (identityError || !identity.user) throw identityError || new Error('Please sign in again.')
+  const reviewedAt = new Date().toISOString()
+  const { error } = await client.from('coach_applications').update({
+    state,
+    reviewer_note: note.trim() || null,
+    reviewed_at: reviewedAt,
+    reviewed_by: identity.user.id,
+    updated_at: reviewedAt,
+  }).eq('id', id)
+  if (error) throw error
+  const action = state === 'approved' ? 'approved' : state === 'returned' ? 'returned' : 'review_started'
+  const { error: auditError } = await client.from('coach_application_audit').insert({
+    application_id: id,
+    action,
+    note: note.trim() || null,
+    actor_id: identity.user.id,
+  })
+  if (auditError) throw auditError
+}
+
+export async function activateCoachApplication(applicationId) {
+  const { data, error } = await requireSupabase().functions.invoke('coach-admin', { body: { applicationId } })
+  if (error) {
+    let detail = null
+    try { detail = await error.context?.json?.() } catch { /* Use the SDK fallback message. */ }
+    throw new Error(detail?.error || error.message || 'Coach activation could not be completed.')
+  }
+  if (!data?.ok) throw new Error(data?.error || 'Coach activation could not be completed.')
+  return data
+}
+
 // Alpha 20 data crosses narrow database boundaries: users never receive raw
 // signup, entitlement, feedback-triage or analytics tables.
 export async function getFounderStatus() {

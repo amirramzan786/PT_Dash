@@ -25,9 +25,11 @@ rules in
 The implementation adds a consent-gated relationship table, transition RPCs and
 fail-closed Coach visibility helper with static contract tests. The migration is
 now applied to the hosted Supabase project with no existing relationships, and
-the web app has a role-aware Coach workspace foundation. The next gate is review
-with one or two real coaches and clients before enabling invitations, messaging,
-bookings or insight data.
+the web app has a protected, role-aware `/coach` workspace foundation. Public
+applications now feed a private administrator review and activation queue, then
+invite approved Coaches to complete their profile inside that separate platform.
+The next gate is review with one or two real coaches and clients before enabling
+client invitations, messaging, bookings or insight data.
 
 ## Pilot success gates
 

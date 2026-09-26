@@ -897,7 +897,7 @@ function SettingsPage({ user, userRole, onSignOut, closeSettings, accountName, a
 }
 
 export default function AppV3({ user, onSignOut }) {
-  const isCoachConsole = window.location.pathname === '/coach-console'
+  const isCoachConsole = ['/coach', '/coach/', '/coach/login', '/coach-console'].includes(window.location.pathname)
   const [tab, setTab] = useState(() => {
     const requested = window.location.hash.replace(/^#/, '')
     return [...tabs.map(({ id }) => id), 'Settings'].includes(requested) ? requested : 'Home'
@@ -1346,7 +1346,7 @@ export default function AppV3({ user, onSignOut }) {
   if (loadError) return <div className="v2-loading app-load-error"><div className="steel-emblem"><SteelMark /></div><div><span className="eyebrow">STEEL IS TEMPORARILY OFFLINE</span><h2>We couldn’t load your data</h2><p>Check your connection, then try again. Your account data is still safe.</p><button type="button" className="gold-button" onClick={retryAppLoad}>Try again</button></div></div>
   if (isCoachConsole) {
     const allowed = userRole === 'trainer' || userRole === 'admin'
-    return <main className="v2-app coach-console-shell">{allowed ? <><div className="coach-console-banner"><span className="eyebrow">INTERNAL TESTING SURFACE</span><h1>Steel Coach console</h1><p>Backend-backed Coach workflows live here first. This surface is intentionally hidden from the member app.</p></div><CoachWorkspace userRole={userRole} relationships={coachRelationships} loading={coachLoading} onRefresh={refreshCoachRelationships}/></> : <section className="v2-loading app-load-error"><div className="steel-emblem"><SteelMark /></div><div><span className="eyebrow">ACCESS RESTRICTED</span><h2>Coach testing is not enabled for this account.</h2><p>Use an approved Coach or administrator account to open the internal testing surface.</p></div></section>}<small className="steel-build">Steel Coach console · Build {import.meta.env.VITE_BUILD_SHA || 'development'}</small></main>
+    return <main className="v2-app coach-console-shell">{allowed ? <><div className="coach-console-banner"><span className="eyebrow">PROTECTED COACH PLATFORM</span><h1>Steel Coach</h1><p>The professional workspace for approved Coaches and Steel administrators. It remains separate from the member app.</p></div><CoachWorkspace userRole={userRole} relationships={coachRelationships} loading={coachLoading} onRefresh={refreshCoachRelationships}/></> : <section className="v2-loading app-load-error"><div className="steel-emblem"><SteelMark /></div><div><span className="eyebrow">ACCESS RESTRICTED</span><h2>This account does not have Coach access.</h2><p>Coach accounts are activated only after Steel reviews and approves an application.</p><a className="gold-button" href="https://projectsteel.co.uk/coach/apply/">Apply to Coach with Steel</a></div></section>}<small className="steel-build">Steel Coach · Build {import.meta.env.VITE_BUILD_SHA || 'development'}</small></main>
   }
   if (!profile?.onboarding_completed && !onboardingDismissed) return <OnboardingFlow preferences={preferences} setPreferences={setPreferences} toggleEquipment={toggleEquipment} onComplete={completeOnboarding} saving={saving} onSignOut={onSignOut} />
 

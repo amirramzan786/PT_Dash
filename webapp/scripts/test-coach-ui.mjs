@@ -3,17 +3,37 @@ import fs from 'node:fs'
 import test from 'node:test'
 
 const component = fs.readFileSync(new URL('../src/components/CoachWorkspace.jsx', import.meta.url), 'utf8')
+const app = fs.readFileSync(new URL('../src/AppV3.jsx', import.meta.url), 'utf8')
+const auth = fs.readFileSync(new URL('../src/AuthGate.jsx', import.meta.url), 'utf8')
 const api = fs.readFileSync(new URL('../src/lib/steelApi.js', import.meta.url), 'utf8')
+const coachAdmin = fs.readFileSync(new URL('../supabase/functions/coach-admin/index.ts', import.meta.url), 'utf8')
 
-test('Coach UI is a consent-led, relationship-backed preview', () => {
-  assert.match(component, /Foundation preview/)
-  assert.match(component, /Client-owned access/)
-  assert.match(component, /Client consent is required/)
-  assert.match(component, /Signals, not silent decisions/)
-  assert.match(component, /Your Steel Coach/)
-  assert.match(component, /Book a session/)
-  assert.match(component, /Calendly or Google Calendar/)
-  assert.doesNotMatch(component, /<strong>Coach messages<\/strong>/)
-  assert.doesNotMatch(component, /from\(['"]coach_client_relationships/)
+test('Coach is a protected platform, not a member-app tab', () => {
+  assert.match(app, /\['\/coach', '\/coach\/', '\/coach\/login', '\/coach-console'\]/)
+  assert.match(app, /PROTECTED COACH PLATFORM/)
+  assert.match(auth, /\/coach\/login/)
+  assert.match(auth, /STEEL COACH · PROTECTED WORKSPACE/)
+  assert.doesNotMatch(app, /id:\s*['"]Coach['"]/)
+  assert.doesNotMatch(app, /navigateToTab\(['"]Coach['"]\)/)
+})
+
+test('Coach review refresh does not return a Promise as React cleanup', () => {
+  assert.match(component, /void refresh\(\)/)
+  assert.doesNotMatch(component, /useEffect\(refresh/)
+  assert.doesNotMatch(component, /useEffect\(\(\)\s*=>\s*refresh\(\)/)
+})
+
+test('Coach workspace uses consent-led relationships and private onboarding APIs', () => {
+  assert.match(component, /consent-led operating space/)
+  assert.match(component, /Coach applications/)
+  assert.match(component, /Build your professional profile/)
   assert.match(api, /rpc\('get_my_coach_relationships'\)/)
+  assert.match(api, /from\('coach_profiles'\)/)
+  assert.match(api, /from\('coach_applications'\)/)
+  assert.match(api, /functions\.invoke\('coach-admin'/)
+})
+
+test('approved Coach invites return to the dedicated Coach route', () => {
+  assert.match(coachAdmin, /redirectTo:\s*'https:\/\/app\.projectsteel\.co\.uk\/coach'/)
+  assert.doesNotMatch(coachAdmin, /#Coach/)
 })
