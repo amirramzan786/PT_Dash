@@ -2,6 +2,8 @@
 
 ## Start every task here
 
+> **First:** follow the shared collaborative development kickoff section below before design or implementation. Then apply this project's effort assessment and requirements.
+
 - Before commencing work, state the recommended effort level: **Light** for a focused lookup or small edit, **Standard** for normal implementation or investigation, and **Deep** for broad architecture, multi-system changes, or high-risk verification. Give a one-sentence reason.
 - Treat this repository as the canonical Project Steel codebase.
 - Read `PROJECT_REGISTER.md`, `ROADMAP.md`, and the relevant Plane work item before changing product behaviour.
@@ -44,3 +46,12 @@
 - Update the Plane work item with final scope, state, decisions, verification results, and the next action.
 - Update `PROJECT_REGISTER.md` or `ROADMAP.md` when a durable product decision or delivery status changed.
 - Leave the working tree and branch state explicit for the next task.
+
+## Shared creative and development kickoff — required for every task
+
+Before any task begins, read the canonical [Development Kickoff](https://github.com/amirramzan786/amirdesigns/blob/main/docs/development-kickoff.md) and [Shared Design & Development Toolkit](https://github.com/amirramzan786/amirdesigns/blob/main/docs/ai-development-toolkit.md) where private-repository access permits; disclose inaccessibility and use the rules below instead. This supplements the Project Steel-specific instructions, Plane workflow and effort assessment above, rather than replacing them.
+
+Our working method is **understand → inspect existing solutions and toolkit → brainstorm concepts/options with Amir → agree substantial choices → design/prototype where useful → implement → review/iterate → verify**. Before a new major feature, UX, visual or architecture decision, bring up to three grounded alternatives (including existing patterns), weigh them and recommend one. Explicitly consider applicable options among Anime.js v4, Lucide, PhotoSwipe, Playwright, Bencho and UI Skills, alongside project-native resources; do not adopt a library without a demonstrated fit.
+
+Show concept/reference/preview explorations where valuable. Keep the creative conversation collaborative and protect approved directions, accessible design and working code. Every task gets at least a lightweight kickoff. Small fixes, urgent regressions and already approved autonomous plans should proceed without unnecessarily awaiting a brainstorm; surface genuinely new material decisions. Record useful discoveries/decisions in the project and shared toolkit.
+
